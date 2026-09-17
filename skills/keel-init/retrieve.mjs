@@ -2,8 +2,13 @@
 // Traz a base de conhecimento do Keel para este projecto e põe as fontes das regras a apontar para ela.
 //
 //   node .keel/retrieve.mjs             clona ou actualiza a base e deixa as fontes locais
+//   node .keel/retrieve.mjs --auto      só age se faltar; é o que o hook SessionStart corre
 //   node .keel/retrieve.mjs --urls      devolve as fontes a URLs do GitHub (para partilhar o repo)
 //   node .keel/retrieve.mjs --onde <p>  usa outra pasta partilhada em vez de ~/.keel/base
+//
+// O `--auto` é o que torna isto automático: quem clona o projecto e abre o Claude Code recebe a
+// base sem correr nada. Sai em silêncio e em milissegundos quando já cá está, e nunca falha a
+// sessão — sem acesso ao repositório privado, explica-se e segue.
 //
 // A base é clonada **uma vez por máquina** e ligada a cada projecto por junction, porque são 54 MB
 // e 5 259 ficheiros. O `.keel/` não entra no repositório do projecto: é cache, não é contrato.
@@ -81,10 +86,16 @@ function git(args, cwd) {
   return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
+// Num clone raso não se faz `git pull`: o `--depth 1` traz um histórico disjunto do que cá está e o
+// merge não avança ("Not possible to fast-forward"). O erro só aparece quando há mesmo alguma coisa
+// para trazer, portanto passa despercebido até ao dia em que interessa. Busca-se e assenta-se em
+// cima — que é o certo para uma cache de leitura, onde não há trabalho local a perder.
 export function clonar(partilhada, { repo = REPO, log = () => {} } = {}) {
   if (fs.existsSync(path.join(partilhada, '.git'))) {
     log(`base já cá: ${partilhada} — a actualizar`);
-    git(['pull', '--ff-only', '--depth', '1'], partilhada);
+    const ramo = git(['rev-parse', '--abbrev-ref', 'HEAD'], partilhada).trim();
+    git(['fetch', '--depth', '1', 'origin', ramo], partilhada);
+    git(['reset', '--hard', `origin/${ramo}`], partilhada);
     return 'actualizada';
   }
   log(`a clonar a base (~54 MB, sem histórico) para ${partilhada}`);
@@ -121,13 +132,27 @@ export function garantirGitignore(projeto) {
   return true;
 }
 
+// A pergunta que o modo automático faz a cada arranque, por isso tem de ser barata: não basta a
+// ligação existir, tem de haver conteúdo do outro lado. Uma junction cujo destino foi apagado
+// continua a "existir" mas não resolve — e é assim que se distingue.
+export function estaPronta(projeto) {
+  return fs.existsSync(path.join(projeto, '.keel', 'base', 'cursos'));
+}
+
 function main(argv) {
-  const projeto = process.cwd();
+  const projeto = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  const auto = argv.includes('--auto');
   const log = (m) => console.log(`  ${m}`);
+
+  // No arranque automático não se resmunga: um projecto sem contrato do Keel não é um erro.
   if (!fs.existsSync(path.join(projeto, '.agents'))) {
+    if (auto) return 0;
     console.error('Não há `.agents/` aqui. Corre isto na raiz do projecto, depois do /keel-init.');
     return 2;
   }
+  // O caminho comum: já cá está. Sai em milissegundos e sem escrever nada, porque o que este
+  // hook escreve entra no contexto da sessão, e contexto gasto a dizer "está tudo bem" é desperdício.
+  if (auto && estaPronta(projeto)) return 0;
 
   if (argv.includes('--urls')) {
     const n = converter(projeto, 'urls');
@@ -139,16 +164,31 @@ function main(argv) {
   const partilhada = i >= 0 && argv[i + 1] ? path.resolve(argv[i + 1]) : pastaPartilhada();
 
   try {
-    clonar(partilhada, { log });
+    clonar(partilhada, { log: auto ? () => {} : log });
   } catch (erro) {
-    console.error(`Falhou o clone da base: ${erro.message.trim().split('\n').at(-1)}`);
+    // Em automático nunca se trava a sessão por causa disto: diz-se o que falhou e segue.
+    // O stdout de um SessionStart entra no contexto, portanto a mensagem é dirigida ao agente.
+    const porque = erro.message.trim().split('\n').at(-1);
+    if (auto) {
+      console.log(
+        `A base de conhecimento do Keel não pôde ser trazida (${porque}). As fontes das regras ficam ` +
+          `a apontar para ${REPO_BASE}, que é privado. Se o utilizador precisar de as abrir, confirma ` +
+          'que a conta de git desta máquina tem acesso e corre `node .keel/retrieve.mjs`.',
+      );
+      return 0;
+    }
+    console.error(`Falhou o clone da base: ${porque}`);
     console.error(`O repositório é privado — confirma que tens acesso a ${REPO_BASE}.`);
     return 1;
   }
-  ligar(projeto, partilhada, { log });
-  if (garantirGitignore(projeto)) log('.keel/ acrescentado ao .gitignore');
+  ligar(projeto, partilhada, { log: auto ? () => {} : log });
+  if (garantirGitignore(projeto) && !auto) log('.keel/ acrescentado ao .gitignore');
   const n = converter(projeto, 'local');
-  console.log(`Pronto. ${n} ficheiro(s) do contrato com as fontes locais; a base está em ${partilhada}.`);
+  console.log(
+    auto
+      ? `Base de conhecimento do Keel trazida para .keel/base; as fontes de ${n} ficheiro(s) do contrato abrem localmente.`
+      : `Pronto. ${n} ficheiro(s) do contrato com as fontes locais; a base está em ${partilhada}.`,
+  );
   return 0;
 }
 

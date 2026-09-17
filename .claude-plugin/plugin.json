@@ -2,7 +2,7 @@
   "name": "keel",
   "displayName": "Keel",
   "description": "Agentes de papel e regras com ID para programar com Claude Code, destiladas de 25 cursos e confirmadas nas transcrições. Cada regra tem porquê, como verificar e a aula de origem. A base completa — cursos, notas e sínteses — fica à parte e vem com a skill `keel-base`.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "Rogers Ribeiro"
   },

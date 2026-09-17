@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "A quilha de um projecto de programação com agentes: o que se assenta primeiro.",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "repository": "https://github.com/Rogers-Ribeiro/keel-engine"
   },
   "plugins": [

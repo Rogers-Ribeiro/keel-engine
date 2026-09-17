@@ -34,7 +34,7 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 │   ├── nucleo.md          as regras que valem em qualquer tarefa
 │   └── regras/<tema>.md   só os temas escolhidos
 ├── .keel/retrieve.mjs     traz a base de conhecimento (o resto de `.keel/` é cache, fora do git)
-└── .claude/settings.json  permissões e hooks, se o nível de exigência os pedir
+└── .claude/settings.json  o hook SessionStart que traz a base, mais permissões e hooks do nível escolhido
 ```
 
 Regras de escrita:
@@ -46,7 +46,7 @@ Regras de escrita:
 
 Cada regra traz a aula que a originou. No plugin essas fontes são URLs do repositório da base, que é privado: abrem no browser, mas obrigam a autenticar e não servem para o agente ler.
 
-Por isso copias também `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/retrieve.mjs` para `.keel/retrieve.mjs` e **corre-lo uma vez**, no fim:
+Por isso copias `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/retrieve.mjs` para `.keel/retrieve.mjs`, **registas o hook** que o corre sozinho, e corre-lo uma vez agora:
 
 ```
 node .keel/retrieve.mjs
@@ -54,10 +54,43 @@ node .keel/retrieve.mjs
 
 O que ele faz, por esta ordem: clona a base sem histórico para `~/.keel/base` (~54 MB, uma vez por máquina, partilhada por todos os projectos), liga-a a este projecto com uma junction em `.keel/base`, acrescenta `.keel/` ao `.gitignore`, e reescreve as fontes do contrato para caminhos locais. A partir daí, abrir a fonte de uma regra é abrir um ficheiro.
 
-Três coisas que convém saber:
-- **Correr outra vez é seguro.** Actualiza o clone e não mexe no que já está na forma certa.
+### O hook, que é o que torna isto automático
+
+Em `.claude/settings.json`, dentro de `hooks`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.keel/retrieve.mjs", "--auto"],
+            "timeout": 300,
+            "statusMessage": "A trazer a base de conhecimento do Keel…"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Quem clonar o repositório e abrir o Claude Code recebe a base sem correr nada, nem sequer saber que existe. O `--auto` sai em silêncio e em milissegundos quando já cá está, e **nunca falha a sessão**: sem acesso ao repositório privado, explica-se e segue.
+
+Três cuidados ao escrever isto:
+- Se já houver `.claude/settings.json`, **junta** a chave `SessionStart` ao que lá está. Não reescrevas o ficheiro.
+- `command` é `node` com `args` — em exec form, sem shell. No Windows, um hook com `args` precisa de um executável a sério, e um `.cmd` não serve.
+- `${CLAUDE_PROJECT_DIR}` é substituído nos `args`, e é por isso que o caminho funciona seja qual for a pasta de onde a sessão arrancou.
+
+### O resto que convém saber
+
+- **Correr outra vez é seguro.** Sem `--auto`, actualiza o clone; com `--auto`, só age se faltar. Nenhum dos dois mexe no que já está na forma certa.
 - **A base não entra no repositório do projecto.** São 5 259 ficheiros; é cache, não é contrato. O `.gitignore` trata disso.
-- **Quem clonar o projecto tem de correr o script**, tal como correria um `npm install`, senão as fontes apontam para ficheiros que ainda não tem. Diz isso no `CLAUDE.md` que escreves. Se preferires um repositório em que as fontes abrem sem passo nenhum, `node .keel/retrieve.mjs --urls` devolve-as a URLs do GitHub.
+- **Se preferires um repositório em que as fontes são URLs**, `node .keel/retrieve.mjs --urls` faz o caminho inverso.
 
 Se o clone falhar por falta de acesso, não é problema teu: o repositório é privado e a conta autenticada tem de lá ter entrada. Diz isso e segue — o contrato fica escrito na mesma, só com as fontes em URL.
 
