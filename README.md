@@ -1,6 +1,6 @@
 # Keel — engine
 
-Versão 0.5.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
+Versão 0.5.1. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
 
 ## Instalar
 

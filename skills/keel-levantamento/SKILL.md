@@ -23,6 +23,8 @@ Não as misturas, porque respondem-se de maneiras diferentes e valem coisas dife
 2. Confirma que não estás a auditar a própria base do Keel nem o plugin.
 3. Diz quanto isto custa antes de começar: são vários subagentes sobre um repositório inteiro. Se o utilizador quiser só uma dimensão, corre só essa.
 
+**O caso normal é auditar outro repositório.** Um sistema audita-se para decidir alguma coisa noutro sítio: se se continua, se se refaz, se serve de base ao que vem a seguir. Se o repositório a auditar não estiver acessível a partir desta sessão, pede ao utilizador que o acrescente — `/add-dir <caminho>` na sessão, ou `claude --add-dir <caminho>` ao arrancar — em vez de tentares ler o que não alcanças. O relatório fica do lado de cá; o repositório auditado fica como estava.
+
 ## Passo 1 — ler o que o projecto já diz de si
 
 **Antes de qualquer subagente.** Procura e lê, se existirem:
@@ -113,7 +115,11 @@ Se o isolamento não existir, di-lo primeiro e sem rodeios: **tudo o resto é ac
 
 ## Passo 5 — juntar
 
-Escreves **um** relatório em `docs/levantamento/<AAAA-MM-DD>/relatorio.md`, com os ficheiros de cada dimensão ao lado. Forma:
+Escreves **um** relatório em `docs/levantamento/<AAAA-MM-DD>-<repositório>/relatorio.md`, com os ficheiros de cada dimensão ao lado.
+
+**Onde:** na raiz da sessão, não no repositório auditado. Quando se audita o repositório A a partir do projecto B, o relatório é de B — é B que tem a decisão em mãos —, e A não recebe um único byte. Só quando a sessão corre dentro do próprio repositório auditado é que os dois coincidem.
+
+Forma:
 
 ```
 # Levantamento — <repositório>
@@ -146,7 +152,7 @@ Escreves **um** relatório em `docs/levantamento/<AAAA-MM-DD>/relatorio.md`, com
 - **Não passes a saída dos subagentes pelo teu contexto.** Cada um escreve o seu ficheiro; tu lês os ficheiros para juntar. É a diferença entre um levantamento que cabe numa sessão e um que rebenta a meio.
 - **Não proponhas uma reescrita.** Foste chamado para diagnosticar. A decisão de refazer é de quem paga, e precisa deste relatório para ser tomada.
 - **O que está bem conta.** Um relatório só com defeitos leva quem o lê a deitar fora código que funciona.
-- **Não mexas no repositório auditado** para lá do relatório. Sem formatar, sem corrigir "só uma coisinha", sem criar ramos.
+- **Não escrevas nada no repositório auditado.** Nem o relatório. Sem formatar, sem corrigir "só uma coisinha", sem criar ramos, sem `git` que não seja de leitura. Um levantamento que altera o que está a medir deixa de ser um levantamento.
 
 ## Quando acabas
 
