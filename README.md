@@ -16,7 +16,7 @@ for preciso confirmar a origem de uma regra.
 
 - `agents/` — 2 ficheiro(s)
 - `regras/` — 21 ficheiro(s)
-- `decisoes/` — 8 ficheiro(s)
+- `docs/` — 11 ficheiro(s)
 - `skills/` — 2 ficheiro(s)
 
 ## O que não traz

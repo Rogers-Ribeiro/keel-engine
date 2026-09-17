@@ -82,7 +82,7 @@ O núcleo e as listas abaixo valem sempre; o resto é sob demanda.
 
 ## Onde procurar o que não está aqui
 
-A base está em `${CLAUDE_PLUGIN_ROOT}` quando o Keel corre como plugin, e em `C:/Projects/Cursos/formacao-dev` na máquina onde vive o repositório. Usa o primeiro que existir.
+A base está em `${CLAUDE_PLUGIN_ROOT}` quando o Keel corre como plugin, e na raiz do repositório quando estás dentro da própria base. Usa o primeiro que existir.
 
 - Regras completas: `regras/codigo-limpo.md`, `regras/python.md`, `regras/seguranca.md`, `regras/testes.md`.
 - Decisões, com as fontes: `docs/decisoes/`.

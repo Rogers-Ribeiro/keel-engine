@@ -19,7 +19,7 @@ Para o trabalho normal não é preciso: as regras trazem a justificação e o mo
 
 ## Passos
 
-1. **Vê se já está cá.** Procura uma pasta com `cursos/`, `conhecimento/` e `regras/` — tipicamente `C:/Projects/Cursos/formacao-dev` ou onde o utilizador a tiver. Se existir, salta o clone.
+1. **Vê se já está cá.** Procura uma pasta com `cursos/`, `conhecimento/` e `regras/`. Se não a encontrares, pergunta ao utilizador onde a tem antes de clonar. Se existir, salta o clone.
 
 2. **Clona**, se não existir. O repositório é privado; o acesso depende da conta autenticada:
    ```
