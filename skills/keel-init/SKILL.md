@@ -33,6 +33,7 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 │   ├── keel.yaml          versão do engine, temas escolhidos, respostas e data
 │   ├── nucleo.md          as regras que valem em qualquer tarefa
 │   └── regras/<tema>.md   só os temas escolhidos
+├── .keel/retrieve.mjs     traz a base de conhecimento (o resto de `.keel/` é cache, fora do git)
 └── .claude/settings.json  permissões e hooks, se o nível de exigência os pedir
 ```
 
@@ -40,6 +41,25 @@ Regras de escrita:
 - **Copia** o `nucleo.md` e os `regras/<tema>.md` do plugin (`${CLAUDE_PLUGIN_ROOT}/regras/`) para dentro do projecto. Não uses imports por caminho absoluto: partem noutra máquina e não versionam com o código.
 - Se o projecto já tiver `CLAUDE.md`, **acrescenta** a secção no fim e não toques no resto.
 - O `keel.yaml` regista a versão do engine e as escolhas, para se saber depois o que foi gerado e com que base.
+
+## As fontes das regras
+
+Cada regra traz a aula que a originou. No plugin essas fontes são URLs do repositório da base, que é privado: abrem no browser, mas obrigam a autenticar e não servem para o agente ler.
+
+Por isso copias também `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/retrieve.mjs` para `.keel/retrieve.mjs` e **corre-lo uma vez**, no fim:
+
+```
+node .keel/retrieve.mjs
+```
+
+O que ele faz, por esta ordem: clona a base sem histórico para `~/.keel/base` (~54 MB, uma vez por máquina, partilhada por todos os projectos), liga-a a este projecto com uma junction em `.keel/base`, acrescenta `.keel/` ao `.gitignore`, e reescreve as fontes do contrato para caminhos locais. A partir daí, abrir a fonte de uma regra é abrir um ficheiro.
+
+Três coisas que convém saber:
+- **Correr outra vez é seguro.** Actualiza o clone e não mexe no que já está na forma certa.
+- **A base não entra no repositório do projecto.** São 5 259 ficheiros; é cache, não é contrato. O `.gitignore` trata disso.
+- **Quem clonar o projecto tem de correr o script**, tal como correria um `npm install`, senão as fontes apontam para ficheiros que ainda não tem. Diz isso no `CLAUDE.md` que escreves. Se preferires um repositório em que as fontes abrem sem passo nenhum, `node .keel/retrieve.mjs --urls` devolve-as a URLs do GitHub.
+
+Se o clone falhar por falta de acesso, não é problema teu: o repositório é privado e a conta autenticada tem de lá ter entrada. Diz isso e segue — o contrato fica escrito na mesma, só com as fontes em URL.
 
 ## O último passo não é um detalhe
 

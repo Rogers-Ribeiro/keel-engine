@@ -23,7 +23,7 @@ Para o trabalho normal não é preciso: as regras trazem a justificação e o mo
 
 2. **Clona**, se não existir. O repositório é privado; o acesso depende da conta autenticada:
    ```
-   git clone https://github.com/Rogers-Ribeiro/keel.git <destino>
+   git clone --depth 1 https://github.com/Rogers-Ribeiro/keel.git <destino>
    ```
    Pergunta o destino antes de clonar. São dezenas de megabytes e milhares de ficheiros: diz isso antes, não depois.
 
