@@ -13,7 +13,7 @@ A distinção que manda em tudo o que se segue: o **engine** vive na máquina e 
 
 1. Confirma que estás na raiz do repositório do projecto (há `.git`), e **não** dentro do keel nem da base de conhecimento.
 2. Se já existir `.agents/keel.yaml`, o projecto já foi iniciado: não reescrevas nada. Diz o que está instalado e pára.
-3. Se o repositório tiver código a sério e nenhum contrato, este não é o caminho certo: diz-lhe que o `keel-init` é para projectos novos e que adoptar um repositório existente pede um levantamento primeiro.
+3. Se o repositório tiver código a sério e nenhum contrato, este não é o caminho certo: o `keel-init` é para projectos novos. Adoptar um repositório existente pede um levantamento primeiro — usa a skill `keel-levantamento`, que diz o que lá está medido contra as regras, e volta aqui depois de haver decisão.
 
 ## As perguntas — no máximo quatro
 
