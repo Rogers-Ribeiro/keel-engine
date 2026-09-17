@@ -1,6 +1,6 @@
 # Keel — engine
 
-Versão 0.1.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
+Versão 0.2.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
 
 ## Instalar
 
@@ -15,7 +15,7 @@ for preciso confirmar a origem de uma regra.
 ## O que traz
 
 - `agents/` — 2 ficheiro(s)
-- `regras/` — 16 ficheiro(s)
+- `regras/` — 21 ficheiro(s)
 - `decisoes/` — 8 ficheiro(s)
 - `skills/` — 2 ficheiro(s)
 

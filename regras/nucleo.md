@@ -9,6 +9,7 @@ O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho. As escolha
 - `UPDATE` ou `DELETE` sem `WHERE`: **PY-011**.
 - Excepções silenciadas: **COD-014**, **PY-006**.
 - Ler ou escrever dados de um utilizador sem filtrar pelo dono autenticado: **SEG-016**.
+- Dados de vários tenants na mesma tabela sem RLS activa **e** forçada, com um papel de aplicação que não é dono: **DB-018**, **DB-019**, **DB-021**.
 - Aprovação genérica para o agente executar código: **SEG-007**. O que nunca pode acontecer bloqueia-se antes: **SEG-008**, **PROC-023**.
 - Chains legadas em código novo: **PROC-031**.
 
@@ -37,6 +38,7 @@ O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho. As escolha
 - Casos inválidos e excepções também se testam: **TST-002**.
 - Saídas de LLM não se comparam por igualdade exacta: **TST-007**; LLM falso a cada commit: **TST-006**.
 - A cobertura não tem meta fixa, e 100% não é objectivo (decisão D-PY11).
+- Cada tabela com `tenant_id` traz o teste de isolamento com dois tenants: **DB-024**.
 
 ## Com LLM e agentes
 
@@ -51,4 +53,4 @@ O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho. As escolha
 
 ## Os temas
 
-`arquitetura` · `codigo-limpo` · `padroes-de-projeto` · `python` · `testes` · `dev-com-agentes` · `llm-e-prompts` · `agentes-ia` · `rag` · `producao-ia` · `seguranca` · `docker-e-deploy` · `ux` · `dados-e-ml` · `nlp`
+`arquitetura` · `codigo-limpo` · `padroes-de-projeto` · `python` · `testes` · `dev-com-agentes` · `llm-e-prompts` · `agentes-ia` · `rag` · `producao-ia` · `seguranca` · `docker-e-deploy` · `ux` · `dados-e-ml` · `nlp` · `persistencia` · `filas-e-concorrencia` · `api-e-contratos` · `observabilidade` · `integracoes`
