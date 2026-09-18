@@ -271,3 +271,26 @@ Prefixo `PROC`. Regras confirmadas nas transcrições a 2026-09-17. Síntese de 
 **Como verificar:** Os loaders e os splitters preservam `source` nos metadados, e a resposta do RAG inclui as fontes usadas.
 **Fonte:** [LangChain §10, aula 56](https://github.com/Rogers-Ribeiro/keel/blob/main/cursos/langchain/transcricoes/056-tavily-crawling.md) · [nota](https://github.com/Rogers-Ribeiro/keel/blob/main/cursos/langchain/notas/10-building-a-documentation-assistant-embeddings-vectordbs-retr.md) · [LangChain §9, aula 46](https://github.com/Rogers-Ribeiro/keel/blob/main/cursos/langchain/transcricoes/046-medium-analyzer-ingestion-implementation.md) · [nota](https://github.com/Rogers-Ribeiro/keel/blob/main/cursos/langchain/notas/09-the-gist-of-rag-embeddings-vector-databases-and-retrieval.md)
 **Cursos:** 3
+
+## Aprender com os erros
+
+Estas duas regras não saem de curso nenhum. Nenhum dos cursos extraídos trata de como um agente
+acumula o que aprendeu entre projectos: a PROC-005 manda corrigir a skill e não só o resultado, mas
+não diz onde fica o que se corrigiu nem como chega ao projecto seguinte. Saem da referência
+[licoes-do-agente](../docs/licoes-do-agente.md) e da skill `keel-licao`, que as executa.
+
+### PROC-033 — Erro evitável regista-se com prova; lição só à reincidência
+
+**Regra:** Quando cometeres um erro evitável que alguém teve de corrigir, regista a ocorrência com a prova que a demonstra (ficheiro e linha, comando ou mensagem de erro). Só à terceira ocorrência da mesma chave é que propões transformá-la numa lição — e a lição escreve-se com a aprovação do utilizador, nunca sozinho.
+**Porquê:** Uma ocorrência isolada é um acidente e duas ainda podem ser distracção; a terceira é que torna o padrão inegável. Sem esse filtro o registo aceita tudo, enche-se de entradas que não valem nada e aprende-se a ignorá-lo — e um registo ignorado não protege nem nas entradas boas. Sem a prova, o que fica escrito é a teoria do próprio agente sobre por que falhou.
+**Como verificar:** Cada entrada do registo tem o campo de prova preenchido, e cada lição escrita tem pelo menos três ocorrências da mesma chave por trás.
+**Fonte:** [licoes-do-agente](../docs/licoes-do-agente.md)
+**Cursos:** 0
+
+### PROC-034 — O que uma máquina apanha vira verificação, não texto
+
+**Regra:** Antes de escrever uma lição ou uma regra nova, pergunta se um linter, um teste, um hook ou um ficheiro de configuração apanham o caso. Se apanharem, escreve a verificação e não escrevas o texto.
+**Porquê:** Texto em contexto compete por atenção com tudo o resto, a cada sessão; uma verificação corre sozinha e não falha por distracção. É a PROC-023 ao contrário: se o hook garante e o texto só sugere, o que se pode garantir não se pede. Escrever as duas coisas é pior do que escrever só a verificação, porque deixa uma regra que vai ser ignorada ao lado de um teste que não vai.
+**Como verificar:** Nenhuma lição ou regra do registo descreve um caso que a ferramenta de lint, os testes ou os hooks do projecto já detectam.
+**Fonte:** [licoes-do-agente](../docs/licoes-do-agente.md)
+**Cursos:** 0

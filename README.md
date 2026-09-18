@@ -1,6 +1,6 @@
 # Keel — engine
 
-Versão 0.5.1. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
+Versão 0.6.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
 
 ## Instalar
 
@@ -9,15 +9,19 @@ Versão 0.5.1. **Gerado** a partir da base de conhecimento por `ferramentas/engi
 /plugin install keel@keel-engine
 ```
 
-Depois, num projecto: `/keel-init` escreve o contrato no repositório, e `/keel-base` traz a base completa quando
-for preciso confirmar a origem de uma regra.
+## As skills
+
+- `/keel-base` — trazer a base de conhecimento
+- `/keel-init` — escrever o contrato num projecto
+- `/keel-levantamento` — auditar código que já existe
+- `/keel-licao` — que o mesmo erro não se aprenda duas vezes
 
 ## O que traz
 
 - `agents/` — 2 ficheiro(s)
 - `regras/` — 21 ficheiro(s)
-- `docs/` — 11 ficheiro(s)
-- `skills/` — 4 ficheiro(s)
+- `docs/` — 12 ficheiro(s)
+- `skills/` — 6 ficheiro(s)
 
 ## O que não traz
 

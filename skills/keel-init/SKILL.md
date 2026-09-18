@@ -34,7 +34,8 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 │   ├── nucleo.md          as regras que valem em qualquer tarefa
 │   └── regras/<tema>.md   só os temas escolhidos
 ├── .keel/retrieve.mjs     traz a base de conhecimento (o resto de `.keel/` é cache, fora do git)
-└── .claude/settings.json  o hook SessionStart que traz a base, mais permissões e hooks do nível escolhido
+├── .keel/licoes.mjs       põe em contexto o que já se aprendeu noutros projectos desta máquina
+└── .claude/settings.json  os hooks SessionStart, mais permissões e hooks do nível escolhido
 ```
 
 Regras de escrita:
@@ -71,6 +72,13 @@ Em `.claude/settings.json`, dentro de `hooks`:
             "args": ["${CLAUDE_PROJECT_DIR}/.keel/retrieve.mjs", "--auto"],
             "timeout": 300,
             "statusMessage": "A trazer a base de conhecimento do Keel…"
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.keel/licoes.mjs", "sugerir"],
+            "timeout": 15,
+            "statusMessage": "A ler as lições do Keel…"
           }
         ]
       }
@@ -85,6 +93,17 @@ Três cuidados ao escrever isto:
 - Se já houver `.claude/settings.json`, **junta** a chave `SessionStart` ao que lá está. Não reescrevas o ficheiro.
 - `command` é `node` com `args` — em exec form, sem shell. No Windows, um hook com `args` precisa de um executável a sério, e um `.cmd` não serve.
 - `${CLAUDE_PROJECT_DIR}` é substituído nos `args`, e é por isso que o caminho funciona seja qual for a pasta de onde a sessão arrancou.
+
+### O segundo hook: o que já se aprendeu noutros projectos
+
+Copia também `${CLAUDE_PLUGIN_ROOT}/skills/keel-licao/licoes.mjs` para `.keel/licoes.mjs`. É o que
+põe em contexto as lições — não deste projecto, de **todos** os projectos desta máquina. Um projecto
+novo arranca já com o que os outros aprenderam, que é o contrário do que costuma acontecer.
+
+O registo em si fica em `~/.keel/`, ao lado da base, e não no repositório: é estado local, muda a
+cada sessão e não tem nada que produzir diffs. Quando não há lições nenhumas o hook não escreve
+nada — uma sessão não deve pagar contexto para lhe dizerem que está tudo bem. O resto está na skill
+`keel-licao`.
 
 ### O resto que convém saber
 

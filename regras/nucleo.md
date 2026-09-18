@@ -12,6 +12,7 @@ O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho. As escolha
 - Dados de vários tenants na mesma tabela sem RLS activa **e** forçada, com um papel de aplicação que não é dono: **DB-018**, **DB-019**, **DB-021**.
 - Aprovação genérica para o agente executar código: **SEG-007**. O que nunca pode acontecer bloqueia-se antes: **SEG-008**, **PROC-023**.
 - Chains legadas em código novo: **PROC-031**.
+- Uma regra em texto para o que um linter, um teste ou um hook apanham: **PROC-034**.
 
 ## Antes de escrever código
 
@@ -30,6 +31,7 @@ O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho. As escolha
 - Módulos sem ciclos; o núcleo sem ORM, frameworks nem SDKs: **ARQ-002**, **ARQ-006**, **PAD-003**.
 - Guardas em vez de aninhamento: **COD-011**.
 - A validação de entrada externa junta todos os erros; o resto falha no primeiro (decisão D-OO02): **ARQ-013**.
+- Erro evitável que alguém corrigiu regista-se com prova; à reincidência, propõe-se lição: **PROC-033**.
 
 ## Testes
 
