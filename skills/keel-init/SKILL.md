@@ -1,6 +1,6 @@
 ---
 name: keel-init
-description: Use quando um projecto novo precisa de arrancar com as regras do Keel — escreve o contrato (CLAUDE.md, .agents/ com o núcleo e os temas escolhidos, keel.yaml) dentro do repositório. Use também quando o utilizador disser "instala o keel aqui", "inicia o projecto com as regras" ou "/keel-init".
+description: Use quando um projecto novo precisa de arrancar com as regras do Keel — escreve o contrato (CLAUDE.md, .agents/ com os núcleos dos domínios e os temas escolhidos, keel.yaml) dentro do repositório. Use também quando o utilizador disser "instala o keel aqui", "inicia o projecto com as regras" ou "/keel-init".
 ---
 
 # keel-init — escrever o contrato num projecto
@@ -17,23 +17,31 @@ A distinção que manda em tudo o que se segue: o **engine** vive na máquina e 
 
 ## O domínio, antes das perguntas
 
-A base serve **dois domínios**, e cada um tem o seu núcleo de regras. Antes de perguntar seja o que for, olha para o repositório e decide qual é:
+A base serve **quatro domínios**, e cada um tem o seu núcleo de regras. Um projecto carrega **os que lhe servem** — muitas vezes um, às vezes dois. Antes de perguntar seja o que for, olha para o repositório:
 
-- `sfdx-project.json`, `force-app/`, `manifest/package.xml`, classes `.cls`, `.trigger`, pastas `lwc/` ou `aura/`, `mule-artifact.json`, POMs com `mule-maven-plugin`, `cartridges/` ou `dw.json` → **`salesforce`**.
-- `pyproject.toml`, `requirements*.txt`, `langgraph.json`, código Python → **`python-agentes`**.
+| Encontras | Domínio |
+|---|---|
+| `sfdx-project.json`, `force-app/`, `manifest/package.xml`, classes `.cls` ou `.trigger`, pastas `lwc/` ou `aura/` | `salesforce` |
+| `mule-artifact.json`, POMs com `mule-maven-plugin`, ficheiros `.xml` de fluxos Mule, `.dwl` | `mulesoft` |
+| `cartridges/`, `dw.json`, `hooks.json`, ou uma loja B2B configurada na org | `comercio-digital` |
+| `pyproject.toml`, `requirements*.txt`, `langgraph.json`, código Python | `python-agentes` |
 
-Diz qual escolheste e porquê, numa linha, e deixa corrigir. Num repositório vazio, pergunta. A escolha manda no núcleo que copias e nos temas que propões, e fica registada no `keel.yaml` — é o que distingue um projecto que recebe regras de Apex de um que recebe regras de LangGraph.
+Podem valer dois ao mesmo tempo, e isso é normal: uma loja B2B é `comercio-digital` **e** `salesforce`, porque a loja é configuração de plataforma; uma integração que fala com uma org é `mulesoft` **e** `salesforce`. Uma loja de B2C Commerce, essa, é `comercio-digital` sozinha — o SFCC é outra plataforma.
+
+Diz quais escolheste e porquê, numa linha por domínio, e deixa corrigir. Num repositório vazio, pergunta. A escolha manda no núcleo que copias e nos temas que propões, e fica registada no `keel.yaml`.
 
 ## As perguntas — no máximo quatro
 
 Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e propõe um valor por omissão para cada:
 
 1. **Nome do projecto e uma frase sobre o que faz.**
-2. **Temas de regras** que se aplicam. A proposta sai do domínio (ponto 0 abaixo), e a lista completa de cada um está em `${CLAUDE_PLUGIN_ROOT}/regras/`:
-   - **Python com agentes:** `python`, `codigo-limpo`, `arquitetura`, `testes`, `seguranca`, `agentes-ia`.
-   - **Salesforce, MuleSoft ou comércio digital:** `salesforce-plataforma`, `salesforce-apex`, `salesforce-dados`, `salesforce-seguranca` — e `salesforce-lwc` se houver componentes, `salesforce-integracao` se houver sistemas externos, `mulesoft-desenvolvimento` e `mulesoft-arquitetura` se houver Mule, `comercio-digital` se houver loja, `salesforce-ia` se houver Agentforce.
+2. **Temas de regras** que se aplicam. A proposta sai dos domínios escolhidos (secção acima), e a lista completa de cada um está em `${CLAUDE_PLUGIN_ROOT}/regras/`:
+   - **`python-agentes`:** `python`, `codigo-limpo`, `arquitetura`, `testes`, `seguranca`, `agentes-ia`.
+   - **`salesforce`:** `salesforce-plataforma`, `salesforce-apex`, `salesforce-dados`, `salesforce-seguranca` — e `salesforce-lwc` se houver componentes, `salesforce-integracao` se houver sistemas externos, `salesforce-automacao` se houver flows, `salesforce-ia` se houver Agentforce.
+   - **`mulesoft`:** `mulesoft-desenvolvimento`, e `mulesoft-arquitetura` se o projecto desenha APIs e não só as implementa.
+   - **`comercio-digital`:** `comercio-digital`.
 
-   Mostra a lista do domínio e deixa acrescentar ou tirar. Um projecto que seja mesmo os dois leva temas dos dois, mas isso é raro: o normal é ser de um.
+   Mostra a lista dos domínios escolhidos e deixa acrescentar ou tirar.
 3. **O projecto tem fronteiras internas** (módulos que não se importam uns aos outros)? Decide se entram as regras de arquitectura modular.
 4. **Nível de exigência:** só revisão humana, ou também verificações automáticas (lint, testes, hooks) desde o início.
 
@@ -41,10 +49,10 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 
 ```
 <projecto>/
-├── CLAUDE.md              importa @.agents/nucleo.md e diz como trabalhar aqui
+├── CLAUDE.md              importa cada @.agents/nucleo-<dominio>.md e diz como trabalhar aqui
 ├── .agents/
-│   ├── keel.yaml          versão do engine, domínio, temas escolhidos, respostas e data
-│   ├── nucleo.md          as regras que valem em qualquer tarefa (o núcleo do domínio)
+│   ├── keel.yaml          versão do engine, domínios, temas escolhidos, respostas e data
+│   ├── nucleo-<dominio>.md  um por domínio escolhido, importados pelo CLAUDE.md
 │   └── regras/<tema>.md   só os temas escolhidos
 ├── .keel/retrieve.mjs     traz a base de conhecimento (o resto de `.keel/` é cache, fora do git)
 ├── .keel/licoes.mjs       põe em contexto o que já se aprendeu noutros projectos desta máquina
@@ -52,9 +60,9 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 ```
 
 Regras de escrita:
-- **Copia** o núcleo do domínio e os `regras/<tema>.md` do plugin (`${CLAUDE_PLUGIN_ROOT}/regras/`) para dentro do projecto. O núcleo é o `nucleo.md` no domínio `python-agentes` e o `nucleo-salesforce.md` no domínio `salesforce`, e **em qualquer dos casos fica gravado como `.agents/nucleo.md`**, para que o import do `CLAUDE.md` seja sempre o mesmo. Copia-se um, nunca os dois: um projecto de Salesforce não leva as regras de Python nem o contrário. Não uses imports por caminho absoluto: partem noutra máquina e não versionam com o código.
+- **Copia o núcleo de cada domínio escolhido** e os `regras/<tema>.md` do plugin (`${CLAUDE_PLUGIN_ROOT}/regras/`) para dentro do projecto. O núcleo do `python-agentes` é o `nucleo.md`; o de qualquer outro domínio é o `nucleo-<dominio>.md`. Cada um fica em `.agents/` com o seu nome, e o `CLAUDE.md` importa-os um por linha — não os juntes num ficheiro só, porque depois ninguém sabe de onde veio cada linha nem o que actualizar. Copiam-se só os núcleos dos domínios escolhidos: um projecto de MuleSoft não leva o de Salesforce nem o de Python. Não uses imports por caminho absoluto: partem noutra máquina e não versionam com o código.
 - Se o projecto já tiver `CLAUDE.md`, **acrescenta** a secção no fim e não toques no resto.
-- O `keel.yaml` regista a versão do engine, o **domínio** e as escolhas, para se saber depois o que foi gerado e com que base. O domínio fica lá porque é o que decide qual dos núcleos vale, e sem ele ninguém sabe, meses depois, porque é que este projecto tem regras de Apex e o do lado tem regras de LangGraph.
+- O `keel.yaml` regista a versão do engine, os **domínios** e as escolhas, para se saber depois o que foi gerado e com que base. Os domínios ficam lá porque são o que decide quais núcleos valem, e sem eles ninguém sabe, meses depois, porque é que este projecto tem regras de Apex e o do lado tem regras de LangGraph.
 
 ## As fontes das regras
 
@@ -132,6 +140,6 @@ Antes de dares o trabalho por feito, **corre o que acabaste de instalar**: os te
 
 ## Quando acabas
 
-Diz, em cinco linhas: o domínio escolhido, os ficheiros escritos, os temas incluídos e quantas regras trazem, o que ficou por verificar automaticamente, e o comando para confirmar (`/agents` e `/memory`).
+Diz, em cinco linhas: os domínios escolhidos, os ficheiros escritos, os temas incluídos e quantas regras trazem, o que ficou por verificar automaticamente, e o comando para confirmar (`/agents` e `/memory`).
 
 Se o utilizador quiser confirmar uma regra na aula que a originou, a skill `keel-base` traz a base de conhecimento completa.

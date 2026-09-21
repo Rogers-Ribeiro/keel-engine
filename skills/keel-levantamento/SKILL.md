@@ -43,20 +43,20 @@ O que aprenderes aqui entra no enquadramento de **cada** subagente que lançares
 Mecânico e barato. Para o repositório:
 
 - árvore de pastas até dois ou três níveis, e contagem de ficheiros e linhas por pasta;
-- stack e versões — `pyproject.toml`, `package.json`, `requirements*.txt`, `Dockerfile`, `docker-compose*`; e, do outro domínio, `sfdx-project.json`, `manifest/package.xml`, `mule-artifact.json`, POMs com `mule-maven-plugin`, `dw.json`;
-- pontos de entrada — `main.py`, `app.py`, `manage.py`, rotas, `langgraph.json`, workers, tarefas agendadas; e, do outro domínio, `force-app/main/default/` (classes `.cls`, `.trigger`, `lwc/`, `aura/`, `objects/`, `flows/`, `permissionsets/`), ficheiros `.xml` de configuração Mule, e `cartridges/` do SFCC;
+- stack e versões — `pyproject.toml`, `package.json`, `requirements*.txt`, `Dockerfile`, `docker-compose*` (`python-agentes`); `sfdx-project.json`, `manifest/package.xml` (`salesforce`); `mule-artifact.json`, POMs com `mule-maven-plugin` (`mulesoft`); `dw.json`, `cartridges/`, `hooks.json` (`comercio-digital`);
+- pontos de entrada — `main.py`, `app.py`, `manage.py`, rotas, `langgraph.json`, workers, tarefas agendadas (`python-agentes`); `force-app/main/default/` (classes `.cls`, `.trigger`, `lwc/`, `aura/`, `objects/`, `flows/`, `permissionsets/`) (`salesforce`); ficheiros `.xml` de fluxos Mule e `.dwl` (`mulesoft`); `cartridges/` do SFCC (`comercio-digital`);
 - migrações e modelos de dados — e, numa org de Salesforce, os objectos personalizados e os campos, que são o modelo de dados;
 - o que existe de testes e de CI.
 
-Guarda este mapa num ficheiro. É o que dás aos leitores, para nenhum ter de descobrir a estrutura sozinho. **Escreve nele, à cabeça, qual é o domínio** — é o que decide a tabela do passo seguinte.
+Guarda este mapa num ficheiro. É o que dás aos leitores, para nenhum ter de descobrir a estrutura sozinho. **Escreve nele, à cabeça, quais são os domínios** — podem ser mais do que um — porque é o que decide as tabelas do passo seguinte.
 
 ## Passo 3 — os leitores, em paralelo
 
 Um subagente por dimensão, **no máximo 5 ao mesmo tempo**. Cada um recebe: o mapa do passo 2, o que saiu do passo 1, os ficheiros de regras da sua dimensão, e o caminho do ficheiro onde escreve. Nenhum lê o repositório inteiro e nenhum escreve no código.
 
-As dimensões dependem da stack, porque as regras também dependem. Olha para o mapa do passo 2 e escolhe a tabela: um repositório com `sfdx-project.json`, `force-app/`, `mule-artifact.json`, `cartridges/` ou POMs de Mule é do domínio Salesforce/MuleSoft; um repositório Python com agentes é do outro. Um repositório que tenha os dois leva as dimensões das duas tabelas.
+As dimensões dependem da stack, porque as regras também dependem. Olha para o mapa do passo 2 e escolhe as tabelas dos domínios que encontraste — podem ser mais do que uma. Um repositório com `sfdx-project.json`, `force-app/` ou `manifest/package.xml` leva a tabela de `salesforce`; um com `mule-artifact.json` ou POMs de Mule leva a de `mulesoft`; um com `cartridges/` ou `dw.json` leva a de `comercio-digital`; um repositório Python com agentes leva a de `python-agentes`. Um repositório que caia em mais do que um domínio leva as dimensões de todas as tabelas correspondentes.
 
-**Projecto Python com agentes:**
+**Domínio `python-agentes`:**
 
 | Dimensão | Regras que lê |
 |---|---|
@@ -67,7 +67,7 @@ As dimensões dependem da stack, porque as regras também dependem. Olha para o 
 | Operação: filas, observabilidade e deploy | `filas-e-concorrencia.md`, `observabilidade.md`, `producao-ia.md`, `docker-e-deploy.md` |
 | Código e testes | `codigo-limpo.md`, `python.md`, `testes.md` |
 
-**Projecto Salesforce, MuleSoft ou de comércio digital:**
+**Domínio `salesforce`:**
 
 | Dimensão | Regras que lê |
 |---|---|
@@ -76,11 +76,22 @@ As dimensões dependem da stack, porque as regras também dependem. Olha para o 
 | Partilha, visibilidade e identidade | `salesforce-seguranca.md` |
 | Apex e Lightning Web Components | `salesforce-apex.md`, `salesforce-lwc.md` |
 | Integrações, APIs e eventos | `salesforce-integracao.md` |
-| MuleSoft: desenvolvimento e arquitectura | `mulesoft-desenvolvimento.md`, `mulesoft-arquitetura.md` |
 | IA generativa na plataforma | `salesforce-ia.md` |
-| Comércio digital (B2C e B2B) | `comercio-digital.md` |
 
-Numa org de Salesforce sem MuleSoft nem loja, as três últimas dimensões só entram se houver matéria — Agentforce e Prompt Builder, cartridges do SFCC ou uma loja B2B. Sem isso, diz no relatório que ficaram de fora, como fazes com as outras.
+**Domínio `mulesoft`:**
+
+| Dimensão | Regras que lê |
+|---|---|
+| Fluxos, DataWeave e tratamento de erros | `mulesoft-desenvolvimento.md` |
+| Desenho de APIs, camadas e fiabilidade | `mulesoft-arquitetura.md` |
+
+**Domínio `comercio-digital`:**
+
+| Dimensão | Regras que lê |
+|---|---|
+| Loja: catálogo, preço, checkout e extensão por código | `comercio-digital.md` |
+
+Um repositório pode cair em mais do que um domínio, e aí leva as dimensões de todos — uma loja B2B é `comercio-digital` e `salesforce`. A dimensão de IA generativa só entra se houver Agentforce ou Prompt Builder; sem isso, diz no relatório que ficou de fora, como fazes com as outras.
 
 As regras vêm de `${CLAUDE_PLUGIN_ROOT}/regras/`, **não do contrato do projecto**: o levantamento pergunta o que falta, e o que falta costuma estar nos temas que o projecto ainda não adoptou.
 
