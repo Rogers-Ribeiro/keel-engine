@@ -5,7 +5,7 @@ description: Use quando for preciso a base de conhecimento completa por trás da
 
 # keel-base — trazer a base de conhecimento
 
-O plugin traz as regras e os agentes: algumas dezenas de ficheiros. A base de onde essas regras saíram — 25 cursos, milhares de transcrições, as notas por secção e as sínteses — fica num repositório à parte, porque tem dezenas de megabytes e não pode viajar com o plugin.
+O plugin traz as regras e os agentes: algumas dezenas de ficheiros. A base de onde essas regras saíram — 50 cursos em dois domínios (Python com agentes, e Salesforce/MuleSoft), milhares de transcrições, as notas por secção e as sínteses — fica num repositório à parte, porque tem dezenas de megabytes e mais de 8 000 ficheiros, e não pode viajar com o plugin.
 
 Esta skill traz essa base quando ela for mesmo precisa.
 

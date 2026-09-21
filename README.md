@@ -1,6 +1,6 @@
 # Keel — engine
 
-Versão 0.6.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
+Versão 0.7.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
 
 ## Instalar
 
@@ -19,7 +19,7 @@ Versão 0.6.0. **Gerado** a partir da base de conhecimento por `ferramentas/engi
 ## O que traz
 
 - `agents/` — 2 ficheiro(s)
-- `regras/` — 21 ficheiro(s)
+- `regras/` — 33 ficheiro(s)
 - `docs/` — 12 ficheiro(s)
 - `skills/` — 6 ficheiro(s)
 

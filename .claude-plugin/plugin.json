@@ -1,8 +1,8 @@
 {
   "name": "keel",
   "displayName": "Keel",
-  "description": "Agentes de papel e regras com ID para programar com Claude Code, destiladas de 25 cursos e confirmadas nas transcrições. Cada regra tem porquê, como verificar e a aula de origem. A base completa — cursos, notas e sínteses — fica à parte e vem com a skill `keel-base`.",
-  "version": "0.6.0",
+  "description": "Agentes de papel e regras com ID para programar com Claude Code, destiladas de 50 cursos e confirmadas nas transcrições, em dois domínios: Python com agentes, e Salesforce/MuleSoft. Cada domínio tem o seu núcleo, e cada regra tem porquê, como verificar e a aula de origem. A base completa — cursos, notas e sínteses — fica à parte e vem com a skill `keel-base`.",
+  "version": "0.7.0",
   "author": {
     "name": "Rogers Ribeiro"
   },

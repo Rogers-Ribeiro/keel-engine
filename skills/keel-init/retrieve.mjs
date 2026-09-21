@@ -10,8 +10,8 @@
 // base sem correr nada. Sai em silêncio e em milissegundos quando já cá está, e nunca falha a
 // sessão — sem acesso ao repositório privado, explica-se e segue.
 //
-// A base é clonada **uma vez por máquina** e ligada a cada projecto por junction, porque são 54 MB
-// e 5 259 ficheiros. O `.keel/` não entra no repositório do projecto: é cache, não é contrato.
+// A base é clonada **uma vez por máquina** e ligada a cada projecto por junction, porque são umas
+// dezenas de MB e mais de 8 000 ficheiros. O `.keel/` não entra no repositório do projecto: é cache, não é contrato.
 //
 // Correr outra vez é seguro: actualiza o clone e não mexe no que já está na forma pedida.
 import fs from 'node:fs';
@@ -98,7 +98,7 @@ export function clonar(partilhada, { repo = REPO, log = () => {} } = {}) {
     git(['reset', '--hard', `origin/${ramo}`], partilhada);
     return 'actualizada';
   }
-  log(`a clonar a base (~54 MB, sem histórico) para ${partilhada}`);
+  log(`a clonar a base (dezenas de MB, sem histórico) para ${partilhada}`);
   fs.mkdirSync(path.dirname(partilhada), { recursive: true });
   git(['clone', '--depth', '1', repo, partilhada]);
   return 'clonada';

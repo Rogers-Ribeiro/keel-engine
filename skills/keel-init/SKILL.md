@@ -15,12 +15,25 @@ A distinção que manda em tudo o que se segue: o **engine** vive na máquina e 
 2. Se já existir `.agents/keel.yaml`, o projecto já foi iniciado: não reescrevas nada. Diz o que está instalado e pára.
 3. Se o repositório tiver código a sério e nenhum contrato, este não é o caminho certo: o `keel-init` é para projectos novos. Adoptar um repositório existente pede um levantamento primeiro — usa a skill `keel-levantamento`, que diz o que lá está medido contra as regras, e volta aqui depois de haver decisão.
 
+## O domínio, antes das perguntas
+
+A base serve **dois domínios**, e cada um tem o seu núcleo de regras. Antes de perguntar seja o que for, olha para o repositório e decide qual é:
+
+- `sfdx-project.json`, `force-app/`, `manifest/package.xml`, classes `.cls`, `.trigger`, pastas `lwc/` ou `aura/`, `mule-artifact.json`, POMs com `mule-maven-plugin`, `cartridges/` ou `dw.json` → **`salesforce`**.
+- `pyproject.toml`, `requirements*.txt`, `langgraph.json`, código Python → **`python-agentes`**.
+
+Diz qual escolheste e porquê, numa linha, e deixa corrigir. Num repositório vazio, pergunta. A escolha manda no núcleo que copias e nos temas que propões, e fica registada no `keel.yaml` — é o que distingue um projecto que recebe regras de Apex de um que recebe regras de LangGraph.
+
 ## As perguntas — no máximo quatro
 
 Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e propõe um valor por omissão para cada:
 
 1. **Nome do projecto e uma frase sobre o que faz.**
-2. **Temas de regras** que se aplicam. Por omissão, para um projecto Python com agentes: `python`, `codigo-limpo`, `arquitetura`, `testes`, `seguranca`, `agentes-ia`. Mostra a lista completa e deixa acrescentar ou tirar.
+2. **Temas de regras** que se aplicam. A proposta sai do domínio (ponto 0 abaixo), e a lista completa de cada um está em `${CLAUDE_PLUGIN_ROOT}/regras/`:
+   - **Python com agentes:** `python`, `codigo-limpo`, `arquitetura`, `testes`, `seguranca`, `agentes-ia`.
+   - **Salesforce, MuleSoft ou comércio digital:** `salesforce-plataforma`, `salesforce-apex`, `salesforce-dados`, `salesforce-seguranca` — e `salesforce-lwc` se houver componentes, `salesforce-integracao` se houver sistemas externos, `mulesoft-desenvolvimento` e `mulesoft-arquitetura` se houver Mule, `comercio-digital` se houver loja, `salesforce-ia` se houver Agentforce.
+
+   Mostra a lista do domínio e deixa acrescentar ou tirar. Um projecto que seja mesmo os dois leva temas dos dois, mas isso é raro: o normal é ser de um.
 3. **O projecto tem fronteiras internas** (módulos que não se importam uns aos outros)? Decide se entram as regras de arquitectura modular.
 4. **Nível de exigência:** só revisão humana, ou também verificações automáticas (lint, testes, hooks) desde o início.
 
@@ -30,8 +43,8 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 <projecto>/
 ├── CLAUDE.md              importa @.agents/nucleo.md e diz como trabalhar aqui
 ├── .agents/
-│   ├── keel.yaml          versão do engine, temas escolhidos, respostas e data
-│   ├── nucleo.md          as regras que valem em qualquer tarefa
+│   ├── keel.yaml          versão do engine, domínio, temas escolhidos, respostas e data
+│   ├── nucleo.md          as regras que valem em qualquer tarefa (o núcleo do domínio)
 │   └── regras/<tema>.md   só os temas escolhidos
 ├── .keel/retrieve.mjs     traz a base de conhecimento (o resto de `.keel/` é cache, fora do git)
 ├── .keel/licoes.mjs       põe em contexto o que já se aprendeu noutros projectos desta máquina
@@ -39,9 +52,9 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 ```
 
 Regras de escrita:
-- **Copia** o `nucleo.md` e os `regras/<tema>.md` do plugin (`${CLAUDE_PLUGIN_ROOT}/regras/`) para dentro do projecto. Não uses imports por caminho absoluto: partem noutra máquina e não versionam com o código.
+- **Copia** o núcleo do domínio e os `regras/<tema>.md` do plugin (`${CLAUDE_PLUGIN_ROOT}/regras/`) para dentro do projecto. O núcleo é o `nucleo.md` no domínio `python-agentes` e o `nucleo-salesforce.md` no domínio `salesforce`, e **em qualquer dos casos fica gravado como `.agents/nucleo.md`**, para que o import do `CLAUDE.md` seja sempre o mesmo. Copia-se um, nunca os dois: um projecto de Salesforce não leva as regras de Python nem o contrário. Não uses imports por caminho absoluto: partem noutra máquina e não versionam com o código.
 - Se o projecto já tiver `CLAUDE.md`, **acrescenta** a secção no fim e não toques no resto.
-- O `keel.yaml` regista a versão do engine e as escolhas, para se saber depois o que foi gerado e com que base.
+- O `keel.yaml` regista a versão do engine, o **domínio** e as escolhas, para se saber depois o que foi gerado e com que base. O domínio fica lá porque é o que decide qual dos núcleos vale, e sem ele ninguém sabe, meses depois, porque é que este projecto tem regras de Apex e o do lado tem regras de LangGraph.
 
 ## As fontes das regras
 
@@ -53,7 +66,7 @@ Por isso copias `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/retrieve.mjs` para `.kee
 node .keel/retrieve.mjs
 ```
 
-O que ele faz, por esta ordem: clona a base sem histórico para `~/.keel/base` (~54 MB, uma vez por máquina, partilhada por todos os projectos), liga-a a este projecto com uma junction em `.keel/base`, acrescenta `.keel/` ao `.gitignore`, e reescreve as fontes do contrato para caminhos locais. A partir daí, abrir a fonte de uma regra é abrir um ficheiro.
+O que ele faz, por esta ordem: clona a base sem histórico para `~/.keel/base` (umas dezenas de MB, uma vez por máquina, partilhada por todos os projectos), liga-a a este projecto com uma junction em `.keel/base`, acrescenta `.keel/` ao `.gitignore`, e reescreve as fontes do contrato para caminhos locais. A partir daí, abrir a fonte de uma regra é abrir um ficheiro.
 
 ### O hook, que é o que torna isto automático
 
@@ -108,7 +121,7 @@ nada — uma sessão não deve pagar contexto para lhe dizerem que está tudo be
 ### O resto que convém saber
 
 - **Correr outra vez é seguro.** Sem `--auto`, actualiza o clone; com `--auto`, só age se faltar. Nenhum dos dois mexe no que já está na forma certa.
-- **A base não entra no repositório do projecto.** São 5 259 ficheiros; é cache, não é contrato. O `.gitignore` trata disso.
+- **A base não entra no repositório do projecto.** São mais de 8 000 ficheiros; é cache, não é contrato. O `.gitignore` trata disso.
 - **Se preferires um repositório em que as fontes são URLs**, `node .keel/retrieve.mjs --urls` faz o caminho inverso.
 
 Se o clone falhar por falta de acesso, não é problema teu: o repositório é privado e a conta autenticada tem de lá ter entrada. Diz isso e segue — o contrato fica escrito na mesma, só com as fontes em URL.
@@ -119,6 +132,6 @@ Antes de dares o trabalho por feito, **corre o que acabaste de instalar**: os te
 
 ## Quando acabas
 
-Diz, em cinco linhas: os ficheiros escritos, os temas incluídos e quantas regras trazem, o que ficou por verificar automaticamente, e o comando para confirmar (`/agents` e `/memory`).
+Diz, em cinco linhas: o domínio escolhido, os ficheiros escritos, os temas incluídos e quantas regras trazem, o que ficou por verificar automaticamente, e o comando para confirmar (`/agents` e `/memory`).
 
 Se o utilizador quiser confirmar uma regra na aula que a originou, a skill `keel-base` traz a base de conhecimento completa.

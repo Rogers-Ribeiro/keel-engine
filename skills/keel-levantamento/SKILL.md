@@ -43,16 +43,20 @@ O que aprenderes aqui entra no enquadramento de **cada** subagente que lançares
 Mecânico e barato. Para o repositório:
 
 - árvore de pastas até dois ou três níveis, e contagem de ficheiros e linhas por pasta;
-- stack e versões (`pyproject.toml`, `package.json`, `requirements*.txt`, `Dockerfile`, `docker-compose*`);
-- pontos de entrada (`main.py`, `app.py`, `manage.py`, rotas, `langgraph.json`, workers, tarefas agendadas);
-- migrações e modelos de dados;
+- stack e versões — `pyproject.toml`, `package.json`, `requirements*.txt`, `Dockerfile`, `docker-compose*`; e, do outro domínio, `sfdx-project.json`, `manifest/package.xml`, `mule-artifact.json`, POMs com `mule-maven-plugin`, `dw.json`;
+- pontos de entrada — `main.py`, `app.py`, `manage.py`, rotas, `langgraph.json`, workers, tarefas agendadas; e, do outro domínio, `force-app/main/default/` (classes `.cls`, `.trigger`, `lwc/`, `aura/`, `objects/`, `flows/`, `permissionsets/`), ficheiros `.xml` de configuração Mule, e `cartridges/` do SFCC;
+- migrações e modelos de dados — e, numa org de Salesforce, os objectos personalizados e os campos, que são o modelo de dados;
 - o que existe de testes e de CI.
 
-Guarda este mapa num ficheiro. É o que dás aos leitores, para nenhum ter de descobrir a estrutura sozinho.
+Guarda este mapa num ficheiro. É o que dás aos leitores, para nenhum ter de descobrir a estrutura sozinho. **Escreve nele, à cabeça, qual é o domínio** — é o que decide a tabela do passo seguinte.
 
 ## Passo 3 — os leitores, em paralelo
 
 Um subagente por dimensão, **no máximo 5 ao mesmo tempo**. Cada um recebe: o mapa do passo 2, o que saiu do passo 1, os ficheiros de regras da sua dimensão, e o caminho do ficheiro onde escreve. Nenhum lê o repositório inteiro e nenhum escreve no código.
+
+As dimensões dependem da stack, porque as regras também dependem. Olha para o mapa do passo 2 e escolhe a tabela: um repositório com `sfdx-project.json`, `force-app/`, `mule-artifact.json`, `cartridges/` ou POMs de Mule é do domínio Salesforce/MuleSoft; um repositório Python com agentes é do outro. Um repositório que tenha os dois leva as dimensões das duas tabelas.
+
+**Projecto Python com agentes:**
 
 | Dimensão | Regras que lê |
 |---|---|
@@ -62,6 +66,21 @@ Um subagente por dimensão, **no máximo 5 ao mesmo tempo**. Cada um recebe: o m
 | Agentes, grafos e prompts | `agentes-ia.md`, `llm-e-prompts.md`, `rag.md` |
 | Operação: filas, observabilidade e deploy | `filas-e-concorrencia.md`, `observabilidade.md`, `producao-ia.md`, `docker-e-deploy.md` |
 | Código e testes | `codigo-limpo.md`, `python.md`, `testes.md` |
+
+**Projecto Salesforce, MuleSoft ou de comércio digital:**
+
+| Dimensão | Regras que lê |
+|---|---|
+| Configuração declarativa e automação | `salesforce-plataforma.md`, `salesforce-automacao.md` |
+| Modelo de dados, volume e migração | `salesforce-dados.md` |
+| Partilha, visibilidade e identidade | `salesforce-seguranca.md` |
+| Apex e Lightning Web Components | `salesforce-apex.md`, `salesforce-lwc.md` |
+| Integrações, APIs e eventos | `salesforce-integracao.md` |
+| MuleSoft: desenvolvimento e arquitectura | `mulesoft-desenvolvimento.md`, `mulesoft-arquitetura.md` |
+| IA generativa na plataforma | `salesforce-ia.md` |
+| Comércio digital (B2C e B2B) | `comercio-digital.md` |
+
+Numa org de Salesforce sem MuleSoft nem loja, as três últimas dimensões só entram se houver matéria — Agentforce e Prompt Builder, cartridges do SFCC ou uma loja B2B. Sem isso, diz no relatório que ficaram de fora, como fazes com as outras.
 
 As regras vêm de `${CLAUDE_PLUGIN_ROOT}/regras/`, **não do contrato do projecto**: o levantamento pergunta o que falta, e o que falta costuma estar nos temas que o projecto ainda não adoptou.
 
@@ -99,7 +118,7 @@ O que cada leitor devolve, no seu ficheiro:
 
 Passo separado, depois dos leitores, porque não se responde lendo regras: responde-se comparando o que existe com uma lista de capacidades. Para cada capacidade do alvo, uma linha: **existe**, **existe a meio**, ou **não existe** — com o ficheiro que o prova, ou a constatação de que não há ficheiro nenhum.
 
-Quando o alvo é uma **plataforma multi-tenant**, a lista é esta, e a primeira linha é a que decide se o resto interessa:
+Quando o alvo é uma **plataforma multi-tenant** construída sobre uma base de dados própria, a lista é esta, e a primeira linha é a que decide se o resto interessa. Numa org de Salesforce a pergunta não se põe nestes termos — o isolamento é da plataforma, e o que se audita é o modelo de partilha (`salesforce-seguranca`): OWD, hierarquia de papéis, regras de partilha e `with sharing` no Apex.
 
 | Capacidade | Como se verifica |
 |---|---|
