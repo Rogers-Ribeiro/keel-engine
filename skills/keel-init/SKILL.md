@@ -15,7 +15,7 @@ A distinção que manda em tudo o que se segue: o **engine** vive na máquina e 
 2. Se já existir `.agents/keel.yaml`, o projecto já foi iniciado: não reescrevas nada. Diz o que está instalado e pára.
 3. Se o repositório tiver código a sério e nenhum contrato, este não é o caminho certo: o `keel-init` é para projectos novos. Adoptar um repositório existente pede um levantamento primeiro — usa a skill `keel-levantamento`, que diz o que lá está medido contra as regras, e volta aqui depois de haver decisão.
 
-## O domínio, antes das perguntas
+## Os domínios, antes das perguntas
 
 A base serve **quatro domínios**, e cada um tem o seu núcleo de regras. Um projecto carrega **os que lhe servem** — muitas vezes um, às vezes dois. Antes de perguntar seja o que for, olha para o repositório:
 
@@ -52,7 +52,7 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 ├── CLAUDE.md              importa cada @.agents/nucleo-<dominio>.md e diz como trabalhar aqui
 ├── .agents/
 │   ├── keel.yaml          versão do engine, domínios, temas escolhidos, respostas e data
-│   ├── nucleo-<dominio>.md  um por domínio escolhido, importados pelo CLAUDE.md
+│   ├── nucleo-<dominio>.md  um por domínio escolhido (o do python-agentes é nucleo.md), importados pelo CLAUDE.md
 │   └── regras/<tema>.md   só os temas escolhidos
 ├── .keel/retrieve.mjs     traz a base de conhecimento (o resto de `.keel/` é cache, fora do git)
 ├── .keel/licoes.mjs       põe em contexto o que já se aprendeu noutros projectos desta máquina
