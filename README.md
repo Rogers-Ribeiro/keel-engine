@@ -1,6 +1,6 @@
 # Keel — engine
 
-Versão 0.10.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
+Versão 0.11.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
 
 ## Instalar
 
@@ -21,6 +21,7 @@ conforme o projecto ja tenha codigo ou nao, e o que o /keel-init escreve.
 - `/keel-design` — desenhar antes de haver spec
 - `/keel-init` — escrever o contrato num projecto
 - `/keel-lesson` — que o mesmo erro não se aprenda duas vezes
+- `/keel-upgrade` — actualizar o contrato sem perder o que lá está
 
 ## O que traz
 
@@ -28,7 +29,7 @@ conforme o projecto ja tenha codigo ou nao, e o que o /keel-init escreve.
 - `regras/` — 35 ficheiro(s)
 - `docs/` — 13 ficheiro(s)
 - `caminhos.json/` — 1 ficheiro(s)
-- `skills/` — 8 ficheiro(s)
+- `skills/` — 10 ficheiro(s)
 
 ## O que não traz
 

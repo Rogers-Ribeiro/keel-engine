@@ -17,13 +17,14 @@ bodies are in Portuguese.
 Then **start a new session**. Plugins are loaded at startup, so a session that is already running
 will not see the new commands.
 
-## The five commands
+## The six commands
 
 | Command | Use it when |
 |---|---|
 | `/keel-init` | A project needs the contract written into it. New projects. |
 | `/keel-audit` | A project already has code and you want to know what it violates, before adopting anything. |
 | `/keel-design` | A process or a whole vertical needs designing before there is a spec. |
+| `/keel-upgrade` | The engine moved on and the project's contract is behind. |
 | `/keel-lesson` | Claude made a mistake worth remembering, or the same one twice. |
 | `/keel-base` | You want to read the lecture a rule came from, or search the courses themselves. |
 
@@ -111,7 +112,24 @@ documentation, because no course covered it, and the rule says so.
 It does **not** touch the contract already written into a project. That is deliberate: the contract
 is versioned with your code, and an update must never change the rules of a project in production
 without someone deciding it. `.agents/keel.yaml` records the engine version the contract was written
-from, so you can see when it has fallen behind and review the diff before taking it.
+from.
+
+**`/keel-upgrade` is how the contract catches up.** A contract that has been in use is not a copy of
+the engine any more: rules get edited for the project, new ones are born there, and sections grow
+prose that only makes sense locally. So the merge is **rule by rule**, keyed on the rule ID, against
+three versions — the engine the contract came from, the engine now, and your files.
+
+| Your rule | What happens |
+|---|---|
+| Untouched since you installed | takes the new version, silently |
+| You edited it | **yours is kept**; the engine does not touch it |
+| Born in this project | kept, and flagged as a candidate to promote |
+| Born here and since promoted upstream | yours is kept, and **you are asked** |
+| New in the engine | inserted after the rule numbered just below it |
+| Gone from the engine | kept anyway, and reported |
+
+Nothing is ever deleted, and nothing is committed — you review a `git diff`. Run it without
+`--aplicar` first to see the report and write nothing.
 
 ## Where the rules come from
 
