@@ -15,6 +15,7 @@ Este é o núcleo de um projecto de MuleSoft, e não substitui os outros núcleo
 - A especificação fecha-se, simula-se e recolhe feedback antes da primeira linha de implementação; cada ronda de comentários corrige a especificação, não o código: **MULD-001**, **MULA-005**.
 - As validações estruturais declaram-se no contrato e não se repetem dentro do fluxo: **MULA-010**, **MULD-002**.
 - O que se repete entre APIs sai para um fragmento versionado e publicado, nunca copiado: **MULD-003**, **MULA-006**.
+- A premissa pergunta-se primeiro, numa frase — o que é isto, para quem, e quem carrega no botão — e a quem não leu nada.
 - Cada camada justifica-se — Process API só para combinar System APIs, Experience API só para audiências diferentes, System API sem transformar —, cada API é um bounded context e quem chama é que se adapta: **MULA-001**, **MULA-002**, **MULA-003**, **MULA-008**, **MULA-009**.
 
 ## Estrutura do projecto

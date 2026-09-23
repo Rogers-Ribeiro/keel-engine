@@ -14,6 +14,7 @@ Este é o núcleo de um projecto de Salesforce e não substitui os outros núcle
 ## Antes de escrever código
 
 - O declarativo esgota-se antes de se propor Apex: **SFA-001**, **APX-001**, **SFP-017**; aprovar é approval process, apagar e pedir input ao utilizador são flow: **SFA-002**, **SFA-004**.
+- A premissa pergunta-se primeiro, numa frase — o que é isto, para quem, e quem carrega no botão — e a quem não leu nada.
 - Uma integração classifica-se num padrão antes de se escolher a tecnologia, e o fluxo OAuth sai de o cliente conseguir ou não guardar segredos: **SFX-020**, **SFX-001**.
 
 ## Configuração declarativa: acesso, dados e ambientes

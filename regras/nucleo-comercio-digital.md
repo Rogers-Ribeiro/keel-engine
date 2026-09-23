@@ -10,6 +10,10 @@ Este é o núcleo de um projecto de comércio digital, e não substitui os outro
 - Alterações empurradas directamente para produção, ou o valor por ambiente editado à mão depois da promoção: **COM-001**, **COM-002**.
 - O client ID genérico do sandbox fora do sandbox: **COM-003**.
 
+## Antes de escrever código
+
+- A premissa pergunta-se primeiro, numa frase — o que é isto, para quem, e quem carrega no botão — e a quem não leu nada.
+
 ## B2C Commerce: cartridges, cache e catálogo
 
 - Módulos por `require`, no âmbito mais restrito, e o `hooks.json` declarado no `package.json` do próprio cartridge: **COM-009**, **COM-010**.

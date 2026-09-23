@@ -1,6 +1,6 @@
 # Keel — engine
 
-Versão 0.8.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
+Versão 0.9.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
 
 ## Instalar
 
@@ -12,6 +12,7 @@ Versão 0.8.0. **Gerado** a partir da base de conhecimento por `ferramentas/engi
 ## As skills
 
 - `/keel-base` — trazer a base de conhecimento
+- `/keel-desenho` — desenhar antes de haver spec
 - `/keel-init` — escrever o contrato num projecto
 - `/keel-levantamento` — auditar código que já existe
 - `/keel-licao` — que o mesmo erro não se aprenda duas vezes
@@ -21,7 +22,7 @@ Versão 0.8.0. **Gerado** a partir da base de conhecimento por `ferramentas/engi
 - `agents/` — 2 ficheiro(s)
 - `regras/` — 35 ficheiro(s)
 - `docs/` — 12 ficheiro(s)
-- `skills/` — 6 ficheiro(s)
+- `skills/` — 8 ficheiro(s)
 
 ## O que não traz
 

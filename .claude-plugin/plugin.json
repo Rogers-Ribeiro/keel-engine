@@ -2,7 +2,7 @@
   "name": "keel",
   "displayName": "Keel",
   "description": "Agentes de papel e regras com ID para programar com Claude Code, destiladas de 50 cursos e confirmadas nas transcrições, em quatro domínios: Python com agentes, Salesforce, MuleSoft e comércio digital. Cada domínio tem o seu núcleo, e cada regra tem porquê, como verificar e a aula de origem. A base completa — cursos, notas e sínteses — fica à parte e vem com a skill `keel-base`.",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "author": {
     "name": "Rogers Ribeiro"
   },
