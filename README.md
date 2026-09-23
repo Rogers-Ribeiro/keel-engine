@@ -1,6 +1,6 @@
 # Keel — engine
 
-Versão 0.9.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
+Versão 0.10.0. **Gerado** a partir da base de conhecimento por `ferramentas/engine.mjs`; não se edita aqui.
 
 ## Instalar
 
@@ -9,19 +9,25 @@ Versão 0.9.0. **Gerado** a partir da base de conhecimento por `ferramentas/engi
 /plugin install keel@keel-engine
 ```
 
+## Comecar
+
+Le [docs/using-keel.md](docs/using-keel.md) — o que cada comando faz, por onde se comeca
+conforme o projecto ja tenha codigo ou nao, e o que o /keel-init escreve.
+
 ## As skills
 
+- `/keel-audit` — auditar código que já existe
 - `/keel-base` — trazer a base de conhecimento
-- `/keel-desenho` — desenhar antes de haver spec
+- `/keel-design` — desenhar antes de haver spec
 - `/keel-init` — escrever o contrato num projecto
-- `/keel-levantamento` — auditar código que já existe
-- `/keel-licao` — que o mesmo erro não se aprenda duas vezes
+- `/keel-lesson` — que o mesmo erro não se aprenda duas vezes
 
 ## O que traz
 
 - `agents/` — 2 ficheiro(s)
 - `regras/` — 35 ficheiro(s)
-- `docs/` — 12 ficheiro(s)
+- `docs/` — 13 ficheiro(s)
+- `caminhos.json/` — 1 ficheiro(s)
 - `skills/` — 8 ficheiro(s)
 
 ## O que não traz

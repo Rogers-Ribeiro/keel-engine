@@ -5,7 +5,7 @@ que nenhum curso ensina. Nenhum dos cursos extraídos trata de como um agente de
 o que aprendeu entre projectos — a **PROC-005** chega a dizer *"corrige a skill, não só o
 resultado"*, mas não diz onde fica o que se corrigiu nem como chega ao projecto seguinte.
 
-Escrita a 2026-09-18, a partir do desenho da skill `keel-licao` e do que se observou num
+Escrita a 2026-09-18, a partir do desenho da skill `keel-lesson` e do que se observou num
 repositório real com um ficheiro de lições mantido à mão.
 
 ## O problema

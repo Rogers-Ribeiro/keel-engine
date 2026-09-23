@@ -34,7 +34,7 @@ export const MAX_LICOES = 12;
 
 const CABECALHO = `# Lições — o que já correu mal e ficou decidido
 
-Escritas pela skill \`keel-licao\` quando o mesmo erro reincide. Entram no contexto de cada sessão,
+Escritas pela skill \`keel-lesson\` quando o mesmo erro reincide. Entram no contexto de cada sessão,
 em qualquer projecto desta máquina. Quando uma se confirma, promove-se a regra com ID na base do
 Keel e sai daqui: este ficheiro é uma sala de espera, não uma casa.
 `;
@@ -233,7 +233,7 @@ export function textoParaContexto(pasta, { minimo = MINIMO, maxLicoes = MAX_LICO
     for (const p of pendentes) {
       partes.push(`- \`${p.chave}\` — ${p.oQue} (${p.n}×, em ${enumerar(p.projectos)}; última ${p.ultima})`);
     }
-    partes.push('\nSe algum se repetir outra vez nesta sessão, propõe uma lição com a skill `keel-licao`.');
+    partes.push('\nSe algum se repetir outra vez nesta sessão, propõe uma lição com a skill `keel-lesson`.');
   }
 
   return partes.length ? `${partes.join('\n')}\n` : '';

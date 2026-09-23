@@ -212,3 +212,11 @@ todas passam nos testes que só usam um tenant. A DB-024 é a que apanha as outr
 **Como verificar:** existe um teste por tabela com `tenant_id`; corre com o utilizador da aplicação e não com o das migrações; e falha quando se remove o `FORCE` da tabela.
 **Fonte:** [referência](../docs/postgres-multitenancy.md)
 **Cursos:** 0
+
+### DB-025 — Vectores na mesma base, particionados por hash do tenant
+
+**Regra:** os embeddings vivem numa tabela `pgvector` na **mesma base de dados** da aplicação, sujeita às DB-018 a DB-024 como qualquer outra tabela com `tenant_id`. O particionamento é por **hash do `tenant_id` com um módulo fixo** — da ordem de dezenas a poucas centenas de partições —, nunca uma partição por tenant. O `tenant_id` entra na chave de partição, e o índice vectorial cria-se na tabela particionada, não partição a partição.
+**Porquê:** uma partição por tenant reproduz o tecto que faz cair o schema-por-tenant, encontrado noutro sítio. O planeador aguenta alguns milhares de partições, mas o custo que morde primeiro é a **memória por sessão**: o catálogo de cada partição é carregado na memória local de cada sessão que lhe toque. Com dezenas de milhares de tenants isso degrada-se muito antes de os dados serem grandes. O módulo fixo dá a localidade que se procurava sem que o número de partições cresça com os clientes, e manter o `tenant_id` na chave é o que permite à RLS e aos índices continuarem a podar. Guardar os vectores na mesma base é o que mantém **uma só** política de isolamento, em vez de haver um segundo mecanismo a proteger os embeddings.
+**Como verificar:** a tabela de embeddings tem RLS activa e forçada, como a DB-018 exige; `SELECT partstrat FROM pg_partitioned_table` para essa tabela devolve `h`; a chave de partição inclui o `tenant_id`; o número de partições é uma constante do esquema e não função do número de tenants; e existe o teste de dois tenants da DB-024 sobre ela.
+**Fonte:** [referência](../docs/postgres-multitenancy.md)
+**Cursos:** 0

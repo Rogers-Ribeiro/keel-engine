@@ -1,9 +1,9 @@
 ---
-name: keel-licao
-description: Use quando o utilizador corrigir um erro teu, quando uma revisão ou um teste apanhar algo que devias saber, e quando o arranque da sessão disser que um erro já reincidiu. Regista a ocorrência, e quando a mesma coisa acontece outra vez propõe transformá-la numa lição que passa a valer em todos os projectos. Use também quando o utilizador disser "isto já erraste antes", "regista esta lição" ou "/keel-licao".
+name: keel-lesson
+description: Use quando o utilizador corrigir um erro teu, quando uma revisão ou um teste apanhar algo que devias saber, e quando o arranque da sessão disser que um erro já reincidiu. Regista a ocorrência, e quando a mesma coisa acontece outra vez propõe transformá-la numa lição que passa a valer em todos os projectos. Use também quando o utilizador disser "isto já erraste antes", "regista esta lição" ou "/keel-lesson".
 ---
 
-# keel-licao — que o mesmo erro não se aprenda duas vezes
+# keel-lesson — que o mesmo erro não se aprenda duas vezes
 
 O contrato do Keel desce: cursos → regras → projectos. Não há caminho de volta. Um erro apanhado
 num projecto fica nesse projecto, e o projecto seguinte começa sem ele.
@@ -52,7 +52,7 @@ Não conta, e escrever isto é o que enche o registo de ruído:
 ## Passo 1 — registar a ocorrência
 
 O script está em `.keel/licoes.mjs` (nos projectos iniciados pelo `keel-init`) ou em
-`${CLAUDE_PLUGIN_ROOT}/skills/keel-licao/licoes.mjs`. Tanto faz qual corres: **o registo é um só por
+`${CLAUDE_PLUGIN_ROOT}/skills/keel-lesson/licoes.mjs`. Tanto faz qual corres: **o registo é um só por
 máquina**, em `~/.keel/`, ao lado da base. É isso que torna a coisa transversal.
 
 ```

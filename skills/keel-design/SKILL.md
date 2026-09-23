@@ -1,9 +1,9 @@
 ---
-name: keel-desenho
-description: Use quando um processo ou uma vertical precisa de ser desenhado antes de haver spec — quem faz o quê, por que ordem, e o que cada pessoa vê. Use antes do brainstorming e da spec, e não para alterações pontuais. Use também quando o utilizador disser "vamos desenhar isto", "faz um quadro disto" ou "/keel-desenho".
+name: keel-design
+description: Use quando um processo ou uma vertical precisa de ser desenhado antes de haver spec — quem faz o quê, por que ordem, e o que cada pessoa vê. Use antes do brainstorming e da spec, e não para alterações pontuais. Use também quando o utilizador disser "vamos desenhar isto", "faz um quadro disto" ou "/keel-design".
 ---
 
-# keel-desenho — desenhar antes de haver spec
+# keel-design — desenhar antes de haver spec
 
 Entregas três coisas: um **canvas** em baixa fidelidade, onde o utilizador marca por cima com
 caneta e setas; uma **página durável** no git, com a premissa acordada, as fases e as decisões; e

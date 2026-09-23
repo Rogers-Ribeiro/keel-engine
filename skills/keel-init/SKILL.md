@@ -13,7 +13,7 @@ A distinção que manda em tudo o que se segue: o **engine** vive na máquina e 
 
 1. Confirma que estás na raiz do repositório do projecto (há `.git`), e **não** dentro do keel nem da base de conhecimento.
 2. Se já existir `.agents/keel.yaml`, o projecto já foi iniciado: não reescrevas nada. Diz o que está instalado e pára.
-3. Se o repositório tiver código a sério e nenhum contrato, este não é o caminho certo: o `keel-init` é para projectos novos. Adoptar um repositório existente pede um levantamento primeiro — usa a skill `keel-levantamento`, que diz o que lá está medido contra as regras, e volta aqui depois de haver decisão.
+3. Se o repositório tiver código a sério e nenhum contrato, este não é o caminho certo: o `keel-init` é para projectos novos. Adoptar um repositório existente pede um levantamento primeiro — usa a skill `keel-audit`, que diz o que lá está medido contra as regras, e volta aqui depois de haver decisão.
 
 ## Os domínios, antes das perguntas
 
@@ -52,17 +52,44 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 ├── CLAUDE.md              importa cada @.agents/nucleo-<dominio>.md e diz como trabalhar aqui
 ├── .agents/
 │   ├── keel.yaml          versão do engine, domínios, temas escolhidos, respostas e data
-│   ├── nucleo-<dominio>.md  um por domínio escolhido (o do python-agentes é nucleo.md), importados pelo CLAUDE.md
-│   └── regras/<tema>.md   só os temas escolhidos
+│   └── nucleo-<dominio>.md  um por domínio escolhido (o do python-agentes é nucleo.md), importados pelo CLAUDE.md
+├── .claude/rules/<tema>.md  as regras dos temas escolhidos, com `paths:` no frontmatter
 ├── .keel/retrieve.mjs     traz a base de conhecimento (o resto de `.keel/` é cache, fora do git)
 ├── .keel/licoes.mjs       põe em contexto o que já se aprendeu noutros projectos desta máquina
 └── .claude/settings.json  os hooks SessionStart, mais permissões e hooks do nível escolhido
 ```
 
 Regras de escrita:
-- **Copia o núcleo de cada domínio escolhido** e os `regras/<tema>.md` do plugin (`${CLAUDE_PLUGIN_ROOT}/regras/`) para dentro do projecto. O núcleo do `python-agentes` é o `nucleo.md`; o de qualquer outro domínio é o `nucleo-<dominio>.md`. Cada um fica em `.agents/` com o seu nome, e o `CLAUDE.md` importa-os um por linha — não os juntes num ficheiro só, porque depois ninguém sabe de onde veio cada linha nem o que actualizar. Copiam-se só os núcleos dos domínios escolhidos: um projecto de MuleSoft não leva o de Salesforce nem o de Python. Não uses imports por caminho absoluto: partem noutra máquina e não versionam com o código.
+- **Copia o núcleo de cada domínio escolhido** para `.agents/`, e os ficheiros de tema do plugin (`${CLAUDE_PLUGIN_ROOT}/regras/`) para **`.claude/rules/`**. O núcleo do `python-agentes` é o `nucleo.md`; o de qualquer outro domínio é o `nucleo-<dominio>.md`. Cada um fica em `.agents/` com o seu nome, e o `CLAUDE.md` importa-os um por linha — não os juntes num ficheiro só, porque depois ninguém sabe de onde veio cada linha nem o que actualizar. Copiam-se só os núcleos dos domínios escolhidos: um projecto de MuleSoft não leva o de Salesforce nem o de Python. Não uses imports por caminho absoluto: partem noutra máquina e não versionam com o código.
 - Se o projecto já tiver `CLAUDE.md`, **acrescenta** a secção no fim e não toques no resto.
 - O `keel.yaml` regista a versão do engine, os **domínios** e as escolhas, para se saber depois o que foi gerado e com que base. Os domínios ficam lá porque são o que decide quais núcleos valem, e sem eles ninguém sabe, meses depois, porque é que este projecto tem regras de Apex e o do lado tem regras de LangGraph.
+
+## Os `paths`: a regra chega sozinha, quando morde
+
+O núcleo entra sempre em contexto, e é pequeno de propósito. Os ficheiros de tema são o contrário — num projecto de Salesforce são 143 regras e 17 mil palavras, e pô-las sempre em contexto é a maneira mais segura de nenhuma ser lida: o que fica no meio de um contexto longo é ignorado.
+
+Por isso vão para `.claude/rules/`, com `paths:` no frontmatter. O Claude Code carrega a regra **quando lê um ficheiro que case com o padrão**, e não a cada sessão:
+
+```markdown
+---
+paths:
+  - "force-app/**/classes/**"
+  - "force-app/**/triggers/**"
+  - "**/*.cls"
+---
+
+# Salesforce: Apex
+...
+```
+
+**Os padrões saem do `${CLAUDE_PLUGIN_ROOT}/caminhos.json`**, um por tema, e não se inventam projecto a projecto — é essa a diferença entre uma convenção e cada um a fazer o seu.
+
+**Mas há dois tipos de padrão, e tratam-se de maneira diferente:**
+
+- **Domínios de plataforma** (`salesforce`, `mulesoft`, `comercio-digital`): o caminho é **canónico**. Apex vive em `force-app/**/classes/**` em qualquer org, porque é a plataforma que manda. Copia-se tal e qual.
+- **Domínio `python-agentes`**: o caminho é **convenção**, e varia. Onde vivem os modelos, os workers ou os prompts é decisão de cada projecto. Aqui os padrões da base são um ponto de partida: **confirma cada um contra a estrutura real** que mapeaste, e corrige o que não bater. Um padrão que não casa com nada é uma regra que nunca carrega, e ninguém dá por isso.
+
+Diz ao utilizador, numa linha, quais é que ajustaste e porquê.
 
 ## As fontes das regras
 
@@ -117,14 +144,14 @@ Três cuidados ao escrever isto:
 
 ### O segundo hook: o que já se aprendeu noutros projectos
 
-Copia também `${CLAUDE_PLUGIN_ROOT}/skills/keel-licao/licoes.mjs` para `.keel/licoes.mjs`. É o que
+Copia também `${CLAUDE_PLUGIN_ROOT}/skills/keel-lesson/licoes.mjs` para `.keel/licoes.mjs`. É o que
 põe em contexto as lições — não deste projecto, de **todos** os projectos desta máquina. Um projecto
 novo arranca já com o que os outros aprenderam, que é o contrário do que costuma acontecer.
 
 O registo em si fica em `~/.keel/`, ao lado da base, e não no repositório: é estado local, muda a
 cada sessão e não tem nada que produzir diffs. Quando não há lições nenhumas o hook não escreve
 nada — uma sessão não deve pagar contexto para lhe dizerem que está tudo bem. O resto está na skill
-`keel-licao`.
+`keel-lesson`.
 
 ### O resto que convém saber
 

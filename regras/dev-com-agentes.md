@@ -277,7 +277,7 @@ Prefixo `PROC`. Regras confirmadas nas transcrições a 2026-09-17. Síntese de 
 Estas duas regras não saem de curso nenhum. Nenhum dos cursos extraídos trata de como um agente
 acumula o que aprendeu entre projectos: a PROC-005 manda corrigir a skill e não só o resultado, mas
 não diz onde fica o que se corrigiu nem como chega ao projecto seguinte. Saem da referência
-[licoes-do-agente](../docs/licoes-do-agente.md) e da skill `keel-licao`, que as executa.
+[licoes-do-agente](../docs/licoes-do-agente.md) e da skill `keel-lesson`, que as executa.
 
 ### PROC-033 — Erro evitável regista-se com prova; lição só à reincidência
 

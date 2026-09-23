@@ -65,6 +65,34 @@ A documentação é explícita, e cada uma destas é um canal de fuga:
 - **Custo de desempenho** quando as políticas bloqueiam linhas (por exemplo `SELECT ... FOR SHARE`) em tabelas
   muito escritas.
 
+## Particionar por tenant: porque não uma partição por tenant
+
+Confirmado na documentação oficial a 2026-09-23, em
+[Table Partitioning](https://www.postgresql.org/docs/16/ddl-partitioning.html).
+
+O planeador aguenta **«up to a few thousand partitions fairly well»**, e só quando a poda deixa poucas de pé:
+*«planning times become longer and memory consumption becomes higher when more partitions remain after the
+planner performs partition pruning»*. Numa plataforma com dezenas de milhares de tenants, uma partição por
+tenant passa esse número por uma ordem de grandeza.
+
+O argumento decisivo, porém, não é o do planeamento — é o da **memória por sessão**:
+
+> *«the server's memory consumption may grow significantly over time, especially if many sessions touch large
+> numbers of partitions. That's because each partition requires its metadata to be loaded into the local memory
+> of each session that touches it.»*
+
+É o mesmo tecto que faz cair o schema-por-tenant, encontrado noutro sítio: o custo não está nos dados, está no
+catálogo que cada sessão tem de carregar.
+
+**A alternativa é o hash com módulo fixo.** O Postgres define cada partição por um módulo e um resto — *«the
+hash value of the partition key divided by the specified modulus will produce the specified remainder»* —, e o
+número de partições deixa de ser função do número de clientes. A chave de partição inclui o `tenant_id`, para
+que a RLS e os índices continuem a poder podar.
+
+**Os índices não se criam à mão por partição.** Um índice criado na tabela particionada *«automatically creates
+a matching index on each partition, and any partitions you create or attach later will also have such an
+index»* — o que vale também para um índice vectorial sobre uma coluna `pgvector`.
+
 ## O que isto implica para as regras
 
 | Regra a escrever | Como se verifica |
