@@ -54,7 +54,7 @@ Guarda este mapa num ficheiro. É o que dás aos leitores, para nenhum ter de de
 
 Um subagente por dimensão, **no máximo 5 ao mesmo tempo**. Cada um recebe: o mapa do passo 2, o que saiu do passo 1, os ficheiros de regras da sua dimensão, e o caminho do ficheiro onde escreve. Nenhum lê o repositório inteiro e nenhum escreve no código.
 
-As dimensões dependem da stack, porque as regras também dependem. Olha para o mapa do passo 2 e escolhe as tabelas dos domínios que encontraste — podem ser mais do que uma. Um repositório com `sfdx-project.json`, `force-app/` ou `manifest/package.xml` leva a tabela de `salesforce`; um com `mule-artifact.json` ou POMs de Mule leva a de `mulesoft`; um com `cartridges/` ou `dw.json` leva a de `comercio-digital`; um repositório Python com agentes leva a de `python-agentes`. Um repositório que caia em mais do que um domínio leva as dimensões de todas as tabelas correspondentes.
+As dimensões dependem da stack, porque as regras também dependem. Olha para o mapa do passo 2 e escolhe as tabelas dos domínios que encontraste — podem ser mais do que uma. Um repositório com `sfdx-project.json`, `force-app/` ou `manifest/package.xml` leva a tabela de `salesforce`; um com `mule-artifact.json` ou POMs de Mule leva a de `mulesoft`; um com `cartridges/` ou `dw.json` leva a de `comercio-digital`; um repositório Python com agentes leva a de `python-agentes`; um com `package.json` e TypeScript leva a de `javascript`, mais a de `web-react` se tiver React no browser (`vite.config.*`, `next.config.*`, `tsr.config.json`, `components.json`) e a de `mobile-react-native` se tiver `app.json` de Expo, `android/` ou `ios/`. Um repositório que caia em mais do que um domínio leva as dimensões de todas as tabelas correspondentes.
 
 **Domínio `python-agentes`:**
 
@@ -90,6 +90,25 @@ As dimensões dependem da stack, porque as regras também dependem. Olha para o 
 | Dimensão | Regras que lê |
 |---|---|
 | Loja: catálogo, preço, checkout e extensão por código | `comercio-digital.md` |
+
+**Domínio `javascript`:**
+
+| Dimensão | Regras que lê |
+|---|---|
+| Tipos, módulos e fronteiras do sistema | `javascript-e-typescript.md` |
+| Servidor: rotas, sessões, erros e ficheiros | `node-servidor.md` |
+
+**Domínio `web-react`:**
+
+| Dimensão | Regras que lê |
+|---|---|
+| Componentes, estado e efeitos | `web-react.md` |
+
+**Domínio `mobile-react-native`:**
+
+| Dimensão | Regras que lê |
+|---|---|
+| Ecrãs, navegação, plataforma e dados locais | `mobile-react-native.md` |
 
 Um repositório pode cair em mais do que um domínio, e aí leva as dimensões de todos — uma loja B2B é `comercio-digital` e `salesforce`. A dimensão de IA generativa só entra se houver Agentforce ou Prompt Builder; sem isso, diz no relatório que ficou de fora, como fazes com as outras.
 

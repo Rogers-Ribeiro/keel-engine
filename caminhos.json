@@ -1,38 +1,223 @@
 {
   "_leia-me": "Onde mora a matéria de cada tema, em padrões glob. O keel-init escreve isto no `paths:` do frontmatter de `.claude/rules/<tema>.md`, e o Claude Code carrega a regra quando lê um ficheiro que case. Nos domínios de plataforma (salesforce, mulesoft, comercio-digital) o caminho é canónico: é a plataforma que manda, e não muda de projecto para projecto. No domínio python-agentes é convenção, e o `keel-init` confirma cada padrão contra a estrutura real do repositório antes de o escrever.",
-
-  "salesforce-plataforma": ["force-app/**/objects/**", "force-app/**/layouts/**", "force-app/**/applications/**", "force-app/**/tabs/**", "force-app/**/quickActions/**"],
-  "salesforce-automacao": ["force-app/**/flows/**", "force-app/**/workflows/**", "force-app/**/approvalProcesses/**", "force-app/**/assignmentRules/**", "force-app/**/escalationRules/**"],
-  "salesforce-apex": ["force-app/**/classes/**", "force-app/**/triggers/**", "**/*.cls", "**/*.trigger"],
-  "salesforce-lwc": ["force-app/**/lwc/**", "force-app/**/aura/**", "force-app/**/pages/**", "**/*.page", "**/*.cmp"],
-  "salesforce-dados": ["force-app/**/objects/**", "force-app/**/duplicateRules/**", "force-app/**/matchingRules/**", "manifest/**", "data/**"],
-  "salesforce-seguranca": ["force-app/**/permissionsets/**", "force-app/**/profiles/**", "force-app/**/sharingRules/**", "force-app/**/connectedApps/**", "force-app/**/samlSsoConfigs/**"],
-  "salesforce-integracao": ["force-app/**/namedCredentials/**", "force-app/**/externalCredentials/**", "force-app/**/remoteSiteSettings/**", "force-app/**/platformEventChannels/**", "force-app/**/externalServiceRegistrations/**"],
-  "salesforce-ia": ["force-app/**/genAi*/**", "force-app/**/promptTemplates/**", "force-app/**/einstein*/**"],
-
-  "mulesoft-desenvolvimento": ["src/main/mule/**", "**/*.dwl", "src/main/resources/**", "src/test/munit/**"],
-  "mulesoft-arquitetura": ["src/main/api/**", "**/*.raml", "mule-artifact.json", "pom.xml"],
-
-  "comercio-digital": ["cartridges/**", "**/*.isml", "dw.json", "**/hooks.json"],
-
-  "python": ["**/*.py", "pyproject.toml"],
-  "codigo-limpo": ["**/*.{py,js,ts,tsx,cls,trigger,java}"],
-  "padroes-de-projeto": ["**/*.{py,js,ts,tsx,cls,java}"],
-  "arquitetura": ["**/*.{py,ts,js}", "pyproject.toml", "src/**"],
-  "testes": ["**/test_*.py", "**/*_test.py", "tests/**", "**/*.test.{ts,js,tsx}", "**/*.spec.{ts,js}"],
-  "persistencia": ["**/models/**", "**/migrations/**", "**/*.sql", "alembic/**", "**/schema*"],
-  "filas-e-concorrencia": ["**/workers/**", "**/tasks/**", "**/queue*/**", "**/celery*"],
-  "api-e-contratos": ["**/api/**", "**/routers/**", "**/endpoints/**", "**/*openapi*.{yaml,yml,json}"],
-  "observabilidade": ["**/logging*", "**/telemetry/**", "**/tracing*", "**/metrics*"],
-  "integracoes": ["**/clients/**", "**/integrations/**", "**/adapters/**"],
-  "seguranca": ["**/auth/**", "**/security/**", "**/*.py", "**/*.ts"],
-  "docker-e-deploy": ["Dockerfile*", "**/Dockerfile*", "docker-compose*", ".github/workflows/**", "**/*.tf", "**/k8s/**"],
-  "llm-e-prompts": ["**/prompts/**", "**/*prompt*.{py,md,txt,j2}"],
-  "agentes-ia": ["**/agents/**", "**/graphs/**", "langgraph.json", "**/*agent*.py"],
-  "rag": ["**/rag/**", "**/retriev*/**", "**/embed*/**", "**/index*/**"],
-  "producao-ia": ["**/evals/**", "**/eval*/**", "**/guardrails/**"],
-  "dados-e-ml": ["**/*.ipynb", "**/data/**", "**/features/**", "**/pipelines/**"],
-  "nlp": ["**/nlp/**", "**/tokeniz*/**", "**/*.ipynb"],
-  "ux": ["**/*.{tsx,jsx,vue,svelte}", "**/streamlit*", "**/gradio*", "**/ui/**"],
-  "dev-com-agentes": [".claude/**", "CLAUDE.md", "AGENTS.md", ".agents/**"]
+  "salesforce-plataforma": [
+    "force-app/**/objects/**",
+    "force-app/**/layouts/**",
+    "force-app/**/applications/**",
+    "force-app/**/tabs/**",
+    "force-app/**/quickActions/**"
+  ],
+  "salesforce-automacao": [
+    "force-app/**/flows/**",
+    "force-app/**/workflows/**",
+    "force-app/**/approvalProcesses/**",
+    "force-app/**/assignmentRules/**",
+    "force-app/**/escalationRules/**"
+  ],
+  "salesforce-apex": [
+    "force-app/**/classes/**",
+    "force-app/**/triggers/**",
+    "**/*.cls",
+    "**/*.trigger"
+  ],
+  "salesforce-lwc": [
+    "force-app/**/lwc/**",
+    "force-app/**/aura/**",
+    "force-app/**/pages/**",
+    "**/*.page",
+    "**/*.cmp"
+  ],
+  "salesforce-dados": [
+    "force-app/**/objects/**",
+    "force-app/**/duplicateRules/**",
+    "force-app/**/matchingRules/**",
+    "manifest/**",
+    "data/**"
+  ],
+  "salesforce-seguranca": [
+    "force-app/**/permissionsets/**",
+    "force-app/**/profiles/**",
+    "force-app/**/sharingRules/**",
+    "force-app/**/connectedApps/**",
+    "force-app/**/samlSsoConfigs/**"
+  ],
+  "salesforce-integracao": [
+    "force-app/**/namedCredentials/**",
+    "force-app/**/externalCredentials/**",
+    "force-app/**/remoteSiteSettings/**",
+    "force-app/**/platformEventChannels/**",
+    "force-app/**/externalServiceRegistrations/**"
+  ],
+  "salesforce-ia": [
+    "force-app/**/genAi*/**",
+    "force-app/**/promptTemplates/**",
+    "force-app/**/einstein*/**"
+  ],
+  "mulesoft-desenvolvimento": [
+    "src/main/mule/**",
+    "**/*.dwl",
+    "src/main/resources/**",
+    "src/test/munit/**"
+  ],
+  "mulesoft-arquitetura": [
+    "src/main/api/**",
+    "**/*.raml",
+    "mule-artifact.json",
+    "pom.xml"
+  ],
+  "comercio-digital": [
+    "cartridges/**",
+    "**/*.isml",
+    "dw.json",
+    "**/hooks.json"
+  ],
+  "python": [
+    "**/*.py",
+    "pyproject.toml"
+  ],
+  "codigo-limpo": [
+    "**/*.{py,js,ts,tsx,cls,trigger,java}"
+  ],
+  "padroes-de-projeto": [
+    "**/*.{py,js,ts,tsx,cls,java}"
+  ],
+  "arquitetura": [
+    "**/*.{py,ts,js}",
+    "pyproject.toml",
+    "src/**"
+  ],
+  "testes": [
+    "**/test_*.py",
+    "**/*_test.py",
+    "tests/**",
+    "**/*.test.{ts,js,tsx}",
+    "**/*.spec.{ts,js}"
+  ],
+  "persistencia": [
+    "**/models/**",
+    "**/migrations/**",
+    "**/*.sql",
+    "alembic/**",
+    "**/schema*"
+  ],
+  "filas-e-concorrencia": [
+    "**/workers/**",
+    "**/tasks/**",
+    "**/queue*/**",
+    "**/celery*"
+  ],
+  "api-e-contratos": [
+    "**/api/**",
+    "**/routers/**",
+    "**/endpoints/**",
+    "**/*openapi*.{yaml,yml,json}"
+  ],
+  "observabilidade": [
+    "**/logging*",
+    "**/telemetry/**",
+    "**/tracing*",
+    "**/metrics*"
+  ],
+  "integracoes": [
+    "**/clients/**",
+    "**/integrations/**",
+    "**/adapters/**"
+  ],
+  "seguranca": [
+    "**/auth/**",
+    "**/security/**",
+    "**/*.py",
+    "**/*.ts"
+  ],
+  "docker-e-deploy": [
+    "Dockerfile*",
+    "**/Dockerfile*",
+    "docker-compose*",
+    ".github/workflows/**",
+    "**/*.tf",
+    "**/k8s/**"
+  ],
+  "llm-e-prompts": [
+    "**/prompts/**",
+    "**/*prompt*.{py,md,txt,j2}"
+  ],
+  "agentes-ia": [
+    "**/agents/**",
+    "**/graphs/**",
+    "langgraph.json",
+    "**/*agent*.py"
+  ],
+  "rag": [
+    "**/rag/**",
+    "**/retriev*/**",
+    "**/embed*/**",
+    "**/index*/**"
+  ],
+  "producao-ia": [
+    "**/evals/**",
+    "**/eval*/**",
+    "**/guardrails/**"
+  ],
+  "dados-e-ml": [
+    "**/*.ipynb",
+    "**/data/**",
+    "**/features/**",
+    "**/pipelines/**"
+  ],
+  "nlp": [
+    "**/nlp/**",
+    "**/tokeniz*/**",
+    "**/*.ipynb"
+  ],
+  "ux": [
+    "**/*.{tsx,jsx,vue,svelte}",
+    "**/streamlit*",
+    "**/gradio*",
+    "**/ui/**"
+  ],
+  "dev-com-agentes": [
+    ".claude/**",
+    "CLAUDE.md",
+    "AGENTS.md",
+    ".agents/**"
+  ],
+  "javascript-e-typescript": [
+    "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+    "tsconfig*.json",
+    "package.json",
+    "biome.json*"
+  ],
+  "node-servidor": [
+    "server/**",
+    "src/server/**",
+    "**/controllers/**",
+    "**/middleware/**",
+    "**/*.route.{ts,js}",
+    "**/*.controller.{ts,js}",
+    "nodemon.json",
+    "ecosystem.config.*"
+  ],
+  "web-react": [
+    "**/*.{tsx,jsx}",
+    "src/routes/**",
+    "app/**",
+    "pages/**",
+    "**/components/**",
+    "vite.config.*",
+    "next.config.*",
+    "tsr.config.json",
+    "components.json",
+    "**/routeTree.gen.ts",
+    "src/styles/**",
+    "**/*.css",
+    "tailwind.config.*"
+  ],
+  "mobile-react-native": [
+    "app.json",
+    "app.config.*",
+    "**/*.native.{ts,tsx}",
+    "android/**",
+    "ios/**",
+    "metro.config.*"
+  ]
 }
