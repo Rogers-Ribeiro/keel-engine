@@ -384,7 +384,7 @@ Os cursos são da geração do React 19 mas trazem nomes da anterior. Estas regr
 
 **Regra:** o hook chama-se `useActionState` e vem de `react`.
 **Porquê:** o `useFormState` do `react-dom` foi renomeado. Código escrito contra o nome antigo — que é o que os cursos e os tutoriais ainda mostram — deixa de funcionar.
-**Como verificar:** procura `useFormState` no código; devolve vazio.
+**Como verificar:** procura `useFormState` **importado de `react-dom`**; devolve vazio. O nome sozinho não chega: o `react-hook-form` tem um `useFormState` próprio, que existe, está certo e não é este — procurar só pelo nome acusa-o e a regra passa a ruído.
 **Fonte:** [react-19](../docs/react-19.md)
 **Cursos:** 0
 

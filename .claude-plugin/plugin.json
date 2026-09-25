@@ -2,7 +2,7 @@
   "name": "keel",
   "displayName": "Keel",
   "description": "Agentes de papel e regras com ID para programar com Claude Code, em quatro domínios: Python com agentes, Salesforce, MuleSoft e comércio digital. Cada domínio tem o seu núcleo — o que fica sempre em contexto — e os temas carregam-se só quando se lê um ficheiro a que se apliquem. Cada regra traz o porquê, como se verifica mecanicamente, e por quantas fontes independentes foi confirmada.",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "author": {
     "name": "Rogers Ribeiro"
   },
