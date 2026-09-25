@@ -60,11 +60,11 @@ O script procura o engine antigo na cache dos plugins, que guarda todas as vers�
 máquina onde essa versão nunca esteve, não está lá. Traz-la do repositório pela tag:
 
 ```
-git clone https://github.com/Rogers-Ribeiro/keel-engine /tmp/keel-base
-cd /tmp/keel-base && git checkout v<versão do keel.yaml>
+git clone https://github.com/Rogers-Ribeiro/keel-engine /tmp/keel-antigo
+cd /tmp/keel-antigo && git checkout v<versão do keel.yaml>
 ```
 
-e repete com `--base /tmp/keel-base`.
+e repete com `--base /tmp/keel-antigo`.
 
 **Sem base não há merge.** Com só duas versões não se distingue o que tu editaste do que o engine
 mudou, e a escolha passa a ser um palpite. Se não a conseguires, diz isso ao utilizador e pára — não

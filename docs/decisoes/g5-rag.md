@@ -10,7 +10,6 @@
 
 **Porquê:** A documentação oficial do LangChain dá os dois padrões como válidos, mas liga cada um a um perfil: pipeline fixo para bots de FAQ e de documentação, agente para assistentes com várias ferramentas. O projecto responde sobre uma base de conhecimento própria, que é o primeiro caso.
 
-**Fonte:** LangChain, "Retrieval", https://docs.langchain.com/oss/python/langchain/retrieval, consultada 2026-09-17. Diz que o RAG de dois passos serve para FAQs e bots de documentação, e que o agêntico serve assistentes com acesso a várias ferramentas.
 
 **Contra:** Um agente livre com o retrieval como tool cobre melhor perguntas que exigem várias pesquisas encadeadas a fontes diferentes; se o projecto ganhar uma segunda base, isso pesa a favor do agente nessa parte.
 
@@ -24,7 +23,6 @@
 
 **Porquê:** a única indicação de tamanho que a Anthropic dá é qualitativa — "não mais do que algumas centenas de tokens" — e não a liga ao tipo de conteúdo. A unidade (tokens) também não é directamente comparável aos caracteres usados nos cursos. Não há, portanto, número externo a que agarrar.
 
-**Fonte:** Anthropic, "Contextual Retrieval", https://www.anthropic.com/engineering/contextual-retrieval, artigo de 2024-09. Diz que o corpus se parte em fragmentos "normalmente não maiores do que algumas centenas de tokens". O valor de 800 tokens aparece na mesma página apenas como pressuposto de uma conta de custos, não como exemplo de implementação nem como recomendação.
 
 **Contra:** O orçamento de tokens dividido pelos chunks que cabem no prompt (curso LangChain) acompanha a janela de contexto do modelo escolhido; muda se o modelo mudar, o que o valor fixo do Production AI Agents não faz.
 
@@ -38,7 +36,6 @@
 
 **Porquê:** A comparação da Pinecone entre modelos pagos e um modelo aberto (E5) deu resultados que variam por pergunta, sem vencedor claro, e avisa que os números do MTEB são muitas vezes inflacionados por afinação sobre o próprio benchmark. Sem vencedor de qualidade, pesa a favor do pago não ter de gerir GPU nem infra própria num projecto de uma pessoa.
 
-**Fonte:** Pinecone, "Choosing an Embedding Model", https://www.pinecone.io/learn/series/rag/embedding-models-rundown/, consultada 2026-09-17. Diz que os resultados variam por pergunta entre modelos pagos e abertos e que os números do MTEB são muitas vezes inflacionados.
 
 **Contra:** Um modelo local elimina o custo por chamada e mantém os dados no computador; se o projecto ganhar esse requisito de privacidade, a decisão inverte-se por completo.
 
@@ -52,7 +49,6 @@
 
 **Porquê:** A própria integração do LangChain com o Chroma descreve o modo sem persistência como bom para experimentar e a Chroma Cloud como o caminho de escala; entre os dois fica o modo local persistido, que cobre um projecto de um só programador sem orçamento de infra.
 
-**Fonte:** LangChain, "Chroma", https://docs.langchain.com/oss/python/integrations/vectorstores/chroma, consultada 2026-09-17. Diz que o modo sem persistência serve para experimentar a construir a aplicação e que a Chroma Cloud é o caminho para escala.
 
 **Contra:** O FAISS evita mesmo um processo de base de dados a correr; o RAG Bootcamp usa os dois como stores locais até cerca de um milhão de vectores, o que também cobre este projecto.
 
@@ -66,8 +62,6 @@
 
 **Porquê:** nenhum fabricante publica um valor de omissão defensável. A parte com fonte é outra, e é a que entra na regra: se o peso não for definido, o resultado muda consoante o cliente usado, o que torna a recuperação irreprodutível. O 75/25 é ponto de partida escolhido para este projecto, cujas perguntas são sobretudo em linguagem natural; não é um número recomendado por ninguém.
 
-**Fonte:** Weaviate, "Hybrid search", https://docs.weaviate.io/weaviate/search/hybrid, consultada 2026-09-17. Diz que `alpha=1` é pesquisa vectorial pura e `alpha=0` é pesquisa por palavras-chave pura, e que, se o `alpha` não for definido, o peso efectivo depende do cliente.
-**Fonte:** Pinecone, "Hybrid search overview", https://docs.pinecone.io/guides/search/hybrid-search, consultada 2026-09-17. Diz que não há omissão universal e que o peso se define testando no próprio conjunto de dados.
 
 **Contra:** Se as perguntas do projecto trouxerem muitos termos exactos, siglas ou identificadores (o caso que RAG-011 cobre), um peso mais baixo a favor do BM25 tende a servir melhor do que 75/25.
 
@@ -83,7 +77,6 @@
 
 **Porquê:** O artigo que deu origem à técnica de Corrective RAG vai mais longe do que por documento: segmenta cada documento em fragmentos ("knowledge strips") e pontua cada um, descartando os irrelevantes antes de recompor o contexto. O tutorial mais simples da documentação do LangChain avalia o contexto todo concatenado numa só chamada, mas é um exemplo introdutório, não a técnica de Corrective RAG em si.
 
-**Fonte:** Yan et al., "Corrective Retrieval Augmented Generation", https://arxiv.org/abs/2401.15884, Jan. 2024. Diz que o avaliador de recuperação segmenta cada documento em fragmentos e pontua cada um, filtrando os irrelevantes antes de recompor o contexto.
 
 **Contra:** O tutorial oficial de agente RAG do LangChain avalia o contexto concatenado numa só chamada, mais barato; serve quando há poucos documentos por pergunta e o custo pesa mais do que a precisão do filtro.
 
@@ -97,7 +90,6 @@
 
 **Porquê:** Não há estudo nem documentação de fabricante com números sobre empilhar os dois. O MMR e um reranker por LLM resolvem problemas diferentes (diversidade contra relevância) e compõem-se tecnicamente, mas a única fonte dos cursos que toca no assunto contradiz-se dentro da mesma aula.
 
-**Fonte:** OpenSearch, "Vector search with MMR reranking", https://docs.opensearch.org/latest/vector-search/specialized-operations/vector-search-mmr/, consultada 2026-09-17. Descreve o MMR como um reranking próprio, orientado à diversidade, distinto de um reranker de relevância.
 
 **Contra:** Num chatbot de FAQ com poucas variantes de resposta, combinar os dois pode reduzir respostas repetidas sem perder relevância; medir antes de manter a decisão contrária.
 
@@ -111,7 +103,6 @@
 
 **Porquê:** O exemplo de referência da documentação do LangGraph para estruturar uma aplicação usa exactamente esta separação plana (`tools.py`, `nodes.py`, `state.py`) dentro de um pacote próprio. É um exemplo para agentes simples; para um grafo de RAG com mais nós, o mesmo padrão split-by-concern só precisa de um passo a mais quando o número de nós cresce.
 
-**Fonte:** LangChain, "Application structure", https://docs.langchain.com/oss/python/langgraph/application-structure, consultada 2026-09-17. Diz que o layout de referência separa `tools.py`, `nodes.py` e `state.py` dentro de um pacote de projecto.
 
 **Contra:** A organização por classe com métodos, um por nó (RAG Bootcamp), reduz o número de ficheiros num grafo pequeno; serve melhor enquanto o grafo tiver poucos nós.
 

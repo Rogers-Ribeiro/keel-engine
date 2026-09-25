@@ -5,7 +5,7 @@ description: Use quando o utilizador corrigir um erro teu, quando uma revisão o
 
 # keel-lesson — que o mesmo erro não se aprenda duas vezes
 
-O contrato do Keel desce: cursos → regras → projectos. Não há caminho de volta. Um erro apanhado
+O contrato do Keel desce: regras → projectos. Não há caminho de volta. Um erro apanhado
 num projecto fica nesse projecto, e o projecto seguinte começa sem ele.
 
 Esta skill é o caminho de volta. Tem duas camadas, e **a separação entre elas é o que a faz durar**:
@@ -102,8 +102,7 @@ Este passo corre **na base do Keel**, não num projecto. Para cada lição madur
 1. Escolhe o tema em `regras/` a que pertence, e o ID seguinte desse prefixo.
 2. Escreve a referência em `docs/licoes/<chave>.md`: o que aconteceu, em que projectos, e a prova.
    É ela que a **Fonte** vai citar — uma regra sem fonte que abra não é auditável por ninguém.
-3. Escreve a regra no formato normal, com `**Cursos:** 0`, tal como as **DB-018** a **DB-024**, que
-   também não saem de curso nenhum.
+3. Escreve a regra no formato normal, com `**Cursos:** 0`.
 4. `node ferramentas/validar.mjs`, e reindexa: `cd ferramentas/pesquisa && uv run indexar --camadas L3`.
 5. Fecha o ciclo: `node .keel/licoes.mjs promover --chave "<chave>" --id "<ID da regra>"`. **Este passo
    não é opcional** — sem ele a lição custa duas vezes, como regra e como texto de sessão, e o

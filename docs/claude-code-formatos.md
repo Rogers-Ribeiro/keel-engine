@@ -19,7 +19,7 @@ Referência para escrever os agentes, as skills, as rules, os hooks e as permiss
   |---|---|
   | `name` | Obrigatório. Minúsculas e hífenes. |
   | `description` | Obrigatório. Diz quando delegar; "use proactively" incentiva a delegação automática. A soma das descrições deve ficar abaixo de 15 mil tokens. |
-  | `tools` | Lista branca. Aceita nomes exactos, incluindo MCP (`mcp__cursos__pesquisar`), ou o servidor inteiro (`mcp__cursos`, `mcp__cursos__*`). `Agent(a, b)` limita os subagentes que este pode lançar. |
+  | `tools` | Lista branca. Aceita nomes exactos, incluindo MCP (`mcp__servidor__ferramenta`), ou o servidor inteiro (`mcp__servidor`, `mcp__servidor__*`). `Agent(a, b)` limita os subagentes que este pode lançar. |
   | `disallowedTools` | Lista negra, aplicada antes de `tools`. |
   | `model` | `sonnet`, `opus`, `haiku`, `fable`, um ID completo ou `inherit`. |
   | `permissionMode` | É ignorado se a sessão principal estiver em `acceptEdits`, `auto` ou `bypassPermissions`. |
@@ -132,7 +132,7 @@ Referência para escrever os agentes, as skills, as rules, os hooks e as permiss
 
 ## Consequências para o desenho
 
-1. **Regras sempre presentes em cada papel.** Cada tema de regras (`regras-arquitetura`, `regras-codigo-limpo`, …) é empacotado como skill de conhecimento, com `user-invocable: false`, e **pré-carregado** no frontmatter dos agentes que o usam. Por exemplo, o `arquiteto` e o `revisor` levam arquitectura e código limpo. Assim há uma só fonte para vários agentes e as regras entram sempre ao arrancar. O `mcp__cursos__pesquisar` na lista `tools` fica para o detalhe.
+1. **Regras sempre presentes em cada papel.** Cada tema de regras (`regras-arquitetura`, `regras-codigo-limpo`, …) é empacotado como skill de conhecimento, com `user-invocable: false`, e **pré-carregado** no frontmatter dos agentes que o usam. Por exemplo, o `arquiteto` e o `revisor` levam arquitectura e código limpo. Assim há uma só fonte para vários agentes e as regras entram sempre ao arrancar. O `` na lista `tools` fica para o detalhe.
 2. **O núcleo vai para `.claude/rules/nucleo.md`, sem `paths`.** Carrega sempre, na sessão principal e em todos os subagentes, e por isso tem de continuar curto (no máximo 60 linhas). As regras de código Python vão para `.claude/rules/python.md` com `paths: ["**/*.py"]`.
 3. **Nada de `@C:/.../formacao-dev/...` no projecto.** Um import para fora do projecto pede aprovação e prende o projecto a esta máquina. O `instalar.mjs` **copia** as regras, as skills e os agentes para o repositório novo, que os versiona; para actualizar, corre-se outra vez.
 4. **A frase do desenho "um subagente não lança subagentes" está desactualizada.** A orquestração continua na sessão principal (skill `executar-spec`), porque é lá que o utilizador acompanha, mas por escolha e não por limitação.

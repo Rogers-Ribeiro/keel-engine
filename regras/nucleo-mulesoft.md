@@ -1,6 +1,6 @@
 # Núcleo MuleSoft — o que vale em qualquer tarefa
 
-Este é o núcleo de um projecto de MuleSoft, e não substitui os outros núcleos de `regras/`: um projecto carrega os que lhe servem, e um projecto que seja só de integração não carrega os de Salesforce nem os de Python. O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho; para o que não estiver aqui nem lá, pesquisa no MCP `cursos`.
+Este é o núcleo de um projecto de MuleSoft, e não substitui os outros núcleos de `regras/`: um projecto carrega os que lhe servem, e um projecto que seja só de integração não carrega os de Salesforce nem os de Python. O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho.
 
 ## Nunca
 

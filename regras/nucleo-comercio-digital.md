@@ -1,6 +1,6 @@
 # Núcleo Comércio digital — o que vale em qualquer tarefa
 
-Este é o núcleo de um projecto de comércio digital, e não substitui os outros núcleos de `regras/`: um projecto carrega os que lhe servem. São duas plataformas: COM-001 a COM-017 são de B2C Commerce (SFCC) — cartridges, controllers, `hooks.json` e cache —, e COM-018 a COM-024 são de B2B Commerce, que corre sobre a plataforma Salesforce; um projecto de B2B Commerce carrega também o `regras/nucleo-salesforce.md`, porque a loja é configuração de plataforma. O resto está em `regras/comercio-digital.md`; para o que não estiver aqui nem lá, pesquisa no MCP `cursos`.
+Este é o núcleo de um projecto de comércio digital, e não substitui os outros núcleos de `regras/`: um projecto carrega os que lhe servem. São duas plataformas: COM-001 a COM-017 são de B2C Commerce (SFCC) — cartridges, controllers, `hooks.json` e cache —, e COM-018 a COM-024 são de B2B Commerce, que corre sobre a plataforma Salesforce; um projecto de B2B Commerce carrega também o `regras/nucleo-salesforce.md`, porque a loja é configuração de plataforma. O resto está em `regras/comercio-digital.md`.
 
 ## Nunca
 

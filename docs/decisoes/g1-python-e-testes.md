@@ -10,7 +10,6 @@
 
 **Porquê:** `uv` junta num só binário o que antes exigia pip, pip-tools, pyenv e um gestor de ambientes, é mais rápido, e é já o que as ferramentas deste repositório usam (`uv run`).
 
-**Fonte:** Astral, documentação do `uv`, https://docs.astral.sh/uv/, consultada 2026-09-17: descreve-se como substituto de pip, pip-tools, pipx, Poetry, pyenv e virtualenv (não de conda). Python Packaging User Guide, "Tool recommendations", https://packaging.python.org/en/latest/guides/tool-recommendations/, consultada 2026-09-17: não recomenda nenhuma ferramenta de gestão de dependências de terceiros e não menciona o `uv`.
 
 **Contra:** Poetry tem um fluxo de publicação de pacotes mais maduro; pesaria se o projecto vier a publicar uma biblioteca no PyPI.
 
@@ -24,7 +23,6 @@
 
 **Porquê:** Um manifesto de biblioteca ou aplicação deve aceitar intervalos; é o ficheiro de ambiente, à parte, que fixa versões exactas para instalações repetíveis. O `uv.lock` cumpre esse segundo papel sem tornar o manifesto rígido.
 
-**Fonte:** Python Packaging User Guide, "install_requires vs requirements files", https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/, consultada 2026-09-17: fixar `install_requires` a versões exactas é excessivo e priva o utilizador de correcções; os ficheiros de ambiente é que devem listar versões exactas para reprodutibilidade.
 
 **Contra:** Fixar tudo a `==` directamente no manifesto é mais simples de ler sem abrir o lockfile; funciona em projectos pequenos sem biblioteca distribuída.
 
@@ -38,7 +36,6 @@
 
 **Porquê:** Em Setembro de 2026 o 3.10 está a semanas do fim de vida e o 3.11 já só recebe correcções de segurança; 3.12 dá margem até Outubro de 2028 e já tem toda a sintaxe nativa de tipos.
 
-**Fonte:** Python Developer's Guide, "Status of Python versions", https://devguide.python.org/versions/, consultada 2026-09-17: à data, 3.11 a 3.14 ainda recebem actualizações, o 3.10 termina em Outubro de 2026, e o 3.13/3.14 estão em fase de correcção de bugs.
 
 **Contra:** Fixar em 3.13 dá acesso a correcções mais recentes da linguagem; troca-se por menos garantia de compatibilidade das bibliotecas já testadas.
 
@@ -52,7 +49,6 @@
 
 **Porquê:** Com o mínimo em 3.12, as duas alterações que trouxeram esta sintaxe já se aplicam por inteiro, e a forma antiga fica marcada como redundante.
 
-**Fonte:** PEP 585, "Type Hinting Generics In Standard Collections", https://peps.python.org/pep-0585/, consultada 2026-09-17: diz que importar `List`, `Dict` etc. de `typing` está descontinuado a partir do Python que a suporta. PEP 604, "Allow writing union types as X | Y", https://peps.python.org/pep-0604/, consultada 2026-09-17: define `X | Y` como equivalente a `Union[X, Y]`, disponível desde o Python 3.10.
 
 **Contra:** nenhum motivo técnico da fonte para manter `typing.List`/`Optional` acima do mínimo suportado.
 
@@ -66,7 +62,6 @@
 
 **Porquê:** O projecto depende de abstracções injectadas (portas, fábricas de modelo) que um verificador de tipos ajuda a confirmar; exigir isso do código público, não de todo o código, respeita a tipagem gradual da linguagem.
 
-**Fonte:** PEP 484, "Type Hints", https://peps.python.org/pep-0484/, consultada 2026-09-17: os autores dizem não querer tornar os type hints obrigatórios, "nem por convenção", e descrevem a tipagem gradual como incremental.
 
 **Contra:** Exigir tipos em tudo, sem excepção, dá cobertura total ao verificador; o próprio PEP 484 admite essa opção, só não a impõe.
 
@@ -80,7 +75,6 @@
 
 **Porquê:** É a recomendação directa do guia de estilo oficial; o duplo underscore não dá protecção real ao dado, só evita colisões de nomes em subclasses.
 
-**Fonte:** PEP 8, secção "Method Names and Instance Variables", https://peps.python.org/pep-0008/, consultada 2026-09-17: recomenda um underscore para métodos e variáveis não públicos, e reserva o duplo para evitar colisões de nomes com subclasses.
 
 **Contra:** nenhum, fora do caso de colisão em subclasses que a própria fonte aponta.
 
@@ -94,7 +88,6 @@
 
 **Porquê:** É a recomendação directa do guia de estilo oficial, e evita código acessor que não faz nada além de repetir o nome do atributo.
 
-**Fonte:** PEP 8, secção "Designing for Inheritance", https://peps.python.org/pep-0008/, consultada 2026-09-17: recomenda expor atributos públicos simples sem métodos acessores/mutadores complicados, guardando as properties para quando o atributo precisa mesmo de comportamento.
 
 **Contra:** nenhum; o próprio PEP 8 só avisa para não usar `@property` em operações caras, o que reforça reservá-la para quando há lógica.
 
@@ -108,7 +101,6 @@
 
 **Porquê:** O layout `src/` evita que o interpretador use a cópia de desenvolvimento em vez da instalada; a manipulação do `sys.path` não resolve isso, só contorna o sintoma nos testes.
 
-**Fonte:** Python Packaging User Guide, "src layout vs flat layout", https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/, consultada 2026-09-17: recomenda o layout `src/` para pacotes instaláveis e explica que impede o uso acidental da cópia em desenvolvimento.
 
 **Contra:** o layout plano é mais simples para scripts que nunca se instalam; não é o caso de um projecto com pacote e testes próprios.
 
@@ -122,7 +114,6 @@
 
 **Porquê:** Corre suites `unittest` sem as reescrever, tem fixtures reutilizáveis e um ecossistema de plugins que o `unittest` da biblioteca padrão não tem.
 
-**Fonte:** documentação oficial do pytest, https://docs.pytest.org/en/stable/, consultada 2026-09-17: apresenta o pytest a correr suites `unittest` "out of the box" e destaca as fixtures e mais de 1300 plugins.
 
 **Contra:** `unittest` não pede dependência externa; chega para suites pequenas sem fixtures partilhadas.
 
@@ -136,7 +127,6 @@
 
 **Porquê:** Um teste com um falso confirma o resultado sem se prender à forma como o código chama as suas dependências; `patch` remenda a implementação e por isso quebra quando essa forma muda, mesmo sem mudar o comportamento.
 
-**Fonte:** Martin Fowler, "Mocks Aren't Stubs", https://martinfowler.com/articles/mocksArentStubs.html, consultada 2026-09-17: diz preferir a abordagem clássica, com objectos reais ou falsos, porque a abordagem com mocks acopla o teste à implementação.
 
 **Contra:** `patch` é mais rápido quando não há porta definida; o próprio Fowler reconhece bons programadores satisfeitos com a escola dos mocks.
 
@@ -150,7 +140,6 @@
 
 **Porquê:** as duas fontes concordam que fixar um número desloca o objectivo de testar bem para testar tudo, incluindo ramos que não compensam; um código bem testado tende a ficar naturalmente nos 80-90%, e 100% é sinal de suspeita, não de qualidade.
 
-**Fonte:** Martin Fowler, "Test Coverage", https://martinfowler.com/bliki/TestCoverage.html, consultada 2026-09-17: a cobertura serve para achar código sem testes, não para medir a qualidade dos testes, e ele desconfia de 100%. Ned Batchelder, "Coverage goals", https://nedbatchelder.com/blog/202111/coverage_goals.html, consultada 2026-09-17: recomenda metas diferentes por parte do código, não um número único para todo o projecto.
 
 **Contra:** uma meta única e alta, como pedem os cursos de AI-Driven Development, dá aos agentes um critério simples e automatizável para rejeitar specs incompletas; perde-se isso sem número.
 
@@ -164,7 +153,6 @@
 
 **Porquê:** um conjunto de testes só protege como rede de segurança se correr sozinho a cada alteração; um agente de IA não corre ficheiros `.http` à mão por iniciativa própria.
 
-**Fonte:** Martin Fowler, "Continuous Integration", https://martinfowler.com/articles/continuousIntegration.html, consultada 2026-09-17: diz que testar à mão é lento de mais para a frequência das alterações, e chama ao build auto-testável um pré-requisito da integração contínua.
 
 **Contra:** testes de integração com serviços externos caros ou lentos por vezes só correm à mão ou num pipeline à parte; TST-006 já separa o ciclo do LLM real do LLM falso por essa razão.
 

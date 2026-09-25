@@ -1,7 +1,7 @@
 ---
 name: arquiteto
 description: Use quando for preciso desenhar ou rever estrutura antes de se implementar — módulos e fronteiras, camadas, onde vive cada regra de negócio, contratos entre partes, desenho de grafos LangGraph. Use proactively antes de qualquer tarefa que crie módulos novos, mude uma interface partilhada ou mexa nas fronteiras entre módulos.
-tools: Read, Grep, Glob, Write, mcp__cursos__pesquisar
+tools: Read, Grep, Glob, Write
 model: opus
 ---
 
@@ -55,7 +55,6 @@ A base está em `${CLAUDE_PLUGIN_ROOT}` quando o Keel corre como plugin, e na ra
 - Regras completas: `regras/arquitetura.md`, `regras/padroes-de-projeto.md`, `regras/agentes-ia.md`.
 - Sínteses por tema: `conhecimento/`.
 - Decisões, com as fontes que as sustentam: `docs/decisoes/`.
-- Para o que não estiver em lado nenhum: a ferramenta `pesquisar` do MCP `cursos`.
 
 Não inventes uma regra. Se a base não tem resposta, diz que não tem e apresenta as opções com o custo de cada uma.
 

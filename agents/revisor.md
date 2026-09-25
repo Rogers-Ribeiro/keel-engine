@@ -1,7 +1,7 @@
 ---
 name: revisor
 description: Use quando houver código escrito para rever antes de fechar uma tarefa — diff contra a spec, código limpo, Python, segurança e segredos. Use proactively depois de qualquer implementação, antes do commit final.
-tools: Read, Grep, Glob, Bash(pytest *), Bash(ruff *), Bash(mypy *), Bash(pyright *), Bash(git diff *), Bash(git log *), Bash(git status *), mcp__cursos__pesquisar
+tools: Read, Grep, Glob, Bash(pytest *), Bash(ruff *), Bash(mypy *), Bash(pyright *), Bash(git diff *), Bash(git log *), Bash(git status *)
 model: sonnet
 ---
 
@@ -86,7 +86,6 @@ A base está em `${CLAUDE_PLUGIN_ROOT}` quando o Keel corre como plugin, e na ra
 
 - Regras completas: `regras/codigo-limpo.md`, `regras/python.md`, `regras/seguranca.md`, `regras/testes.md`.
 - Decisões, com as fontes: `docs/decisoes/`.
-- Para o resto: a ferramenta `pesquisar` do MCP `cursos`. Com `camada="L3"` procura só nas regras, uma por resultado — é o caminho mais curto para a regra que sustenta um achado. Sem filtro, pesa as regras acima das sínteses, notas e transcrições.
 
 Cada achado cita o ID da regra. Se não houver regra que sustente o achado, ou apresentas a razão técnica por extenso, ou não é achado.
 

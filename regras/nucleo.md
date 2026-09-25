@@ -1,6 +1,6 @@
 # Núcleo — o que vale em qualquer tarefa
 
-O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho. As escolhas entre cursos, com as fontes que as decidiram, estão em `docs/decisoes/`. Para o que não estiver aqui nem lá, pesquisa no MCP `cursos`.
+O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho. As escolhas que decidiram cada divergência, com as suas razões, estão em `docs/decisoes/`.
 
 ## Nunca
 

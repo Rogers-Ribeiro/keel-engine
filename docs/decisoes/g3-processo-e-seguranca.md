@@ -10,7 +10,6 @@
 
 **Porquê:** A documentação actual do Claude Code já arranca em `auto` por omissão nos planos Pro, Max e Team, com um classificador que revê cada acção antes de correr. É o que reduz mais os pedidos de aprovação sem perder barreira automática, porque `deny` e hooks continuam a valer em `auto` e em `bypassPermissions`. O `acceptEdits` das aulas só cobre edições de ficheiros e comandos comuns do sistema de ficheiros; não revê comandos de shell nem chamadas de rede.
 
-**Fonte:** Anthropic, "Choose a permission mode", https://code.claude.com/docs/en/permission-modes, lido a 2026-09-17. Diz que `auto` é o modo de arranque por omissão nesses planos desde a versão 2.1.228 e que um classificador bloqueia acções que fogem ao pedido, mas avisa que o modo não garante segurança nem substitui revisão em operações sensíveis.
 
 **Contra:** O `auto` exige Sonnet 5, Opus 4.7 ou modelo posterior, e nos planos Enterprise o arranque continua a ser manual. Um projecto que prefira controlo total, ou que corra sem supervisão em CI, deve ficar em `default`/`acceptEdits` ou passar a `dontAsk`.
 
@@ -24,7 +23,6 @@
 
 **Porquê:** O OpenSpec não é um projecto abandonado: tem lançamentos recentes, licença MIT e liga-se ao Claude Code por slash commands próprios. Mas corre em Node.js, o que junta um segundo motor de execução a um projecto só em Python com `uv`, e o fluxo `explore → propose → apply → archive` não cobre nada que a PROC-012/013 já não cubra para um só programador.
 
-**Fonte:** Fission-AI, repositório "OpenSpec", https://github.com/Fission-AI/OpenSpec, lido a 2026-09-17. O README pede Node.js 20.19 ou superior, descreve o pacote npm `@fission-ai/openspec` (versão 1.13.0, publicada há poucos dias) e o fluxo de quatro comandos `/opsx:`.
 
 **Contra:** Se o projecto passar a usar mais do que um assistente de IA a par (Cursor, Copilot), o OpenSpec dá-lhes um formato de spec comum, o que a convenção própria não dá. Reconsiderar nesse cenário ou se a equipa deixar de ser de uma pessoa.
 
@@ -38,7 +36,6 @@
 
 **Porquê:** É decisão de processo interno; a literatura sobre specs para agentes não fixa um número de specs por funcionalidade. O que confirma é o critério para o detalhe: ajustar ao risco da tarefa, não ao tamanho do ficheiro.
 
-**Fonte:** Addy Osmani, "How to write a good spec for AI agents", https://addyosmani.com/blog/good-spec/, 2026. Recomenda ajustar o detalhe da spec à complexidade da tarefa e dividir por secções ou ficheiros quando a spec cobre várias frentes, para não ultrapassar a atenção do modelo.
 
 **Contra:** Um projecto com mais programadores, ou onde front-end e back-end mudam a ritmos diferentes, ganha com specs encadeadas por camada (a opção do curso Arq. com IA). Reconsiderar se o projecto ganhar essa divisão de responsabilidades.
 
@@ -52,7 +49,6 @@
 
 **Porquê:** A mesma fonte que decide a D-PR03 dá aqui o critério que faltava: não sobre-especificar uma tarefa trivial. Uma spec para uma correcção pequena custa mais do que preveni-la.
 
-**Fonte:** Addy Osmani, "How to write a good spec for AI agents", https://addyosmani.com/blog/good-spec/, 2026. Dá como exemplo de tarefa sem spec "centrar uma div", em oposição a um fluxo de OAuth com renovação de token, que justifica spec completa.
 
 **Contra:** Nenhuma fonte forte defende o oposto (spec sempre, mesmo para o trivial); só a Formação CC recomenda planear tudo, sem distinguir tamanho. Sem motivo para mudar.
 
@@ -66,7 +62,6 @@
 
 **Porquê:** A documentação actual do Claude Code contraria as duas opções das aulas: não manda esperar por "produto real" nem trata a memória como pasta à parte, opcional. Manda escrever no CLAUDE.md assim que Claude erra da mesma forma duas vezes, ou assim que se repete uma correcção já dada numa sessão anterior.
 
-**Fonte:** Anthropic, "How Claude remembers your project", https://code.claude.com/docs/en/memory, lido a 2026-09-17. Diz para acrescentar ao CLAUDE.md quando Claude repete o mesmo erro pela segunda vez ou quando se digita outra vez a mesma correcção de uma sessão anterior, e distingue isso da auto-memory, que o próprio Claude escreve a cada sessão.
 
 **Contra:** Para regras de negócio (o que a divergência original tinha em mente, não preferências de sessão), escrevê-las só depois de o código estar validado evita documentar uma decisão que ainda muda. Se o domínio for muito instável nas primeiras semanas, adiar para o primeiro módulo estável continua defensável.
 
@@ -80,7 +75,6 @@
 
 **Porquê:** A documentação oficial do protocolo trata um servidor MCP local como código que corre com os privilégios do cliente, capaz de ler `~/.ssh` ou executar `rm -rf` a partir de um comando de arranque malicioso. A popularidade num catálogo não é sinal de segurança.
 
-**Fonte:** Model Context Protocol, "Security Best Practices", https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices, lido a 2026-09-17. Descreve o comprometimento de servidores MCP locais por comandos de arranque maliciosos e recomenda sandboxing e consentimento explícito antes de qualquer configuração de um cliente.
 
 **Contra:** Nenhuma fonte reconhecida recomenda catálogos sem curadoria; a única razão para os usar é conveniência, que a demonstração do LangChain §27 já mostrou custar caro.
 
@@ -94,7 +88,6 @@
 
 **Porquê:** O OWASP não trata o `.env` como excepção proibida; pede é que os segredos de desenvolvimento nunca sejam os de produção e que o acesso a eles siga o princípio do menor privilégio. Isso cobre-se bloqueando a leitura ao agente, não trocando de mecanismo.
 
-**Fonte:** OWASP, "Secrets Management Cheat Sheet", https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html, lido a 2026-09-17. Recomenda não usar segredos de produção em configurações de desenvolvimento ou teste, sem excluir variáveis de ambiente como mecanismo de carregamento.
 
 **Contra:** Um gestor de segredos com injecção em runtime tira o `.env` de cima da mesa por completo, incluindo do disco; é a opção mais forte se algum dia houver chaves de produção na mesma máquina de desenvolvimento.
 
@@ -108,7 +101,6 @@
 
 **Porquê:** O `matcher` de um hook aceita vários nomes de ferramenta separados por `|`; nada obriga a escolher entre shell e edição. Um hook só de shell deixa passar exactamente o ataque que o curso de Cursor mostrou: apagar um ficheiro pela ferramenta de edição.
 
-**Fonte:** `docs/claude-code-formatos.md` deste repositório, secção Hooks, confirmado na documentação oficial (sub-agents, hooks) a 2026-09-16. Regista a forma `{"matcher": "Bash|PowerShell", ...}` e que `Write`/`Edit` são ferramentas com o mesmo mecanismo de correspondência.
 
 **Contra:** Nenhum. Cobrir mais ferramentas no `matcher` não tem custo de desempenho nem de falsos positivos que justifique deixar alguma de fora.
 
@@ -122,7 +114,6 @@
 
 **Porquê:** O doze factores pede configuração em variáveis de ambiente, não em ficheiros como o `local_settings.py` do Django; o `pydantic-settings` cumpre isso e acrescenta a validação que a SEG-012 exige. Um campo em falta ou de tipo errado dá um `ValidationError` na construção do objecto, antes de qualquer pedido.
 
-**Fonte:** The Twelve-Factor App, "Config", https://12factor.net/config, lido a 2026-09-17. Pydantic, "Settings Management", https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/, lido a 2026-09-17. A primeira exige config em variáveis de ambiente; a segunda confirma que um valor inválido de ambiente produz um `ValidationError` na leitura das definições.
 
 **Contra:** Nenhum dos dois textos fala de validação no arranque como requisito do doze factores; é o `pydantic-settings`, não a metodologia, que garante isso. Se o projecto largasse o Pydantic, teria de repor essa validação à mão.
 
@@ -136,7 +127,6 @@
 
 **Porquê:** o RFC separa os três casos, e trocá-los tem consequência prática — um cliente que recebe 401 sabe que deve autenticar-se e repetir; um que recebe 403 não deve repetir com as mesmas credenciais. Para os dados com dono, o 404 é o que a SEG-016 já implementa: quem não é dono não descobre sequer que o registo existe.
 
-**Fonte:** IETF, RFC 9110, "HTTP Semantics", secções 15.5.2, 15.5.4 e 15.5.5, https://www.rfc-editor.org/rfc/rfc9110.txt, lido a 2026-09-17. O 401 indica que "the request has not been applied because it lacks valid authentication credentials for the target resource" e obriga ao `WWW-Authenticate`; o 403 indica que "the server understood the request but refuses to fulfill it"; e a secção do 403 acrescenta que um servidor que queira esconder a existência do recurso "MAY instead respond with a status code of 404".
 
 **Contra:** Uniformizar em 404 é mais simples de implementar e evita o risco de um 403 mal colocado revelar a existência de um recurso por engano; escolher isso se o projecto preferir simplicidade a precisão semântica.
 
@@ -152,7 +142,6 @@
 
 **Porquê:** A recomendação de cookie `httpOnly` do OWASP visa clientes de navegador, para tirar o token do alcance de um ataque de XSS em JavaScript. Um cliente que não corre num navegador não tem esse vector nem acesso a cookies do mesmo modo, por isso o cabeçalho é a única forma aplicável.
 
-**Fonte:** OWASP, "Session Management Cheat Sheet", https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html, lido a 2026-09-17. Recomenda cookies `httpOnly`, `Secure` e `SameSite` contra XSS, mas não cobre clientes que não são navegador.
 
 **Contra:** Se o projecto vier a ter uma interface web própria a consumir esta API, o cookie `httpOnly` volta à mesa para esse cliente específico, sem deixar de servir o cabeçalho a outros.
 
@@ -166,7 +155,6 @@
 
 **Porquê:** A documentação distingue as duas camadas: `settings` (permissões, `deny`) é imposto pelo cliente independentemente do que Claude decida, mas o CLAUDE.md é só contexto que Claude tenta seguir. Autorizar código de terceiros pertence à camada que é mesmo imposta.
 
-**Fonte:** Anthropic, "How Claude remembers your project", https://code.claude.com/docs/en/memory, lido a 2026-09-17. Explica que as regras de `settings` são cumpridas pelo cliente aconteça o que acontecer, enquanto o CLAUDE.md só orienta o comportamento de Claude, sem o impor.
 
 **Contra:** Um projecto de uma só pessoa não tem administrador a validar essa lista central, ao contrário do cenário do LangChain §27; nesse caso, o ficheiro de `settings` versionado é revisto pelo próprio dono a cada alteração, não por terceiro.
 

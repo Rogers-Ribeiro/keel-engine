@@ -54,8 +54,7 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 │   ├── keel.yaml          versão do engine, domínios, temas escolhidos, respostas e data
 │   └── nucleo-<dominio>.md  um por domínio escolhido (o do python-agentes é nucleo.md), importados pelo CLAUDE.md
 ├── .claude/rules/<tema>.md  as regras dos temas escolhidos, com `paths:` no frontmatter
-├── .keel/retrieve.mjs     traz a base de conhecimento (o resto de `.keel/` é cache, fora do git)
-├── .keel/licoes.mjs       põe em contexto o que já se aprendeu noutros projectos desta máquina
+├── .keel/licoes.mjs         põe em contexto o que já se aprendeu noutros projectos desta máquina
 └── .claude/settings.json  os hooks SessionStart, mais permissões e hooks do nível escolhido
 ```
 
@@ -91,19 +90,15 @@ paths:
 
 Diz ao utilizador, numa linha, quais é que ajustaste e porquê.
 
-## As fontes das regras
+## O hook que traz as lições de outros projectos
 
-Cada regra traz a aula que a originou. No plugin essas fontes são URLs do repositório da base, que é privado: abrem no browser, mas obrigam a autenticar e não servem para o agente ler.
+As regras trazem consigo o porquê e o como verificar; é isso que as sustenta, e não é preciso ir
+buscar nada a lado nenhum para as usar.
 
-Por isso copias `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/retrieve.mjs` para `.keel/retrieve.mjs`, **registas o hook** que o corre sozinho, e corre-lo uma vez agora:
+O que vale a pena automatizar é outra coisa: pôr em contexto, ao arrancar a sessão, o que já se
+aprendeu **noutros** projectos desta máquina.
 
-```
-node .keel/retrieve.mjs
-```
-
-O que ele faz, por esta ordem: clona a base sem histórico para `~/.keel/base` (umas dezenas de MB, uma vez por máquina, partilhada por todos os projectos), liga-a a este projecto com uma junction em `.keel/base`, acrescenta `.keel/` ao `.gitignore`, e reescreve as fontes do contrato para caminhos locais. A partir daí, abrir a fonte de uma regra é abrir um ficheiro.
-
-### O hook, que é o que torna isto automático
+### O hook
 
 Em `.claude/settings.json`, dentro de `hooks`:
 
@@ -114,13 +109,6 @@ Em `.claude/settings.json`, dentro de `hooks`:
       {
         "matcher": "startup|resume",
         "hooks": [
-          {
-            "type": "command",
-            "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.keel/retrieve.mjs", "--auto"],
-            "timeout": 300,
-            "statusMessage": "A trazer a base de conhecimento do Keel…"
-          },
           {
             "type": "command",
             "command": "node",
@@ -135,16 +123,16 @@ Em `.claude/settings.json`, dentro de `hooks`:
 }
 ```
 
-Quem clonar o repositório e abrir o Claude Code recebe a base sem correr nada, nem sequer saber que existe. O `--auto` sai em silêncio e em milissegundos quando já cá está, e **nunca falha a sessão**: sem acesso ao repositório privado, explica-se e segue.
+Quem clonar o repositório e abrir o Claude Code recebe as lições sem correr nada, nem sequer saber que existe. O hook sai em silêncio quando não há nada a dizer, e **nunca falha a sessão**.
 
 Três cuidados ao escrever isto:
 - Se já houver `.claude/settings.json`, **junta** a chave `SessionStart` ao que lá está. Não reescrevas o ficheiro.
 - `command` é `node` com `args` — em exec form, sem shell. No Windows, um hook com `args` precisa de um executável a sério, e um `.cmd` não serve.
 - `${CLAUDE_PROJECT_DIR}` é substituído nos `args`, e é por isso que o caminho funciona seja qual for a pasta de onde a sessão arrancou.
 
-### O segundo hook: o que já se aprendeu noutros projectos
+### O que ele põe em contexto
 
-Copia também `${CLAUDE_PLUGIN_ROOT}/skills/keel-lesson/licoes.mjs` para `.keel/licoes.mjs`. É o que
+Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-lesson/licoes.mjs` para `.keel/licoes.mjs`. É o que
 põe em contexto as lições — não deste projecto, de **todos** os projectos desta máquina. Um projecto
 novo arranca já com o que os outros aprenderam, que é o contrário do que costuma acontecer.
 
@@ -153,14 +141,6 @@ cada sessão e não tem nada que produzir diffs. Quando não há lições nenhum
 nada — uma sessão não deve pagar contexto para lhe dizerem que está tudo bem. O resto está na skill
 `keel-lesson`.
 
-### O resto que convém saber
-
-- **Correr outra vez é seguro.** Sem `--auto`, actualiza o clone; com `--auto`, só age se faltar. Nenhum dos dois mexe no que já está na forma certa.
-- **A base não entra no repositório do projecto.** São mais de 8 000 ficheiros; é cache, não é contrato. O `.gitignore` trata disso.
-- **Se preferires um repositório em que as fontes são URLs**, `node .keel/retrieve.mjs --urls` faz o caminho inverso.
-
-Se o clone falhar por falta de acesso, não é problema teu: o repositório é privado e a conta autenticada tem de lá ter entrada. Diz isso e segue — o contrato fica escrito na mesma, só com as fontes em URL.
-
 ## O último passo não é um detalhe
 
 Antes de dares o trabalho por feito, **corre o que acabaste de instalar**: os testes, o lint, os hooks. O projecto tem de ficar a passar nas verificações que lhe puseste. Um gerador que entrega uma CI vermelha no primeiro commit destrói a própria credibilidade, e a pessoa desliga tudo antes de perceber o que aquilo era.
@@ -168,5 +148,3 @@ Antes de dares o trabalho por feito, **corre o que acabaste de instalar**: os te
 ## Quando acabas
 
 Diz, em cinco linhas: os domínios escolhidos, os ficheiros escritos, os temas incluídos e quantas regras trazem, o que ficou por verificar automaticamente, e o comando para confirmar (`/agents` e `/memory`).
-
-Se o utilizador quiser confirmar uma regra na aula que a originou, a skill `keel-base` traz a base de conhecimento completa.

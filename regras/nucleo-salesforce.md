@@ -1,6 +1,6 @@
 # Núcleo Salesforce — o que vale em qualquer tarefa
 
-Este é o núcleo de um projecto de Salesforce e não substitui os outros núcleos de `regras/`: MuleSoft, comércio digital e Python têm cada um o seu, e um projecto carrega os que lhe servem — um projecto só de Salesforce não carrega o de Python, e um de B2B Commerce carrega este e o `regras/nucleo-comercio-digital.md`. O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho; para o que não estiver aqui nem lá, pesquisa no MCP `cursos`.
+Este é o núcleo de um projecto de Salesforce e não substitui os outros núcleos de `regras/`: MuleSoft, comércio digital e Python têm cada um o seu, e um projecto carrega os que lhe servem — um projecto só de Salesforce não carrega o de Python, e um de B2B Commerce carrega este e o `regras/nucleo-comercio-digital.md`. O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho.
 
 ## Nunca
 

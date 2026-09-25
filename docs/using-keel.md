@@ -2,7 +2,7 @@
 
 Keel gives a project a **contract**: a small set of rules that Claude Code loads every session, plus
 a larger set it loads only when it touches the code they apply to. The rules are not opinions — each
-one carries the reason, a way to check it mechanically, and the course lecture it was distilled from.
+one carries the reason, a way to check it mechanically, and how many independent sources confirmed it.
 
 This page is for someone who just installed the plugin. It is in English; the rules and the skill
 bodies are in Portuguese.
@@ -17,7 +17,7 @@ bodies are in Portuguese.
 Then **start a new session**. Plugins are loaded at startup, so a session that is already running
 will not see the new commands.
 
-## The six commands
+## The five commands
 
 | Command | Use it when |
 |---|---|
@@ -26,7 +26,6 @@ will not see the new commands.
 | `/keel-design` | A process or a whole vertical needs designing before there is a spec. |
 | `/keel-upgrade` | The engine moved on and the project's contract is behind. |
 | `/keel-lesson` | Claude made a mistake worth remembering, or the same one twice. |
-| `/keel-base` | You want to read the lecture a rule came from, or search the courses themselves. |
 
 ## Start here
 
@@ -97,13 +96,15 @@ pure SFCC storefront takes `comercio-digital` alone.
 **Regra:** ...
 **Porquê:** ...
 **Como verificar:** ...
-**Fonte:** [PD1 §4, aula 45](...)
 **Cursos:** 3
 ```
 
 `Como verificar` is what makes the audit possible: either the code violates it or it does not.
-`Cursos` is how many courses taught it — `0` means it was written by hand from official
-documentation, because no course covered it, and the rule says so.
+
+The number at the end is how many **independent sources** confirmed the rule. A rule three sources
+agree on is worth more than one only a single source taught, and the rule says which it is. `0` means
+it was written by hand from official documentation — and those rules carry a `**Fonte:**` line that
+links to that documentation and opens.
 
 ## Updating
 
@@ -133,17 +134,17 @@ Nothing is ever deleted, and nothing is committed — you review a `git diff`. R
 
 ## Where the rules come from
 
-They are distilled from course transcripts, in layers: transcript → note per section → synthesis per
-theme → rule. The synthesis is per *theme*, across courses, so where courses disagree the
-disagreement is written down instead of one of them winning silently.
+They are distilled in layers from a private knowledge base, and synthesised **per theme** rather
+than per source — so where sources disagree, the disagreement is written down instead of one of them
+winning silently. What ships here is the result: the rule, why it holds, and how to check it.
 
 Two other paths exist, and both are marked `Cursos: 0`:
 
-- **Confirmed documentation**, for things no course teaches. Postgres row-level security is the
-  example — the pipeline would never produce those rules, because it only sees what courses teach.
+- **Confirmed documentation**, for things the distillation would never produce because nothing in the
+  base teaches them. Postgres row-level security is the example.
 - **Lessons from use**, via `/keel-lesson`. When Claude makes the same mistake a third time, it can
-  be promoted to a rule. This is the only path that goes *upward*; everything else descends from
-  courses to projects.
+  be promoted to a rule. This is the only path that goes *upward*; everything else descends into
+  projects.
 
 ## Troubleshooting
 
@@ -154,5 +155,6 @@ that theme's file in `.claude/rules/`. On the platform domains the patterns are 
 `python-agentes` they are conventions, and `/keel-init` adapts them to your layout — a pattern that
 matches nothing is a rule that never loads, and nothing tells you.
 
-**A rule's source link does not open.** The base repository is private. Run `/keel-base` to clone it
-locally; the links are rewritten to local paths.
+**A rule has no `Fonte:` line.** That is expected for most of them. The rules distilled from the
+base ship without their source links — what travels is the rule, the reason, and the check. Rules
+written from public documentation keep a working link to it.
