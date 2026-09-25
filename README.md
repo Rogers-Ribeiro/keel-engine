@@ -17,7 +17,7 @@ mechanically**, and how many independent sources confirmed it. The middle one is
 `/keel-audit` possible — either the code violates the rule or it does not, and that is not a matter
 of taste.
 
-Version 0.13.1. This repository is **generated**; it is not edited here.
+Version 0.13.2. This repository is **generated**; it is not edited here.
 
 ## Install
 
