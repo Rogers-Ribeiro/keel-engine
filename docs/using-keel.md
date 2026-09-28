@@ -27,6 +27,27 @@ will not see the new commands.
 | `/keel-upgrade` | The engine moved on and the project's contract is behind. |
 | `/keel-lesson` | Claude made a mistake worth remembering, or the same one twice. |
 
+## Three agents come with it
+
+Besides the commands, the plugin ships three role agents. Claude Code dispatches them when the work
+matches, or you can name one.
+
+| Agent | What it does |
+|---|---|
+| `arquiteto` | Designs structure before there is code — module boundaries, layers, where each business rule lives, contracts between parts. It writes the design and nothing else. |
+| `revisor` | Reads the diff against the spec and the rules, runs the tests and the linter, and reports what is wrong by severity, citing the rule ID on each finding. |
+| `perito` | Diagnoses something broken in a real environment — production or UAT. |
+
+**`perito` is the one worth reading before you use it.** It asks which environment it is in before
+running anything, negotiates access per platform (Salesforce, MuleSoft, a database, commerce), and
+**it cannot write anywhere**. That is not a promise in its prompt — its tool allowlist contains no
+write command, so there is no path to one. For a database, where a query and a `DELETE` go through
+the same binary and an allowlist cannot help, it proves the session is read-only before its first
+query and refuses to continue if it is not.
+
+It produces a diagnosis with every piece of evidence next to the command that produced it, a probable
+cause, what it could not confirm, and the fix **written out as a command for a person to run**.
+
 ## Start here
 
 **If the repository already has code**, run `/keel-audit` first, not `/keel-init`. It maps the
