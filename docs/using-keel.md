@@ -34,11 +34,11 @@ matches, or you can name one.
 
 | Agent | What it does |
 |---|---|
-| `arquiteto` | Designs structure before there is code — module boundaries, layers, where each business rule lives, contracts between parts. It writes the design and nothing else. |
-| `revisor` | Reads the diff against the spec and the rules, runs the tests and the linter, and reports what is wrong by severity, citing the rule ID on each finding. |
-| `perito` | Diagnoses something broken in a real environment — production or UAT. |
+| `architect` | Designs structure before there is code — module boundaries, layers, where each business rule lives, contracts between parts. It writes the design and nothing else. |
+| `reviewer` | Reads the diff against the spec and the rules, runs the tests and the linter, and reports what is wrong by severity, citing the rule ID on each finding. |
+| `troubleshoot` | Diagnoses something broken in a real environment — production or UAT. |
 
-**`perito` is the one worth reading before you use it.** It asks which environment it is in before
+**`troubleshoot` is the one worth reading before you use it.** It asks which environment it is in before
 running anything, negotiates access per platform (Salesforce, MuleSoft, a database, commerce), and
 **it cannot write anywhere**. That is not a promise in its prompt — its tool allowlist contains no
 write command, so there is no path to one. For a database, where a query and a `DELETE` go through

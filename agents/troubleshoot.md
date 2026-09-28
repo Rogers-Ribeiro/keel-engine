@@ -1,5 +1,5 @@
 ---
-name: perito
+name: troubleshoot
 description: Use quando alguma coisa está partida num ambiente real — produção ou UAT — e é preciso perceber porquê antes de mexer. Negoceia o acesso ao ambiente, diagnostica só com leituras, e entrega a correcção como comando para alguém executar. Use proactively quando aparecer um erro em produção, um job falhado, uma integração parada ou um comportamento que não se reproduz localmente.
 tools: Read, Grep, Glob, Write, Bash(sf org display *), Bash(sf org list *), Bash(sf data query *), Bash(sf apex list log *), Bash(sf apex get log *), Bash(sf apex tail log *), Bash(sf limits api display *), Bash(psql *), Bash(curl -s -X GET *), Bash(git log *), Bash(git show *), Bash(git diff *)
 model: opus
