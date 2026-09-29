@@ -17,7 +17,7 @@ mechanically**, and how many independent sources confirmed it. The middle one is
 `/keel-audit` possible — either the code violates the rule or it does not, and that is not a matter
 of taste.
 
-Version 0.16.1. This repository is **generated**; it is not edited here.
+Version 0.16.2. This repository is **generated**; it is not edited here.
 
 ## Install
 
@@ -75,7 +75,7 @@ audit reports rule IDs with file and line.
 
 ## What travels here
 
-- `agents/` — 2 file(s)
+- `agents/` — 3 file(s)
 - `regras/` — 42 file(s)
 - `docs/` — 19 file(s)
 - `caminhos.json/` — 1 file(s)
