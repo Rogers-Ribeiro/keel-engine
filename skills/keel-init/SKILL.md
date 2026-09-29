@@ -5,7 +5,7 @@ description: Use quando um projecto novo precisa de arrancar com as regras do Ke
 
 # keel-init — escrever o contrato num projecto
 
-Escreves, **dentro do repositório do projecto**, as regras que ele passa a seguir. Os agentes (`architect`, `reviewer`) já vêm do plugin e não se copiam.
+Escreves, **dentro do repositório do projecto**, as regras que ele passa a seguir. Os agentes (`arquiteto`, `revisor`) já vêm do plugin e não se copiam.
 
 A distinção que manda em tudo o que se segue: o **engine** vive na máquina e actualiza-se com `plugin update`; o **contrato** vive no repositório, versiona com o código e **nunca é sobrescrito por uma actualização**. Sem o contrato no repositório, o agente não o lê e a CI não o verifica.
 
