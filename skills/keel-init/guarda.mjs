@@ -8,6 +8,8 @@
 // edição. O `deny` fica na mesma — é a primeira barreira e não custa nada —, e isto cobre as variantes.
 //
 // O que recusa é pouco de propósito: publicar (`git push`), apagar recursivamente e tocar em `.env`.
+// E, quando o projecto tem o `.keel/revisao.mjs`, fazer commit com achados de revisão abertos ou
+// editar à mão o ficheiro onde eles estão (PROC-036).
 // Um guarda que recusa demais é desligado na primeira semana, e um guarda desligado não guarda nada.
 // O que cada projecto quiser acrescentar vai para o `deny` dele, não para aqui.
 import path from 'node:path';
@@ -21,10 +23,26 @@ const eFicheiroEnv = (nome) => /^\.env(\.[\w.-]+)?$/i.test(nome) && !MODELOS_ENV
 // Claude Code faz com as regras de permissão.
 const partes = (comando) => comando.split(/&&|\|\||[;|\n]/).map((p) => p.trim()).filter(Boolean);
 
+// Qualquer `git` cujo subcomando seja este, com ou sem opções antes (`git -C x push`).
+const gitComSubcomando = (subcomando) =>
+  new RegExp(
+    String.raw`^(?:"[^"]*[\\/]|'[^']*[\\/]|\S*[\\/])?git(?:\.exe)?["']?(?:\s+(?:-C\s+\S+|-c\s+\S+|--?[\w-]+(?:=\S+)?))*\s+` +
+      subcomando +
+      String.raw`\b`,
+    'i',
+  );
+const GIT_PUSH = gitComSubcomando('push');
+const GIT_COMMIT = gitComSubcomando('commit');
+
+const eRevisaoJson = (ficheiro) => /(?:^|\/)\.keel\/revisao\.json$/i.test(ficheiro.replace(/\\/g, '/'));
+
+// O motivo de uma recusa por revisão começa por isto, para o `main` dar a instrução certa: aqui o
+// agente pode resolver sozinho, e não deve passar o comando à pessoa.
+export const MOTIVO_REVISAO = 'revisão por fechar';
+
 const REGRAS_SHELL = [
   {
-    // Qualquer `git` cujo subcomando seja `push`, com ou sem opções antes (`git -C x push`).
-    testa: (p) => /^(?:"[^"]*[\\/]|'[^']*[\\/]|\S*[\\/])?git(?:\.exe)?["']?(?:\s+(?:-C\s+\S+|-c\s+\S+|--?[\w-]+(?:=\S+)?))*\s+push\b/i.test(p),
+    testa: (p) => GIT_PUSH.test(p),
     motivo: 'publicar no remoto (`git push`) é para a pessoa fazer, depois de rever',
   },
   {
@@ -45,8 +63,9 @@ const REGRAS_SHELL = [
   },
 ];
 
-// Devolve o motivo da recusa, ou `null` se a chamada pode seguir.
-export function avaliar(entrada) {
+// Devolve o motivo da recusa, ou `null` se a chamada pode seguir. `abertos` são os achados de revisão
+// por fechar, que o `main` lê do `.keel/revisao.json`.
+export function avaliar(entrada, { abertos = [] } = {}) {
   const ferramenta = entrada?.tool_name ?? '';
   const dados = entrada?.tool_input ?? {};
 
@@ -54,12 +73,17 @@ export function avaliar(entrada) {
     for (const parte of partes(String(dados.command ?? ''))) {
       const regra = REGRAS_SHELL.find((r) => r.testa(parte));
       if (regra) return `${regra.motivo}: \`${parte}\``;
+      if (abertos.length > 0 && GIT_COMMIT.test(parte)) {
+        return `${MOTIVO_REVISAO}: ${abertos.map((a) => a.id).join(', ')} ainda abertos`;
+      }
     }
     return null;
   }
 
   if (ferramenta === 'Write' || ferramenta === 'Edit') {
-    const nome = path.basename(String(dados.file_path ?? '').replace(/\\/g, '/'));
+    const ficheiro = String(dados.file_path ?? '');
+    if (eRevisaoJson(ficheiro)) return `${MOTIVO_REVISAO}: os achados mudam só pelo \`node .keel/revisao.mjs\`, não à mão`;
+    const nome = path.basename(ficheiro.replace(/\\/g, '/'));
     if (eFicheiroEnv(nome)) return `o \`.env\` tem segredos; o agente não o lê nem o altera: \`${nome}\``;
   }
 
@@ -79,11 +103,21 @@ async function main() {
     return 0;
   }
 
-  const motivo = avaliar(entrada);
+  // O `revisao.mjs` pode não existir num projecto que ainda não o recebeu. Sem ele, o guarda continua
+  // a guardar o resto: um import que falhasse fora deste `try` desligava-o por inteiro.
+  let abertos = [];
+  try {
+    const revisao = await import('./revisao.mjs');
+    abertos = revisao.abertos(revisao.pastaProjecto());
+  } catch {}
+
+  const motivo = avaliar(entrada, { abertos });
   if (!motivo) return 0;
   process.stderr.write(
     `Bloqueado pelo guarda do Keel — ${motivo}.\n` +
-      'Não procures outra forma de fazer o mesmo. Diz à pessoa o que querias fazer e porquê, e ela corre o comando.\n',
+      (motivo.startsWith(MOTIVO_REVISAO)
+        ? 'Corre `node .keel/revisao.mjs estado`: corrige e pede ao reviewer uma nova ronda, ou fecha cada achado com `recusar --porque`.\n'
+        : 'Não procures outra forma de fazer o mesmo. Diz à pessoa o que querias fazer e porquê, e ela corre o comando.\n'),
   );
   return 2;
 }

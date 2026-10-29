@@ -51,6 +51,20 @@ Prefixo `LLM`. ## Escrita de prompts
 **Como verificar:** Não há prompts montados por concatenação no código de negócio; cada prompt reutilizado existe uma só vez, com as variáveis nomeadas.
 **Cursos:** 2
 
+### LLM-019 — O que persiste vai no system prompt, o que muda vai no turno do utilizador
+
+**Regra:** Põe no system prompt só o que vale para todos os pedidos (papel, regras permanentes, formato por omissão, conhecimento de base) e passa no turno do utilizador os dados de cada pedido (a pergunta, o documento a tratar, os valores do utilizador ou da conta).
+**Porquê:** Dados dinâmicos no system prompt mudam o prefixo a cada chamada, perdem a cache e são reprocessados em cada troca; regras permanentes postas no turno do utilizador podem ser ignoradas ou sobrepostas numa conversa de vários turnos.
+**Como verificar:** O texto do system prompt é constante entre pedidos, sem variáveis do utilizador, da conta ou do pedido; essas variáveis entram na mensagem do utilizador. Uma regra permanente repetida em cada turno do utilizador é um erro a assinalar.
+**Cursos:** 2
+
+### LLM-020 — Um bloco rotulado por documento, referido pelo nome
+
+**Regra:** Quando o prompt leva dois ou mais documentos, põe cada um no seu bloco com a mesma estrutura (conteúdo e origem, com um índice ou rótulo) e, nas instruções, refere-te a cada documento pelo rótulo ou pelo índice, nunca como "os documentos" ou "o contexto".
+**Porquê:** A atribuição correcta de cada afirmação ao seu documento depende de as fontes estarem separadas e rotuladas; referências vagas e texto colado sem fronteiras são a causa principal de atribuir uma afirmação à fonte errada.
+**Como verificar:** Nos prompts com vários documentos, cada documento tem o seu bloco com origem; as instruções que dizem respeito a uma só fonte nomeiam-na. Documentos concatenados num único bloco, ou instruções que só falam de "os documentos", são um erro a assinalar.
+**Cursos:** 2
+
 ## Saída estruturada e ferramentas
 
 ### LLM-008 — Esquema validado para a saída consumida por código
@@ -75,6 +89,20 @@ Prefixo `LLM`. ## Escrita de prompts
 **Porquê:** É a partir desse esquema e dessa docstring que o modelo percebe a funcionalidade da ferramenta e decide chamá-la; sem eles, escolhe mal ou ignora-a.
 **Como verificar:** Nenhuma ferramenta registada no agente está sem docstring ou sem tipos nos argumentos.
 **Fonte:** [referência](../docs/langchain-formatos.md)
+**Cursos:** 2
+
+### LLM-021 — Depois do schema, as regras de negócio em código
+
+**Regra:** Depois de validar a forma da saída estruturada, valida em código as regras de negócio (datas em intervalo válido, identificadores que existem, valores plausíveis) e, quando um erro pode passar com valores válidos, pede campos que o exponham — o total calculado ao lado do total declarado, uma marca de conflito quando a fonte se contradiz — e compara-os no código.
+**Porquê:** O schema garante a forma, não o facto: uma data inventada ou um total que não bate certo passam a validação de tipos e seguem para os sistemas a jusante; só a comparação feita pelo código torna o erro visível.
+**Como verificar:** Cada extracção que alimenta código tem, além do schema, uma validação de regras de negócio; onde há totais ou campos que se podem contradizer, o schema tem o campo de verificação e o código desvia o registo quando os valores divergem.
+**Cursos:** 2
+
+### LLM-022 — O pedido de correcção leva a fonte, a saída falhada e o erro exacto
+
+**Regra:** Quando a validação de uma extracção falha, volta a pedir com o texto-fonte, a saída que falhou e o erro de validação exacto (campo e valor esperado), dentro de um limite de tentativas; se a informação não está na fonte, não repitas — deixa o campo nulo e marca-o em falta.
+**Porquê:** Um "corrige a saída" sem o erro não dá ao modelo mais informação do que o pedido original; com a fonte e o erro, ele re-extrai a partir da evidência. A repetição corrige forma e estrutura, mas nunca recupera um dado que a fonte não contém.
+**Como verificar:** O ciclo de validação constrói o novo pedido com os três elementos e tem um máximo de tentativas; não há repetição genérica sem o erro, nem ciclo que só termina quando um campo ausente da fonte vem preenchido.
 **Cursos:** 2
 
 ## Modelo, parâmetros e custo
@@ -107,6 +135,22 @@ Prefixo `LLM`. ## Escrita de prompts
 **Porquê:** Com a instanciação isolada troca-se de modelo ou de fornecedor, e comparam-se modelos entre si, sem reescrever o resto do código; um SDK de fornecedor no código de negócio prende a aplicação a esse fornecedor.
 **Como verificar:** Só o módulo de modelos importa classes de chat ou SDKs de fornecedores; trocar o modelo por omissão implica alterar um ficheiro.
 **Fonte:** [referência](../docs/langchain-formatos.md)
+**Cursos:** 2
+
+### LLM-023 — Raciocínio alargado só onde muda a resposta
+
+**Regra:** Nos modelos Claude com thinking adaptativo, começa com um nível de esforço (`effort`) moderado e sobe para os níveis altos só nas tarefas de raciocínio em vários passos em que o chain-of-thought no prompt não dá qualidade suficiente; não deixes esforço alto por omissão em tarefas simples.
+**Porquê:** Os tokens de pensamento são facturados mesmo sem aparecerem na resposta, aumentam a latência e contam para o limite de `max_tokens`; numa tarefa com resposta directa não mudam a qualidade, só o custo.
+**Como verificar:** A configuração do modelo indica o nível de esforço por tipo de tarefa; qualquer uso de `xhigh` ou `max` está ligado a uma tarefa complexa e à avaliação (LLM-018) que o justifica.
+**Fonte:** [referência](../docs/claude-api-formatos.md)
+**Cursos:** 2
+
+### LLM-024 — Prefixo estável na cache de prompts, com o acerto confirmado no `usage`
+
+**Regra:** Quando o mesmo system prompt, conjunto de ferramentas ou documento se reenvia entre chamadas à API Claude, marca o fim da parte estável com `cache_control` e mantém essa parte idêntica byte a byte — sem data ou hora, identificadores de sessão, ferramentas em ordem variável nem JSON com chaves por ordenar — e confirma o acerto pelos campos de leitura de cache do `usage`.
+**Porquê:** A cache só reutiliza um prefixo exactamente igual; um valor volátil no prefixo faz falhar a cache sem erro nenhum, a resposta continua igual e só a factura e o `usage` mostram que se paga a escrita em vez da leitura.
+**Como verificar:** O system prompt e as ferramentas não interpolam valores que mudam por pedido; a ordem das ferramentas é fixa; existe um teste ou um registo que mostra leituras de cache acima de zero em chamadas repetidas.
+**Fonte:** [referência](../docs/claude-api-formatos.md)
 **Cursos:** 2
 
 ## Histórico e memória

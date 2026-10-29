@@ -49,6 +49,13 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Fonte:** [referência](../docs/langchain-formatos.md)
 **Cursos:** 2
 
+### IAP-024 — Campo opcional na fonte é nullable no schema
+
+**Regra:** No schema de extracção, declara como nullable todo o campo que a fonte pode não trazer, e aceita `null` como resposta válida; não o tornes obrigatório nem repitas o pedido até vir preenchido.
+**Porquê:** Um campo obrigatório obriga o modelo a pôr lá alguma coisa, e quando a fonte não tem o valor ele inventa um que parece real; repetir não ajuda, porque nenhuma tentativa encontra o que o documento não contém e a insistência empurra para a invenção.
+**Como verificar:** No modelo Pydantic ou no JSON Schema, os campos que dependem do conteúdo do documento são nullable. Um campo obrigatório para um dado que pode faltar na fonte, ou um ciclo de retry que só termina quando o campo vem preenchido, é um erro a assinalar.
+**Cursos:** 1
+
 ## Grafos e agentes com LangGraph
 
 ### IAP-007 — LangGraph só quando o fluxo precisa dele
@@ -105,6 +112,13 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Como verificar:** Toda a função decorada com `@tool` tem `try/except` (ou validação prévia) e devolve texto em caso de falha. Um `raise` no corpo de uma tool é um erro a assinalar.
 **Cursos:** 1
 
+### IAP-025 — Resultado da tool aparado no wrapper
+
+**Regra:** Corta em código o resultado de cada tool antes de ele entrar na conversa, deixando só os campos de que a decisão seguinte precisa (lista de campos permitidos no wrapper); quando o schema da fonte não é estável, resume-o com um modelo pequeno ou guarda-o fora e passa só uma referência.
+**Porquê:** Cada resultado completo fica no histórico e é pago outra vez em cada pedido, e o ruído afasta os factos importantes uns dos outros; o corte no wrapper é determinístico e não custa nada, enquanto o cortado só na apresentação já ocupou a janela.
+**Como verificar:** Entre a chamada à API externa e o retorno da tool há um passo que selecciona campos. Uma tool que devolve o payload bruto de um serviço com dezenas de campos é um erro a assinalar.
+**Cursos:** 2
+
 ## RAG e memória
 
 ### IAP-014 — Responder só pelo contexto e admitir que não sabe
@@ -144,6 +158,21 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Como verificar:** O ponto de chamada ao LLM percorre uma lista de modelos e regista qual foi usado. Uma chamada a um único modelo sem alternativa é um erro a assinalar em caminhos críticos.
 **Cursos:** 1
 
+### IAP-026 — Classificar o erro antes de repetir
+
+**Regra:** Antes de repetir uma chamada, classifica o erro: repete só os transitórios — 429 esperando o `retry-after`, 529 e sobrecargas com backoff exponencial — e, num pedido inválido (400), num erro de permissão ou de raciocínio, corrige o pedido ou aborta e escala sem repetir.
+**Porquê:** Um erro permanente falha igual em cada tentativa, por isso repeti-lo só paga outra vez o mesmo resultado e adia a correcção; abortar não é falhar em silêncio, é tornar o erro visível ao componente seguinte ou a uma pessoa.
+**Como verificar:** A política de retry decide pelo código ou pela categoria do erro, e não apanha todas as excepções da mesma forma. Um retry à volta de um 400, de uma falha de validação ou de um erro de permissão é um erro a assinalar.
+**Fonte:** [referência](../docs/claude-api-formatos.md)
+**Cursos:** 2
+
+### IAP-027 — Chave de idempotência nas escritas que podem ser repetidas
+
+**Regra:** Dá a cada tool que cria ou altera estado num sistema externo uma chave de idempotência gerada por quem chama (ou uma escrita condicional ao estado actual), e devolve o resultado guardado quando a mesma chave volta a chegar.
+**Porquê:** Sem idempotência, repetir depois de uma falha de rede — pelo agente ou por um coordenador que relança um subagente — duplica o registo, a mensagem ou a cobrança, que são as consequências mais difíceis de reverter.
+**Como verificar:** As tools de escrita aceitam uma chave de idempotência e guardam-na com o resultado, ou verificam o estado antes de escrever. Uma tool de escrita atrás de um retry sem nenhuma das duas é um erro a assinalar.
+**Cursos:** 1
+
 ## Observabilidade e testes
 
 ### IAP-019 — Tracing desde a primeira chamada
@@ -177,3 +206,20 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Porquê:** Uma chave commitada fica exposta e não se apaga do histórico; o exemplo versionado documenta o que é preciso configurar sem revelar nada.
 **Como verificar:** O `.gitignore` cobre `.env`, existe `.env.example` com todas as variáveis, e nenhum diff traz uma chave literal nem um ficheiro de configuração com segredos.
 **Cursos:** 1
+
+### IAP-028 — O que tem de valer sempre é imposto em código
+
+**Regra:** Impõe em código, e não só no prompt, toda a restrição com consequência financeira, legal, de segurança ou de identidade: limites de valor e autorização verificados antes da execução, gates de pré-requisito que bloqueiam uma tool até o passo anterior ter terminado, e filtros sobre a saída.
+**Porquê:** Uma instrução no prompt é seguida quase sempre, mas não sempre — perde força em execuções longas, cede a entradas adversariais e falha em casos-limite —, e num caminho de alto risco uma falha rara basta; o prompt orienta, o código impede.
+**Como verificar:** Para cada "nunca" ou "só depois de" da spec ou do prompt de sistema há uma verificação em código no caminho de execução da tool. Uma regra de montante, de permissão ou de ordem de passos que exista apenas no texto do prompt é um erro a assinalar.
+**Cursos:** 2
+
+## Ciclo do agente na API do Claude
+
+### IAP-023 — A recusa e o corte por `max_tokens` têm caminho próprio
+
+**Regra:** Verifica o `stop_reason` antes de ler o corpo da resposta, e encaminha `refusal` e `max_tokens` para tratamento próprio, nunca para o caminho normal da resposta. O ciclo em si — continuar com `tool_use`, terminar com `end_turn` — é a AGT-030.
+**Porquê:** Uma recusa chega com sucesso HTTP e, tratada como resposta normal, entrega ao utilizador texto confuso; uma resposta cortada por `max_tokens` parece completa e não está.
+**Como verificar:** Existe um ramo para `refusal` que mostra uma mensagem controlada e regista a categoria, e um ramo para `max_tokens` que não entrega a resposta como final.
+**Fonte:** [referência](../docs/claude-api-formatos.md)
+**Cursos:** 2

@@ -57,6 +57,20 @@ Prefixo `AGT`. ## Quando usar um agente
 **Fonte:** [referência](../docs/langchain-formatos.md)
 **Cursos:** 5
 
+### AGT-026 — Repetir automaticamente só erros transitórios
+
+**Regra:** o erro devolvido por uma tool diz a categoria (transitório, validação, negócio, permissão) e se a mesma chamada, sem alterações, pode vir a resultar; o código repete automaticamente só os transitórios, com backoff exponencial com jitter e um número máximo de tentativas, e aborta e escala de imediato os outros.
+**Porquê:** repetir um erro de validação ou de regra de negócio dá sempre o mesmo resultado e só gasta pedidos, podendo manter o ciclo a correr até ao limite; o orçamento de tentativas define-se pelo custo e pela latência aceitáveis, não pela probabilidade de um dia resultar.
+**Como verificar:** procura os ciclos de retry à volta de tools e de chamadas ao modelo: têm de filtrar pela categoria do erro e ter um máximo de tentativas; um `retry` genérico sobre qualquer excepção, ou sem limite, não passa.
+**Cursos:** 4
+
+### AGT-027 — Resultado vazio não é falha de acesso
+
+**Regra:** uma tool distingue no resultado «procurei e não encontrei» (sucesso com resultado vazio) de «não consegui procurar» (timeout, ligação recusada, credencial rejeitada, marcado como erro); nunca apanhes a falha e devolvas uma lista vazia como sucesso.
+**Porquê:** o modelo trata uma lista vazia como facto e conclui que os dados não existem — não repete, não tenta outra via e responde com confiança a partir de uma fonte que ninguém leu.
+**Como verificar:** nos `except` das tools, procura `return []`, `return None` ou texto de «nada encontrado»; o caminho de erro tem de devolver um resultado marcado como falha, diferente do caminho de resultado vazio.
+**Cursos:** 2
+
 ## Grafo e estado
 
 ### AGT-008 — `add_messages` nas mensagens, reducer nos campos acumulados
@@ -145,6 +159,13 @@ Prefixo `AGT`. ## Quando usar um agente
 **Como verificar:** existe um teste ou um script de execução por subgrafo ou por tool; uma peça nova que só aparece testada através do grafo completo não passa.
 **Cursos:** 4
 
+### AGT-028 — O subagente recebe tudo de forma explícita
+
+**Regra:** o prompt de cada subagente leva a tarefa, os achados anteriores completos (não resumidos, com fonte e data separadas do conteúdo) e o formato e o tamanho máximo do que tem de devolver; nada se assume herdado do coordenador.
+**Porquê:** o subagente começa com contexto vazio e não vê a conversa do coordenador; sem contrato de retorno devolve uma narrativa que polui o contexto de quem o chamou.
+**Como verificar:** lê o prompt de delegação: tem de incluir os dados de que o subagente precisa e um formato de retorno estruturado com limite; uma delegação do tipo «analisa o que encontrámos» sem os achados não passa.
+**Cursos:** 5
+
 ## Segurança e supervisão
 
 ### AGT-019 — Aprovação humana antes de acções críticas
@@ -176,6 +197,13 @@ Prefixo `AGT`. ## Quando usar um agente
 **Como verificar:** procura literais de chave no diff e confirma que o `.env` está no `.gitignore`; segredos citados em ficheiros de instruções são motivo de rejeição.
 **Cursos:** 8
 
+### AGT-029 — Conteúdo externo entra delimitado e como dado
+
+**Regra:** todo o conteúdo que vem de fora — documentos, páginas web, resultados de tools, mensagens de clientes — entra no contexto dentro de marcadores rotulados ou codificado em JSON, no bloco de resultado da tool e nunca no system prompt, e o system prompt diz que esse conteúdo se lê mas não se segue.
+**Porquê:** instruções escondidas num documento ou num resultado de tool chegam ao modelo como qualquer outro texto; separar e rotular reduz o risco de injecção, embora não o elimine — a protecção que conta continua fora do modelo (ver AGT-019 e AGT-020).
+**Como verificar:** procura onde o texto externo é concatenado no prompt: tem de estar envolvido em marcadores ou codificado, e o system prompt tem de explicar os marcadores; texto externo interpolado no system prompt é motivo de rejeição.
+**Cursos:** 4
+
 ## Observabilidade
 
 ### AGT-023 — Tracing activado em tudo o que não é um exemplo isolado
@@ -201,3 +229,24 @@ Prefixo `AGT`. ## Quando usar um agente
 **Porquê:** o agente segue a sequência até ao fim e verifica cada passo, e as checkboxes deixam ver o que já foi feito e retomar o trabalho.
 **Como verificar:** a spec tem passos com checkbox e cada um nomeia a skill ou o MCP; um pedido grande sem spec não avança.
 **Cursos:** 2
+
+## Ciclo de ferramentas na API Claude
+
+### AGT-030 — O ciclo pára pelo `stop_reason`, e o limite é rede de segurança
+
+**Regra:** num ciclo escrito sobre a API Claude, continua enquanto o `stop_reason` for `tool_use` e termina quando for `end_turn`; nunca pares por procurar palavras no texto do modelo nem por a resposta trazer texto. Mantém um limite de iterações bem acima do caso normal, e quando ele dispara regista a falha e escala para uma pessoa em vez de mostrar a última resposta parcial.
+**Porquê:** o texto do modelo é linguagem natural e não sinal de controlo, e uma resposta pode trazer texto ao lado de um bloco `tool_use` por correr; nenhum número fixo de voltas serve para todos os casos, por isso o contador só protege contra bugs.
+**Como verificar:** o `while` do ciclo testa o `stop_reason`; procura comparações do texto com «done», «final answer» ou semelhantes, e confirma que o ramo do limite atingido regista e escala em vez de devolver a resposta.
+**Fonte:** [referência](../docs/claude-api-formatos.md)
+**Cursos:** 5
+
+### AGT-031 — Resposta do modelo intacta e todos os `tool_result` numa mensagem
+
+**Regra:** depois de uma resposta com `tool_use`, acrescenta ao histórico a resposta do modelo inteira como mensagem `assistant` e, a seguir, uma única mensagem `user` com um bloco `tool_result` por cada pedido, cada um ligado pelo seu `tool_use_id`.
+**Porquê:** a API não guarda nada entre pedidos — cada volta reenvia a conversa toda, e a ordem das mensagens importa; quando o modelo pede várias tools numa resposta, os resultados voltam todos juntos.
+**Como verificar:** no código do ciclo, confirma que se reenvia o `content` completo da resposta (e não só o texto) e que os resultados são agregados numa só mensagem `user`; um `tool_result` por mensagem, ou sem `tool_use_id`, não passa.
+**Fonte:** [referência](../docs/claude-api-formatos.md)
+**Cursos:** 3
+
+## Engenharia de contexto
+

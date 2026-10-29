@@ -17,7 +17,7 @@ mechanically**, and how many independent sources confirmed it. The middle one is
 `/keel-audit` possible — either the code violates the rule or it does not, and that is not a matter
 of taste.
 
-Version 0.17.0. This repository is **generated**; it is not edited here.
+Version 0.18.0. This repository is **generated**; it is not edited here.
 
 ## Install
 
@@ -75,12 +75,12 @@ audit reports rule IDs with file and line.
 
 ## What travels here
 
-- `agents/` — 3 file(s)
+- `agents/` — 4 file(s)
 - `regras/` — 44 file(s)
-- `docs/` — 20 file(s)
+- `docs/` — 22 file(s)
 - `caminhos.json/` — 1 file(s)
 - `LICENSE/` — 1 file(s)
-- `skills/` — 9 file(s)
+- `skills/` — 15 file(s)
 
 ## Como ler uma regra
 

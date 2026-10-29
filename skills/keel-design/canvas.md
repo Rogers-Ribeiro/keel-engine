@@ -36,7 +36,7 @@ na página durável (`docs/desenho/<AAAA-MM-DD>-<processo>.md`) ou no índice `d
 Procura lá antes de criares. Se não encontrares, pergunta ao utilizador — não crias um segundo.
 
 Ao utilizador diz-se **o que aconteceu no canvas**, nunca o mecanismo: «estão lá as cinco fases, a
-terceira com a faixa da ANA vazia», e não «publiquei seis ficheiros com um índice v3».
+terceira com a faixa do cliente vazia», e não «publiquei seis ficheiros com um índice v3».
 
 ## 2. Baixa fidelidade não leva sistema de design
 
@@ -173,7 +173,7 @@ os passos à direita:
   <h2 style="margin: 0 0 12px; font-size: 24px;">{{fase}}</h2>
 
   <div style="display: flex; align-items: stretch; gap: 20px; padding: 18px; background: #ffffff; border: 1px solid #dee2e8;">
-    <div style="width: 220px; flex: none; font-size: 15px; font-weight: 600;">A ANA<div style="font-weight: 400; font-size: 13px; color: #767f8e;">quem pede o cartão</div></div>
+    <div style="width: 220px; flex: none; font-size: 15px; font-weight: 600;">O cliente<div style="font-weight: 400; font-size: 13px; color: #767f8e;">quem pede o cartão</div></div>
     <div style="flex-grow: 1; display: flex; align-items: center; gap: 14px;">
       <div style="padding: 14px 18px; border: 1px solid #2c3550; border-radius: 8px; font-size: 14px;">Pede o cartão VIP</div>
       <svg width="28" height="10" viewBox="0 0 28 10" aria-hidden="true"><path d="M0 5h24M20 1l4 4-4 4" fill="none" stroke="#767f8e" stroke-width="1.5"></path></svg>
@@ -357,7 +357,7 @@ O instantâneo é datado e diz que é instantâneo. **A fonte viva é sempre o c
 
 | | Largura × altura | De onde vem |
 |---|---|---|
-| Ecrã de secretária | 1280 × 880 | o que o AnnieFlow usou; o contrato **recomenda** 1280 a 1440 de largura |
+| Ecrã de secretária | 1280 × 880 | o que se usou nos primeiros desenhos; o contrato **recomenda** 1280 a 1440 de largura |
 | Telemóvel | 390 × 844 | o contrato |
 | Quadro de processo | 1600 a 2200 de largura por fase | recomendação nossa, **sem medição por trás** — ajusta ao número de faixas |
 

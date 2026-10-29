@@ -190,6 +190,7 @@ export function frontmatterPaths(padroes) {
 export const SCRIPTS = [
   { destino: '.keel/guarda.mjs', origem: 'skills/keel-init/guarda.mjs' },
   { destino: '.keel/licoes.mjs', origem: 'skills/keel-lesson/licoes.mjs' },
+  { destino: '.keel/revisao.mjs', origem: 'skills/keel-init/revisao.mjs' },
 ];
 
 // O mesmo bloco que o `keel-init` escreve. Um teste confirma que os dois não se afastam.
@@ -240,6 +241,14 @@ export function actualizarScripts(projecto, base, novo, aplicar) {
 
 // Junta ao `settings.json` as entradas do `deny` mínimo e o hook de guarda que faltarem. Não tira
 // nem reordena nada: uma entrada que o projecto não quer, tira-a o projecto, à vista no diff.
+// O hook `Stop` que não deixa a tarefa acabar com achados de revisão abertos (PROC-036).
+export const HOOK_REVISAO = {
+  hooks: [{ type: 'command', command: 'node', args: ['${CLAUDE_PROJECT_DIR}/.keel/revisao.mjs', 'parar'], timeout: 10 }],
+};
+
+const usaScript = (grupos, nome) =>
+  grupos.some((g) => (g.hooks ?? []).some((h) => [h.command, ...(h.args ?? [])].some((a) => String(a).includes(nome))));
+
 export function juntarControlos(settings) {
   const s = structuredClone(settings ?? {});
   const acrescentados = [];
@@ -253,12 +262,14 @@ export function juntarControlos(settings) {
   }
   s.hooks ??= {};
   s.hooks.PreToolUse ??= [];
-  const temGuarda = s.hooks.PreToolUse.some((g) =>
-    (g.hooks ?? []).some((h) => [h.command, ...(h.args ?? [])].some((a) => String(a).includes('guarda.mjs'))),
-  );
-  if (!temGuarda) {
+  if (!usaScript(s.hooks.PreToolUse, 'guarda.mjs')) {
     s.hooks.PreToolUse.push(structuredClone(HOOK_GUARDA));
     acrescentados.push('hook `PreToolUse` do guarda (`Bash|PowerShell|Write|Edit`)');
+  }
+  s.hooks.Stop ??= [];
+  if (!usaScript(s.hooks.Stop, 'revisao.mjs')) {
+    s.hooks.Stop.push(structuredClone(HOOK_REVISAO));
+    acrescentados.push('hook `Stop` dos achados de revisão');
   }
   return { settings: s, acrescentados };
 }

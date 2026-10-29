@@ -56,6 +56,7 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 ├── .claude/rules/<tema>.md  as regras dos temas escolhidos, com `paths:` no frontmatter
 ├── .keel/licoes.mjs         põe em contexto o que já se aprendeu noutros projectos desta máquina
 ├── .keel/guarda.mjs         o hook que recusa o que nunca pode acontecer
+├── .keel/revisao.mjs        os achados de revisão como estado, e o hook Stop que não deixa acabar com achados abertos
 └── .claude/settings.json  o `deny` mínimo e o hook de guarda (sempre), o hook SessionStart, e os hooks do nível escolhido
 ```
 
@@ -91,101 +92,26 @@ paths:
 
 Diz ao utilizador, numa linha, quais é que ajustaste e porquê.
 
-## O bloqueio que vai sempre
+## O settings.json e os scripts de .keel/
 
-Os temas instalados trazem regras de segurança em texto — não publicar sem revisão, não apagar em massa, não tocar em segredos. Em texto, quem as cumpre é o modelo, e ninguém fica a saber quando não cumpre: num estudo de 481 CLAUDE.md públicos, só 4% a 16% das regras de segurança tinham um controlo por trás ([regras-vs-controlos](${CLAUDE_PLUGIN_ROOT}/docs/regras-vs-controlos.md)). Instalar as regras sem o controlo seria reproduzir exactamente isso. Por isso esta parte **não depende do nível de exigência** (PROC-023, PROC-035).
+Três coisas entram em qualquer projecto, seja qual for o nível de exigência, e os blocos exactos estão em **`controlos.md`**, ao lado deste ficheiro — **lê-o antes de escreveres o `settings.json`**:
 
-Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/guarda.mjs` para `.keel/guarda.mjs`, e junta ao `.claude/settings.json`:
+- **O bloqueio que vai sempre** (PROC-023, PROC-035): o `deny` mínimo e o hook `PreToolUse` que corre `.keel/guarda.mjs`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/guarda.mjs`. Regras de segurança em texto sem controlo por trás dependem de o modelo obedecer, e ninguém fica a saber quando não obedece ([regras-vs-controlos](${CLAUDE_PLUGIN_ROOT}/docs/regras-vs-controlos.md)).
+- **O hook que fecha a revisão** (PROC-036): `Stop` a correr `.keel/revisao.mjs parar`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/revisao.mjs`, e `.keel/revisao.json` no `.gitignore`. O `reviewer` grava os achados; o hook não deixa a tarefa acabar, e o guarda não deixa fazer commit, enquanto houver um aberto.
+- **O hook que traz as lições** de outros projectos desta máquina: `SessionStart` a correr `.keel/licoes.mjs sugerir`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-lesson/licoes.mjs`.
 
-```json
-{
-  "permissions": {
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Bash(git push *)",
-      "PowerShell(git push *)",
-      "Bash(rm -rf *)",
-      "PowerShell(Remove-Item *)"
-    ]
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash|PowerShell|Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.keel/guarda.mjs"],
-            "timeout": 10
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+Se o `settings.json` já existir, **junta** às listas que lá estão; nunca substituas nem tires entradas do projecto.
 
-Os dois fazem trabalhos diferentes, e um não dispensa o outro:
-- O **`deny`** é a primeira barreira e é imposto pelo cliente, mas vê só o texto: `Bash(git push *)` não apanha `git -C . push`, e nenhuma regra `Bash(...)` apanha um `.env` alterado pela ferramenta de edição.
-- O **guarda** cobre essas variantes e sai com `exit 2`. O `matcher` inclui `Write|Edit` (D-PR08). Recusa pouco de propósito — publicar, apagar recursivamente e tocar no `.env` —, porque um guarda que recusa trabalho normal é desligado na primeira semana. O que o projecto quiser acrescentar vai para o `deny` dele.
+## O CLAUDE.md: só o que foge do padrão
 
-Cuidados:
-- Se o `settings.json` já tiver `permissions.deny` ou `hooks.PreToolUse`, **junta** às listas que lá estão. Não substituas nada, e não tires entradas do projecto.
-- Se o projecto precisar mesmo de uma das entradas fora (por exemplo, um pipeline que faz `git push` a partir da sessão), não a tires em silêncio: pergunta, e regista a excepção no `keel.yaml` com o porquê.
-- Testa antes de acabar: dá ao guarda um `git push` pelo stdin e confirma o `exit 2`.
+O `CLAUDE.md` entra em todas as sessões, e cada linha compete com as regras pela atenção do modelo. Arquivos de contexto com visões gerais do repositório não melhoraram a taxa de sucesso de agentes de código e subiram o custo em mais de 20% ([contexto-e-qualidade](${CLAUDE_PLUGIN_ROOT}/docs/contexto-e-qualidade.md)). Por isso leva só (PROC-037):
 
-## O hook que traz as lições de outros projectos
+- a frase da pergunta 1, sobre o que o projecto faz — uma, não uma secção;
+- os imports dos núcleos, um por linha;
+- os comandos que não se adivinham pelo código: como se correm os testes, o lint, a aplicação;
+- as práticas que **contrariam** o padrão da linguagem ou da plataforma, e o porquê de cada uma.
 
-As regras trazem consigo o porquê e o como verificar; é isso que as sustenta, e não é preciso ir
-buscar nada a lado nenhum para as usar.
-
-O que vale a pena automatizar é outra coisa: pôr em contexto, ao arrancar a sessão, o que já se
-aprendeu **noutros** projectos desta máquina.
-
-### O hook
-
-Em `.claude/settings.json`, dentro de `hooks`:
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.keel/licoes.mjs", "sugerir"],
-            "timeout": 15,
-            "statusMessage": "A ler as lições do Keel…"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Quem clonar o repositório e abrir o Claude Code recebe as lições sem correr nada, nem sequer saber que existe. O hook sai em silêncio quando não há nada a dizer, e **nunca falha a sessão**.
-
-Três cuidados ao escrever isto:
-- Se já houver `.claude/settings.json`, **junta** a chave `SessionStart` ao que lá está. Não reescrevas o ficheiro.
-- `command` é `node` com `args` — em exec form, sem shell. No Windows, um hook com `args` precisa de um executável a sério, e um `.cmd` não serve.
-- `${CLAUDE_PROJECT_DIR}` é substituído nos `args`, e é por isso que o caminho funciona seja qual for a pasta de onde a sessão arrancou.
-
-### O que ele põe em contexto
-
-Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-lesson/licoes.mjs` para `.keel/licoes.mjs`. É o que
-põe em contexto as lições — não deste projecto, de **todos** os projectos desta máquina. Um projecto
-novo arranca já com o que os outros aprenderam, que é o contrário do que costuma acontecer.
-
-O registo em si fica em `~/.keel/`, ao lado da base, e não no repositório: é estado local, muda a
-cada sessão e não tem nada que produzir diffs. Quando não há lições nenhumas o hook não escreve
-nada — uma sessão não deve pagar contexto para lhe dizerem que está tudo bem. O resto está na skill
-`keel-lesson`.
+Não leva visão geral, árvore de pastas, lista de dependências nem descrição da arquitectura: o agente descobre isso lendo o código, e a descrição desactualiza-se sem ninguém dar por isso. A pergunta para cada parágrafo é *«o agente acertaria isto sem ler aqui?»* — se sim, sai.
 
 ## O último passo não é um detalhe
 
@@ -193,4 +119,6 @@ Antes de dares o trabalho por feito, **corre o que acabaste de instalar**: os te
 
 ## Quando acabas
 
-Diz, em cinco linhas: os domínios escolhidos, os ficheiros escritos, os temas incluídos e quantas regras trazem, o que o `deny` e o guarda bloqueiam e o que ficou por verificar automaticamente, e o comando para confirmar (`/agents`, `/memory` e `/permissions`).
+Corre `node ${CLAUDE_PLUGIN_ROOT}/skills/keel-init/contexto.mjs` na raiz do projecto: soma o que entra em todas as sessões. Acima de 200 linhas, corta no `CLAUDE.md` antes de acabar.
+
+Diz, em seis linhas: os domínios escolhidos, os ficheiros escritos, os temas incluídos e quantas regras trazem, o que o `deny`, o guarda e o hook de revisão bloqueiam e o que ficou por verificar automaticamente, as linhas de contexto fixo que o `contexto.mjs` contou, e o comando para confirmar (`/agents`, `/memory` e `/permissions`).

@@ -57,7 +57,7 @@ regra. No máximo diz-te que o engine deixou de a ter.
 O relatório tem ainda uma secção **Scripts e controlos**, porque as regras de segurança só valem com
 o que as impõe (PROC-023, PROC-035):
 
-- os scripts de `.keel/` (`guarda.mjs`, `licoes.mjs`) seguem a mesma lógica a três que as regras:
+- os scripts de `.keel/` (`guarda.mjs`, `licoes.mjs`, `revisao.mjs`) seguem a mesma lógica a três que as regras:
   em falta, instalam-se; intactos desde a base, passam à versão nova; editados no projecto, ficam e
   o relatório diz-te para comparares à mão;
 - ao `.claude/settings.json` **só se acrescenta** o que falta do `deny` mínimo e o hook `PreToolUse`
@@ -108,7 +108,7 @@ um ficheiro que case, em vez de as ter todas em contexto a cada sessão.
 
 O script **não faz commit**. Fica um `git diff` para ler, que é o que torna isto revisível.
 
-### 5. Depois de aplicar, três coisas que o script não faz
+### 5. Depois de aplicar, quatro coisas que o script não faz
 
 **Testar o guarda.** Se foi instalado, dá-lhe um `git push` pelo stdin e confirma o `exit 2`:
 
@@ -128,6 +128,12 @@ padrão que não casa com nada é uma regra que nunca carrega, e ninguém dá po
 contexto em **todas** as sessões, costuma ter emendas do projecto, e não tem IDs para comparar bloco
 a bloco. Abre-o ao lado do núcleo do domínio no engine e decide à mão. Se estiver acima das 60
 linhas, diz isso ao utilizador: cada linha ali custa atenção em cada turno.
+
+**O contexto fixo.** Corre `node ${CLAUDE_PLUGIN_ROOT}/skills/keel-init/contexto.mjs` na raiz do
+projecto. Soma o `CLAUDE.md`, os núcleos importados e as regras sem `paths:` — o que entra em todas
+as sessões. Acima de 200 linhas, põe a tabela no relatório e aponta o que cortar primeiro: no
+`CLAUDE.md`, o que o agente acertaria sem ler (visão geral, árvore de pastas, arquitectura descrita
+em prosa) (PROC-037).
 
 ## Regras
 

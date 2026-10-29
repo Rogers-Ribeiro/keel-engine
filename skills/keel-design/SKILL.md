@@ -49,24 +49,8 @@ A razão está escrita, e é a **UX-004**: com fidelidade alta demais, quem lê 
 está pronto e só comenta polimento. **Uma spec de novecentas linhas é um protótipo de alta
 fidelidade**, e convida a rever o acabamento; a pergunta grossa fica de fora.
 
-### O que custa não fazer isto
-
-No cartão VIP da ANA, o `DT:249` torna o produto **obrigatório** na configuração de regras, o
-`DT:165` torna-o **opcional** no cartão, e o `AF:1507` exige que as validações corram **também** no
-VIP. Três textos, cada um coerente consigo próprio, e juntos deixam um cartão VIP sem origem
-documentada para as suas regras.
-
-A pergunta — *o cartão VIP tem produto?* — chegou a ser formulada, e com **três saídas escritas**:
-(a) configuração por segmento, (b) um produto interno de cortesia, (c) cartão sem regras de âmbito.
-Não faltava análise. **O que faltou foi a pergunta ir à ANA.** Foi respondida por inferência, pela
-(b).
-
-Três dias depois a ANA respondeu numa sessão de revisão — *«não faz sentido no VIP termos o campo
-product»*, que é a (c) — e desfez um registo `Product2` na sandbox, um script de Apex e todo o
-trabalho à volta.
-
-Num quadro de processo, «emitir um cartão VIP» teria uma faixa para a ANA. A pergunta *quem carrega
-neste botão* tê-la-ia posto lá, **vazia, à vista**, três dias antes.
+O caso que fez este passo — três dias de trabalho desfeitos por uma pergunta respondida por
+inferência — está em `casos.md` (caso 1).
 
 ## Passo 2 — os quadros
 
@@ -87,14 +71,12 @@ Três obrigações, cada uma com a sua razão:
 
 **Cada faixa tem um actor nomeado, nunca «o sistema» sozinho.** Uma faixa sem dono é um passo que
 ninguém faz — ou que dois fazem e ninguém sabe qual. O nome pode ser um papel («o suporte», «quem
-administra o cliente», «a ANA»), mas é um nome. Uma faixa que só se consegue rotular com «o
+administra o cliente», «o cliente»), mas é um nome. Uma faixa que só se consegue rotular com «o
 sistema» fica lá **vazia e por preencher**, porque é isso que ela é.
 
 **O estado de falha desenha-se sempre.** É onde o desenho e o código se confrontam: no caminho feliz
-não há nada com que discordar, e toda a gente concorda com ele. O terceiro ecrã do aprovisionamento
-do AnnieFlow — *a organização já é de outro cliente, e apagá-la derrubava um cliente vivo* — era um
-caso que o código já tratava e que nenhum ecrã desenhava. Foi ele que obrigou a decidir o que a spec
-não tinha decidido.
+não há nada com que discordar, e toda a gente concorda com ele. É também onde mora o caso que o
+código já trata e nenhum ecrã desenha (`casos.md`, caso 2).
 
 **Cada quadro leva por baixo uma nota a dizer que suposição testa.** É a `UX-004` tornada
 verificável: se não consegues escrever a suposição numa frase, **o quadro não está a testar nada e
@@ -115,10 +97,6 @@ descobrir que a premissa estava errada com dez quadros feitos custa dez vezes ma
 descobri-lo com dois. Pior do que o custo, um processo inteiro desenhado convida ao mesmo que uma
 spec de novecentas linhas — comentários sobre a ordem das caixas, e não sobre se aquilo é para quê.
 
-No cartão VIP da ANA, **a pergunta do produto decidia-se na primeira fase**. Desenhada sozinha,
-teria posto a faixa vazia da ANA à vista antes de existir mais alguma coisa — e o que estava em
-causa eram três dias, não o resto do processo.
-
 ## Passo 3 — a volta
 
 O utilizador responde de duas maneiras, e **só se vê uma delas se se for buscar as duas**:
@@ -138,7 +116,7 @@ Cada volta regista, na página durável, duas coisas:
 - **o que mudou** no desenho;
 - **a frase que o motivou**, entre aspas e de quem a disse.
 
-A frase vale mais do que a alteração. *«Quem instala a AnnieSales é apenas a gente»* tem seis
+A frase vale mais do que a alteração. *«Quem instala o produto somos só nós»* tem seis
 palavras e desfez dois documentos; a alteração que dela saiu explica-se sozinha, mas a frase é o que
 ensina onde estava o erro de premissa — e é a única coisa que se pode procurar daqui a um ano.
 
@@ -162,9 +140,8 @@ tomada.
 - **o que falta** para a fechar;
 - **a quem se pergunta**, pelo nome.
 
-Foi a falta desse nome que custou o produto de cortesia: a pergunta estava formulada, as três saídas
-estavam escritas, e não havia linha nenhuma a dizer *«isto pergunta-se à ANA»*. Uma pergunta em
-aberto sem destinatário responde-se sozinha, por inferência, e é sempre assim que acaba.
+Uma pergunta em aberto sem destinatário responde-se sozinha, por inferência, e é sempre assim que
+acaba (`casos.md`, caso 1).
 
 ## Passo 5 — o que fica
 
@@ -178,32 +155,18 @@ aberto sem destinatário responde-se sozinha, por inferência, e é sempre assim
 desaparecer — se o raciocínio só lá viver, perde-se com ele. O instantâneo tira-se **quando o
 desenho assenta**, e não a cada volta, senão o git enche-se de ruído.
 
-**E «assenta» tem critério**, senão o instantâneo tira-se por cansaço:
-
-> a volta em que **não aparecem marcas novas nem comentários novos**, e em que as decisões em aberto
-> ou fecharam **ou têm dono**.
-
-As três condições verificam-se olhando para o que já tens: o canvas da volta anterior contra o desta,
-e a lista de abertas do passo 4. Uma delas que falhe é mais uma volta, não um instantâneo.
-
-**Cada página declara à cabeça quem manda se divergir da spec.** Uma frase, no topo, antes de tudo o
-resto: *«em caso de divergência com a spec 010, manda esta página»*, ou o contrário. Uma página de
-desenho à frente da spec é normal e diz-se; uma spec à frente do desenho sem a página o dizer é como
-se perdem manhãs — alguém implementa o que já foi corrigido.
-
-O `docs/desenho/README.md` indexa os processos, numa tabela com **o processo, quem o faz e o
-estado** («desenhado e acordado», «duas decisões medidas, oito em aberto», «por desenhar»). Se não
-existir, cria-o com o primeiro processo lá dentro.
+Antes de tirares o instantâneo ou de escreveres a página, **lê `pagina.md`**, ao lado deste
+ficheiro: diz quando é que o desenho assentou (o critério, para não se tirar por cansaço), o que a
+página declara à cabeça sobre divergir da spec, e o índice de `docs/desenho/`.
 
 ## Na fase de desenho, pesquisa-se sem filtro de domínio
 
 A pesquisa da base aceita `--dominio`, e serve para **executar**: um projecto de Salesforce não quer
 regras de LangGraph ao lado das de Apex. **Atrapalha para perceber.**
 
-A lição que explicou o diagnóstico das duas reversões do AnnieFlow estava no tema `ux.md`, que o
-projecto **não tinha instalado** — só se alcançou por pesquisa sem filtro. Um projecto de Salesforce
-a desenhar um processo tem exactamente o mesmo problema: a lição sobre fidelidade de protótipos não
-está nos temas de Salesforce e nunca estará.
+Uma lição sobre fidelidade de protótipos não está nos temas de Salesforce e nunca estará; um
+projecto de Salesforce a desenhar um processo só lhe chega por pesquisa sem filtro (`casos.md`,
+caso 3).
 
 **Nos passos 1 e 2, pesquisas sem `dominio`.** A partir do passo 4, quando já se decide dentro de
 uma stack, o filtro volta a fazer sentido.

@@ -27,15 +27,16 @@ will not see the new commands.
 | `/keel-upgrade` | The engine moved on and the project's contract is behind. |
 | `/keel-lesson` | Claude made a mistake worth remembering, or the same one twice. |
 
-## Three agents come with it
+## Four agents come with it
 
-Besides the commands, the plugin ships three role agents. Claude Code dispatches them when the work
+Besides the commands, the plugin ships four role agents. Claude Code dispatches them when the work
 matches, or you can name one.
 
 | Agent | What it does |
 |---|---|
 | `architect` | Designs structure before there is code — module boundaries, layers, where each business rule lives, contracts between parts. It writes the design and nothing else. |
-| `reviewer` | Reads the diff against the spec and the rules, runs the tests and the linter, and reports what is wrong by severity, citing the rule ID on each finding. |
+| `reviewer` | Reads only the diff and the spec — never the plan or the conversation — and gives each dimension PASS, FAIL or NO EVIDENCE. Every dimension starts at FAIL and only passes with evidence: a test run, linter or type-checker output, a cited line. Each finding is recorded in `.keel/revisao.json`. |
+| `refuter` | Runs only at critical gates (security, tenant isolation, migrations). It takes each PASS and tries to break it by writing the test that would fail. |
 | `troubleshoot` | Diagnoses something broken in a real environment — production or UAT. |
 
 **`troubleshoot` is the one worth reading before you use it.** It asks which environment it is in before
@@ -77,6 +78,16 @@ The `deny` list and the guard go in at every strictness level. A security rule t
 text depends on the model obeying it, and nobody finds out when it doesn't; the guard
 (`.keel/guarda.mjs`, a `PreToolUse` hook on `Bash|PowerShell|Write|Edit`) refuses `git push`,
 recursive deletes and any touch of `.env`, including the variants a text-only `deny` rule misses.
+
+Review findings are state, not text. While `.keel/revisao.json` holds an open finding, the guard
+refuses `git commit` and a `Stop` hook keeps the task from ending. A finding closes as fixed only
+after a new reviewer pass on that dimension, or as not fixed with a stated reason.
+
+The `CLAUDE.md` it writes is short on purpose: the core imports, the commands an agent cannot guess,
+and the practices that break from the usual convention. No project overview and no folder tree —
+the agent finds those by reading the code, and studies of repository context files found that
+overviews raise cost without raising success. `node <plugin>/skills/keel-init/contexto.mjs` adds up
+everything that loads in every session and warns above 200 lines.
 
 Two things matter about this layout, and they are the whole design:
 
