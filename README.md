@@ -7,7 +7,7 @@ Then the context grows, the guide sinks into the middle of it, and it stops matt
 the middle of a long context gets ignored, and nothing tells you when that happens.
 
 Keel splits the difference. Each domain has a **core** of at most 60 lines that is always in
-context, and it holds nothing but rule IDs. The rules themselves — 35 files of them — sit in
+context, and it holds nothing but rule IDs. The rules themselves — 36 files of them — sit in
 `.claude/rules/` with a `paths:` frontmatter, and Claude Code loads each one **only when it opens a
 file that rule applies to**. You pay attention for the Apex rules when you are writing Apex, and not
 otherwise.
@@ -17,7 +17,7 @@ mechanically**, and how many independent sources confirmed it. The middle one is
 `/keel-audit` possible — either the code violates the rule or it does not, and that is not a matter
 of taste.
 
-Version 0.16.2. This repository is **generated**; it is not edited here.
+Version 0.17.0. This repository is **generated**; it is not edited here.
 
 ## Install
 
@@ -62,7 +62,7 @@ a **Fonte** line that links to the documentation and opens.
 
 ## Domains
 
-A project takes only the domains that apply to it, and can take several: `comercio-digital`, `javascript`, `mobile-react-native`, `mulesoft`, `python-agentes`, `salesforce`, `web-react`.
+A project takes only the domains that apply to it, and can take several: `automacao-de-testes`, `comercio-digital`, `javascript`, `mobile-react-native`, `mulesoft`, `python-agentes`, `salesforce`, `web-react`.
 A B2B Commerce store takes commerce **and** Salesforce, because the store is platform configuration.
 A pure integration project takes MuleSoft alone.
 
@@ -76,11 +76,11 @@ audit reports rule IDs with file and line.
 ## What travels here
 
 - `agents/` — 3 file(s)
-- `regras/` — 42 file(s)
-- `docs/` — 19 file(s)
+- `regras/` — 44 file(s)
+- `docs/` — 20 file(s)
 - `caminhos.json/` — 1 file(s)
 - `LICENSE/` — 1 file(s)
-- `skills/` — 8 file(s)
+- `skills/` — 9 file(s)
 
 ## Como ler uma regra
 

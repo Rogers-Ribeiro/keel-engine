@@ -54,6 +54,20 @@ Sem `--aplicar` não escreve ficheiro nenhum. Sai um relatório com seis linhas:
 Repara no que não está na tabela: **não há linha de «apagada»**. Nenhum caminho do script apaga uma
 regra. No máximo diz-te que o engine deixou de a ter.
 
+O relatório tem ainda uma secção **Scripts e controlos**, porque as regras de segurança só valem com
+o que as impõe (PROC-023, PROC-035):
+
+- os scripts de `.keel/` (`guarda.mjs`, `licoes.mjs`) seguem a mesma lógica a três que as regras:
+  em falta, instalam-se; intactos desde a base, passam à versão nova; editados no projecto, ficam e
+  o relatório diz-te para comparares à mão;
+- ao `.claude/settings.json` **só se acrescenta** o que falta do `deny` mínimo e o hook `PreToolUse`
+  do guarda — as mesmas entradas que o `keel-init` escreve. Nada do projecto sai nem muda de sítio.
+  Um `settings.json` que não seja JSON válido não é tocado, e o relatório diz o que juntar à mão.
+
+Se o projecto não quiser uma das entradas (um pipeline que faz `git push` da sessão, por exemplo),
+tira-a ele depois, à vista no diff, e regista o porquê no `keel.yaml`. O script não pergunta, porque
+acrescentar um bloqueio é reversível numa linha e esquecê-lo não é.
+
 ### 2. Se não encontrar a base
 
 O script procura o engine antigo na cache dos plugins, que guarda todas as versões instaladas. Numa
@@ -94,7 +108,16 @@ um ficheiro que case, em vez de as ter todas em contexto a cada sessão.
 
 O script **não faz commit**. Fica um `git diff` para ler, que é o que torna isto revisível.
 
-### 5. Depois de aplicar, duas coisas que o script não faz
+### 5. Depois de aplicar, três coisas que o script não faz
+
+**Testar o guarda.** Se foi instalado, dá-lhe um `git push` pelo stdin e confirma o `exit 2`:
+
+```
+echo '{"tool_name":"Bash","tool_input":{"command":"git push"}}' | node .keel/guarda.mjs; echo $?
+```
+
+Se o projecto tiver hooks com caminhos absolutos no `settings.json`, diz-o: noutra máquina falham, e
+`${CLAUDE_PROJECT_DIR}` resolve isso.
 
 **Os padrões do `paths:`.** Nos domínios de plataforma são canónicos e copiam-se tal e qual. No
 `python-agentes` são convenção: onde vivem os modelos, os workers ou os prompts é decisão de cada

@@ -69,9 +69,14 @@ style. Decide what to adopt, then run `/keel-init`.
 │   ├── keel.yaml             engine version, domains, themes, answers, date
 │   └── nucleo-<domain>.md    one per chosen domain, always in context
 ├── .claude/rules/<theme>.md  the theme rules, with `paths:` in the frontmatter
-├── .keel/                    cache: the knowledge base, git-ignored
-└── .claude/settings.json     the SessionStart hooks
+├── .keel/                    the lessons script and the guard hook
+└── .claude/settings.json     a minimal `deny` list, the guard hook, and the SessionStart hook
 ```
+
+The `deny` list and the guard go in at every strictness level. A security rule that only exists as
+text depends on the model obeying it, and nobody finds out when it doesn't; the guard
+(`.keel/guarda.mjs`, a `PreToolUse` hook on `Bash|PowerShell|Write|Edit`) refuses `git push`,
+recursive deletes and any touch of `.env`, including the variants a text-only `deny` rule misses.
 
 Two things matter about this layout, and they are the whole design:
 

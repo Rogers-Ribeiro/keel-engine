@@ -269,3 +269,15 @@ não diz onde fica o que se corrigiu nem como chega ao projecto seguinte. Saem d
 **Como verificar:** Nenhuma lição ou regra do registo descreve um caso que a ferramenta de lint, os testes ou os hooks do projecto já detectam.
 **Fonte:** [licoes-do-agente](../docs/licoes-do-agente.md)
 **Cursos:** 0
+
+## Regras e controlos
+
+Esta regra não sai de curso nenhum. Os cursos ensinam o `deny` e os hooks (PROC-023), mas nenhum mede quantas das regras de segurança escritas num projecto têm, de facto, um controlo por trás. Sai da referência [regras-vs-controlos](../docs/regras-vs-controlos.md), que resume um estudo de 481 ficheiros CLAUDE.md públicos.
+
+### PROC-035 — Cada regra de segurança escrita diz que controlo a impõe
+
+**Regra:** Ao escrever uma regra de segurança em texto (CLAUDE.md, `.claude/rules/`, uma skill), põe ao lado o controlo que a impõe: a entrada de `permissions.deny`, o hook ou o teste. Se não houver nenhum, escreve-o primeiro (PROC-034); se não for possível, diz na própria regra que depende de o modelo obedecer.
+**Porquê:** Uma instrução em texto é interpretada pelo modelo; o `deny` e o hook `PreToolUse` bloqueiam antes de a acção correr. Num estudo de 481 CLAUDE.md públicos, só 4% a 16% das regras de segurança tinham um controlo nativo equivalente, e quem as escreveu não tinha forma de o saber — o ficheiro é um canal só de escrita. Uma regra que diz que não tem controlo, pelo menos, não engana quem a lê.
+**Como verificar:** Para cada regra de segurança dos ficheiros de instruções do projecto existe uma entrada correspondente no `deny` do `.claude/settings.json`, um hook `PreToolUse` que a cobre, ou a menção explícita de que não há controlo. O `keel-audit` lista as que não têm nenhuma das três.
+**Fonte:** [regras-vs-controlos](../docs/regras-vs-controlos.md)
+**Cursos:** 0

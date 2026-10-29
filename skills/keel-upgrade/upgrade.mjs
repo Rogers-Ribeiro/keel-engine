@@ -181,9 +181,111 @@ export function frontmatterPaths(padroes) {
   return ['---', 'paths:', ...padroes.map((p) => `  - ${JSON.stringify(p)}`), '---', ''].join('\n');
 }
 
+// ---------------------------------------------------------------- scripts e controlos
+//
+// Os scripts de `.keel/` são do engine, não do projecto, e seguem a mesma lógica a três que as
+// regras: intacto desde a base passa à versão nova; editado no projecto fica; em falta instala-se.
+// O `settings.json` é do projecto: aqui só se **junta** o que o contrato mínimo exige e lá não está.
+
+export const SCRIPTS = [
+  { destino: '.keel/guarda.mjs', origem: 'skills/keel-init/guarda.mjs' },
+  { destino: '.keel/licoes.mjs', origem: 'skills/keel-lesson/licoes.mjs' },
+];
+
+// O mesmo bloco que o `keel-init` escreve. Um teste confirma que os dois não se afastam.
+export const DENY_MINIMO = [
+  'Read(./.env)',
+  'Read(./.env.*)',
+  'Bash(git push *)',
+  'PowerShell(git push *)',
+  'Bash(rm -rf *)',
+  'PowerShell(Remove-Item *)',
+];
+
+export const HOOK_GUARDA = {
+  matcher: 'Bash|PowerShell|Write|Edit',
+  hooks: [{ type: 'command', command: 'node', args: ['${CLAUDE_PROJECT_DIR}/.keel/guarda.mjs'], timeout: 10 }],
+};
+
+const lerSeExiste = (f) => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8').replace(/\r\n/g, '\n') : null);
+
+// Devolve o que fazer com um script: `instalar`, `actualizar`, `igual`, `editado` ou `sem-origem`.
+export function estadoDoScript(textoBase, textoProjecto, textoNovo) {
+  if (textoNovo === null) return 'sem-origem';
+  if (textoProjecto === null) return 'instalar';
+  if (textoProjecto === textoNovo) return 'igual';
+  if (textoBase !== null && textoProjecto === textoBase) return 'actualizar';
+  return 'editado';
+}
+
+export function actualizarScripts(projecto, base, novo, aplicar) {
+  const linhas = [];
+  for (const { destino, origem } of SCRIPTS) {
+    const fProjecto = path.join(projecto, destino);
+    const textoNovo = lerSeExiste(path.join(novo, origem));
+    const estado = estadoDoScript(lerSeExiste(path.join(base, origem)), lerSeExiste(fProjecto), textoNovo);
+    if (estado === 'igual' || estado === 'sem-origem') continue;
+    if (estado === 'editado') {
+      linhas.push(`\`${destino}\`: editado neste projecto; **ficou como está**. Compara-o com \`${origem}\` do engine.`);
+      continue;
+    }
+    linhas.push(`\`${destino}\`: ${estado === 'instalar' ? 'instalado (não existia)' : 'actualizado (estava intacto)'}.`);
+    if (aplicar) {
+      fs.mkdirSync(path.dirname(fProjecto), { recursive: true });
+      fs.writeFileSync(fProjecto, textoNovo);
+    }
+  }
+  return linhas;
+}
+
+// Junta ao `settings.json` as entradas do `deny` mínimo e o hook de guarda que faltarem. Não tira
+// nem reordena nada: uma entrada que o projecto não quer, tira-a o projecto, à vista no diff.
+export function juntarControlos(settings) {
+  const s = structuredClone(settings ?? {});
+  const acrescentados = [];
+  s.permissions ??= {};
+  s.permissions.deny ??= [];
+  for (const entrada of DENY_MINIMO) {
+    if (!s.permissions.deny.includes(entrada)) {
+      s.permissions.deny.push(entrada);
+      acrescentados.push(`\`deny\`: ${entrada}`);
+    }
+  }
+  s.hooks ??= {};
+  s.hooks.PreToolUse ??= [];
+  const temGuarda = s.hooks.PreToolUse.some((g) =>
+    (g.hooks ?? []).some((h) => [h.command, ...(h.args ?? [])].some((a) => String(a).includes('guarda.mjs'))),
+  );
+  if (!temGuarda) {
+    s.hooks.PreToolUse.push(structuredClone(HOOK_GUARDA));
+    acrescentados.push('hook `PreToolUse` do guarda (`Bash|PowerShell|Write|Edit`)');
+  }
+  return { settings: s, acrescentados };
+}
+
+export function actualizarControlos(projecto, aplicar) {
+  const ficheiro = path.join(projecto, '.claude', 'settings.json');
+  const texto = lerSeExiste(ficheiro);
+  let actual = {};
+  if (texto !== null) {
+    try {
+      actual = JSON.parse(texto);
+    } catch {
+      return ['`.claude/settings.json` não é JSON válido; **não lhe toquei**. Junta à mão o `deny` mínimo e o hook do guarda (ver `keel-init`).'];
+    }
+  }
+  const { settings, acrescentados } = juntarControlos(actual);
+  if (!acrescentados.length) return [];
+  if (aplicar) {
+    fs.mkdirSync(path.dirname(ficheiro), { recursive: true });
+    fs.writeFileSync(ficheiro, `${JSON.stringify(settings, null, 2)}\n`);
+  }
+  return acrescentados.map((a) => `\`.claude/settings.json\`: acrescentado ${a}.`);
+}
+
 // ---------------------------------------------------------------- relatório
 
-export function relatorio(porTema, deVersao, paraVersao, avisos = []) {
+export function relatorio(porTema, deVersao, paraVersao, avisos = [], controlos = []) {
   const todas = porTema.flatMap((t) => t.accoes);
   const conta = (estado) => todas.filter((a) => a.estado === estado).length;
   const l = [`# Actualização do contrato — ${deVersao} → ${paraVersao}`, ''];
@@ -215,6 +317,16 @@ export function relatorio(porTema, deVersao, paraVersao, avisos = []) {
     );
     if (!itens.length) continue;
     l.push(`## ${titulo}`, '', nota, '', ...itens.map((i) => `- ${i}`), '');
+  }
+  if (controlos.length) {
+    l.push(
+      '## Scripts e controlos',
+      '',
+      'O que impõe as regras de segurança, e não só as descreve (PROC-023, PROC-035). Só se acrescenta: nada foi tirado.',
+      '',
+      ...controlos.map((c) => `- ${c}`),
+      '',
+    );
   }
   if (avisos.length) l.push('## Avisos', '', ...avisos.map((a) => `- ${a}`), '');
   return l.join('\n');
@@ -323,6 +435,8 @@ function main(argv) {
     if (migrar) fs.rmSync(path.join(dir.caminho, nome));
   }
 
+  const controlos = [...actualizarScripts(projecto, base, novo, aplicar), ...actualizarControlos(projecto, aplicar)];
+
   const pastaAgents = path.join(projecto, '.agents');
   for (const n of fs.readdirSync(pastaAgents).filter((n) => n.startsWith('nucleo'))) {
     avisos.push(`\`.agents/${n}\` não foi tocado: o núcleo está sempre em contexto e é teu. Compara-o à mão.`);
@@ -332,7 +446,7 @@ function main(argv) {
     if (migrar) avisos.push('As regras passaram de `.agents/regras/` para `.claude/rules/`, com `paths:` no frontmatter.');
   }
 
-  const md = relatorio(porTema, deVersao, paraVersao, avisos);
+  const md = relatorio(porTema, deVersao, paraVersao, avisos, controlos);
   console.log(md);
   if (aplicar) {
     const destino = path.join(projecto, '.keel', 'upgrade.md');

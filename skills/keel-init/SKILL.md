@@ -43,7 +43,7 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 
    Mostra a lista dos domínios escolhidos e deixa acrescentar ou tirar.
 3. **O projecto tem fronteiras internas** (módulos que não se importam uns aos outros)? Decide se entram as regras de arquitectura modular.
-4. **Nível de exigência:** só revisão humana, ou também verificações automáticas (lint, testes, hooks) desde o início.
+4. **Nível de exigência:** só revisão humana, ou também verificações automáticas (lint, testes, formatação) desde o início. O bloqueio mínimo — o `deny` e o hook de guarda — **não entra nesta pergunta**: vai sempre (secção abaixo).
 
 ## O que escreves
 
@@ -55,7 +55,8 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 │   └── nucleo-<dominio>.md  um por domínio escolhido (o do python-agentes é nucleo.md), importados pelo CLAUDE.md
 ├── .claude/rules/<tema>.md  as regras dos temas escolhidos, com `paths:` no frontmatter
 ├── .keel/licoes.mjs         põe em contexto o que já se aprendeu noutros projectos desta máquina
-└── .claude/settings.json  os hooks SessionStart, mais permissões e hooks do nível escolhido
+├── .keel/guarda.mjs         o hook que recusa o que nunca pode acontecer
+└── .claude/settings.json  o `deny` mínimo e o hook de guarda (sempre), o hook SessionStart, e os hooks do nível escolhido
 ```
 
 Regras de escrita:
@@ -89,6 +90,51 @@ paths:
 - **Domínio `python-agentes`**: o caminho é **convenção**, e varia. Onde vivem os modelos, os workers ou os prompts é decisão de cada projecto. Aqui os padrões da base são um ponto de partida: **confirma cada um contra a estrutura real** que mapeaste, e corrige o que não bater. Um padrão que não casa com nada é uma regra que nunca carrega, e ninguém dá por isso.
 
 Diz ao utilizador, numa linha, quais é que ajustaste e porquê.
+
+## O bloqueio que vai sempre
+
+Os temas instalados trazem regras de segurança em texto — não publicar sem revisão, não apagar em massa, não tocar em segredos. Em texto, quem as cumpre é o modelo, e ninguém fica a saber quando não cumpre: num estudo de 481 CLAUDE.md públicos, só 4% a 16% das regras de segurança tinham um controlo por trás ([regras-vs-controlos](${CLAUDE_PLUGIN_ROOT}/docs/regras-vs-controlos.md)). Instalar as regras sem o controlo seria reproduzir exactamente isso. Por isso esta parte **não depende do nível de exigência** (PROC-023, PROC-035).
+
+Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/guarda.mjs` para `.keel/guarda.mjs`, e junta ao `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(git push *)",
+      "PowerShell(git push *)",
+      "Bash(rm -rf *)",
+      "PowerShell(Remove-Item *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.keel/guarda.mjs"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Os dois fazem trabalhos diferentes, e um não dispensa o outro:
+- O **`deny`** é a primeira barreira e é imposto pelo cliente, mas vê só o texto: `Bash(git push *)` não apanha `git -C . push`, e nenhuma regra `Bash(...)` apanha um `.env` alterado pela ferramenta de edição.
+- O **guarda** cobre essas variantes e sai com `exit 2`. O `matcher` inclui `Write|Edit` (D-PR08). Recusa pouco de propósito — publicar, apagar recursivamente e tocar no `.env` —, porque um guarda que recusa trabalho normal é desligado na primeira semana. O que o projecto quiser acrescentar vai para o `deny` dele.
+
+Cuidados:
+- Se o `settings.json` já tiver `permissions.deny` ou `hooks.PreToolUse`, **junta** às listas que lá estão. Não substituas nada, e não tires entradas do projecto.
+- Se o projecto precisar mesmo de uma das entradas fora (por exemplo, um pipeline que faz `git push` a partir da sessão), não a tires em silêncio: pergunta, e regista a excepção no `keel.yaml` com o porquê.
+- Testa antes de acabar: dá ao guarda um `git push` pelo stdin e confirma o `exit 2`.
 
 ## O hook que traz as lições de outros projectos
 
@@ -147,4 +193,4 @@ Antes de dares o trabalho por feito, **corre o que acabaste de instalar**: os te
 
 ## Quando acabas
 
-Diz, em cinco linhas: os domínios escolhidos, os ficheiros escritos, os temas incluídos e quantas regras trazem, o que ficou por verificar automaticamente, e o comando para confirmar (`/agents` e `/memory`).
+Diz, em cinco linhas: os domínios escolhidos, os ficheiros escritos, os temas incluídos e quantas regras trazem, o que o `deny` e o guarda bloqueiam e o que ficou por verificar automaticamente, e o comando para confirmar (`/agents`, `/memory` e `/permissions`).

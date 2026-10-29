@@ -83,6 +83,7 @@ primeira coluna de cada `UNIQUE`"* é uma regra.
 
 ```
 node .keel/licoes.mjs licao --chave "<a mesma>" --titulo "<curto>" \
+  --ambito "<em que tipo de tarefa ou de ficheiro vale>" \
   --regra "<o que fazer, no imperativo>" \
   --porque "<a consequência de não fazer, não a regra outra vez>" \
   --verificar "<como se vê num diff ou no código que foi cumprida>"
@@ -90,6 +91,14 @@ node .keel/licoes.mjs licao --chave "<a mesma>" --titulo "<curto>" \
 
 O `--verificar` não é enfeite: é o campo que permite a esta lição ser promovida a regra e ser
 auditada por quem não estava lá. Se não o souberes escrever, a lição ainda não está madura.
+
+O `--ambito` também não. A lição entra no contexto de **todos** os projectos desta máquina, e uma
+lembrança certa aplicada ao caso errado faz pior do que nenhuma: num benchmark de memória de agentes
+(MemTrapBench, arXiv:2608.20202), todos os sistemas de memória testados ficaram abaixo do modelo
+sem memória, e o que o paper propõe é confirmar se a memória se aplica antes de a usar. É isso que
+o arranque pede, e é para isso que serve o campo. Escreve-o pelo que se vê na tarefa — *"em tabelas
+Postgres com `tenant_id`"*, *"em hooks do Claude Code no Windows"* — e não pelo projecto onde
+aconteceu. As lições antigas sem o campo continuam válidas; acrescenta-o quando lhes tocares.
 
 ## Passo 3 — promover a regra, na base
 

@@ -54,7 +54,7 @@ Guarda este mapa num ficheiro. É o que dás aos leitores, para nenhum ter de de
 
 Um subagente por dimensão, **no máximo 5 ao mesmo tempo**. Cada um recebe: o mapa do passo 2, o que saiu do passo 1, os ficheiros de regras da sua dimensão, e o caminho do ficheiro onde escreve. Nenhum lê o repositório inteiro e nenhum escreve no código.
 
-As dimensões dependem da stack, porque as regras também dependem. Olha para o mapa do passo 2 e escolhe as tabelas dos domínios que encontraste — podem ser mais do que uma. Um repositório com `sfdx-project.json`, `force-app/` ou `manifest/package.xml` leva a tabela de `salesforce`; um com `mule-artifact.json` ou POMs de Mule leva a de `mulesoft`; um com `cartridges/` ou `dw.json` leva a de `comercio-digital`; um repositório Python com agentes leva a de `python-agentes`; um com `package.json` e TypeScript leva a de `javascript`, mais a de `web-react` se tiver React no browser (`vite.config.*`, `next.config.*`, `tsr.config.json`, `components.json`) e a de `mobile-react-native` se tiver `app.json` de Expo, `android/` ou `ios/`. Um repositório que caia em mais do que um domínio leva as dimensões de todas as tabelas correspondentes.
+As dimensões dependem da stack, porque as regras também dependem. Olha para o mapa do passo 2 e escolhe as tabelas dos domínios que encontraste — podem ser mais do que uma. Um repositório com `sfdx-project.json`, `force-app/` ou `manifest/package.xml` leva a tabela de `salesforce`; um com `mule-artifact.json` ou POMs de Mule leva a de `mulesoft`; um com `cartridges/` ou `dw.json` leva a de `comercio-digital`; um repositório Python com agentes leva a de `python-agentes`; um com `package.json` e TypeScript leva a de `javascript`, mais a de `web-react` se tiver React no browser (`vite.config.*`, `next.config.*`, `tsr.config.json`, `components.json`) e a de `mobile-react-native` se tiver `app.json` de Expo, `android/` ou `ios/`. Um repositório com testes ponta a ponta (`playwright.config.*`, `e2e/`, `tests/e2e/`, `pytest-playwright` nas dependências) leva também a de `automacao-de-testes`, seja qual for a linguagem. Um repositório que caia em mais do que um domínio leva as dimensões de todas as tabelas correspondentes.
 
 **Domínio `python-agentes`:**
 
@@ -110,11 +110,36 @@ As dimensões dependem da stack, porque as regras também dependem. Olha para o 
 |---|---|
 | Ecrãs, navegação, plataforma e dados locais | `mobile-react-native.md` |
 
+**Domínio `automacao-de-testes`:**
+
+| Dimensão | Regras que lê |
+|---|---|
+| Testes ponta a ponta: localizadores, esperas, isolamento, autenticação e CI | `automacao-de-testes.md` |
+
+**Em qualquer domínio, se o repositório tiver instruções para agentes** (`CLAUDE.md`, `AGENTS.md`, `.claude/rules/`, `.cursor/rules/`, `.github/copilot-instructions.md`, skills próprias):
+
+| Dimensão | Regras que lê |
+|---|---|
+| Regras escritas e controlos que as impõem | `dev-com-agentes.md` (PROC-023, PROC-034, PROC-035), `seguranca.md` (SEG-008) |
+
+Esta dimensão não lê o código: lê o que o repositório **diz ao agente** e compara com o que **o impede**. O leitor junta as regras de segurança escritas nos ficheiros de instruções (o que não se publica, apaga, lê ou executa) e, para cada uma, procura o controlo em `.claude/settings.json` e `.claude/settings.local.json` (`permissions.deny`, hooks `PreToolUse`), no sandbox, e na CI quando a regra é sobre o que entra no repositório. Devolve, além do formato comum, uma tabela:
+
+```
+| Regra escrita (ficheiro:linha) | Controlo que a impõe | Estado |
+|---|---|---|
+| "nunca faças push para main" (CLAUDE.md:12) | `Bash(git push *)` no deny; nenhum hook | parcial — o deny não apanha `git -C . push` |
+| "não leias o .env" (CLAUDE.md:15) | — | só texto |
+```
+
+Estados: **imposta** (há `deny` ou hook que a cobre por inteiro), **parcial** (cobre a forma óbvia mas não as variantes — um `deny` de shell sem hook, um hook só com `Bash` num projecto em Windows ou sem `Write|Edit`, D-PR08), **só texto** (nenhum controlo), e **assumida** (a própria regra diz que depende do modelo). A severidade segue o que a regra protege: só texto em segredos, publicação ou apagamento é **sério**; no resto, **reparo**.
+
+Diz no relatório o que esta tabela não mede: uma regra só em texto **não é** uma regra ignorada — é uma regra cujo cumprimento depende do modelo e ninguém fica a saber quando falha ([regras-vs-controlos](${CLAUDE_PLUGIN_ROOT}/docs/regras-vs-controlos.md)). Sem ficheiros de instruções para agentes, a dimensão não corre e diz-se porquê.
+
 Um repositório pode cair em mais do que um domínio, e aí leva as dimensões de todos — uma loja B2B é `comercio-digital` e `salesforce`. A dimensão de IA generativa só entra se houver Agentforce ou Prompt Builder; sem isso, diz no relatório que ficou de fora, como fazes com as outras.
 
 As regras vêm de `${CLAUDE_PLUGIN_ROOT}/regras/`, **não do contrato do projecto**: o levantamento pergunta o que falta, e o que falta costuma estar nos temas que o projecto ainda não adoptou.
 
-Ficam de fora, de propósito: `dev-com-agentes` (é sobre como se desenvolve, não sobre o que está escrito), e `dados-e-ml`, `nlp` e `ux` (só entram se o repositório tiver essa matéria — se tiver, acrescenta a dimensão). Diz no relatório que ficaram de fora.
+Ficam de fora, de propósito: o resto do `dev-com-agentes` (é sobre como se desenvolve, não sobre o que está escrito — só as regras de controlo acima entram, porque essas deixam rasto no `settings.json`), e `dados-e-ml`, `nlp` e `ux` (só entram se o repositório tiver essa matéria — se tiver, acrescenta a dimensão). Diz no relatório que ficaram de fora.
 
 O que cada leitor devolve, no seu ficheiro:
 

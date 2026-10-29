@@ -3,7 +3,7 @@
 //
 //   node .keel/licoes.mjs sugerir     modo hook: põe as lições em contexto e diz o que já reincide
 //   node .keel/licoes.mjs registar --chave <c> --o-que "<…>" --prova "<…>"
-//   node .keel/licoes.mjs licao --chave <c> --titulo "<…>" --regra "<…>" --porque "<…>" --verificar "<…>"
+//   node .keel/licoes.mjs licao --chave <c> --titulo "<…>" --ambito "<…>" --regra "<…>" --porque "<…>" --verificar "<…>"
 //   node .keel/licoes.mjs promover --chave <c> --id <PROC-035>   virou regra na base: sai daqui
 //   node .keel/licoes.mjs descartar --chave <c> --porque "<…>"   não se confirmou: sai daqui
 //   node .keel/licoes.mjs estado      o que há, contado, para uma pessoa ler
@@ -155,7 +155,9 @@ export function escreverLicao(pasta, licao) {
   const chave = normalizarChave(licao.chave);
   if (!chave) throw new Error('falta --chave');
   if (licoesEscritas(pasta).has(chave)) return 'ja-existe';
-  for (const campo of ['titulo', 'regra', 'porque', 'verificar']) {
+  // O âmbito é obrigatório porque a lição entra no contexto de **todos** os projectos: uma lição
+  // certa aplicada fora do caso dela piora o resultado, e a única defesa é ela dizer onde vale.
+  for (const campo of ['titulo', 'ambito', 'regra', 'porque', 'verificar']) {
     if (!String(licao[campo] ?? '').trim()) throw new Error(`falta --${campo}`);
   }
 
@@ -168,6 +170,7 @@ export function escreverLicao(pasta, licao) {
   const bloco = [
     `### ${chave} — ${licao.titulo.trim()}`,
     '',
+    `**Quando vale:** ${licao.ambito.trim()}`,
     `**Regra:** ${licao.regra.trim()}`,
     `**Porquê:** ${licao.porque.trim()}`,
     `**Como verificar:** ${licao.verificar.trim()}`,
@@ -217,6 +220,12 @@ export function textoParaContexto(pasta, { minimo = MINIMO, maxLicoes = MAX_LICO
     const corpo = fs.readFileSync(ficheiro, 'utf8').split(/^(?=### )/m).slice(1);
     if (corpo.length) {
       partes.push('## Lições do Keel — decididas por reincidência, valem em todos os projectos\n');
+      // Uma lembrança certa aplicada ao caso errado piora a resposta, e piora mais do que não a ter
+      // (MemTrapBench, arXiv:2608.20202). A defesa que o paper mede é esta: confirmar antes de usar.
+      partes.push(
+        'Antes de aplicares uma, confirma que a tarefa cabe no **Quando vale** dela. Fora disso, ignora-a: ' +
+          'uma lição certa no caso errado faz pior do que nenhuma.\n',
+      );
       partes.push(corpo.join('').trimEnd());
       if (corpo.length > maxLicoes) {
         partes.push(
@@ -285,7 +294,7 @@ function main(argv) {
 
     if (comando === 'licao') {
       const r = escreverLicao(pasta, {
-        chave: flags.chave, titulo: flags.titulo, regra: flags.regra,
+        chave: flags.chave, titulo: flags.titulo, ambito: flags.ambito, regra: flags.regra,
         porque: flags.porque, verificar: flags.verificar, prova: flags.prova,
       });
       console.log(r === 'escrita' ? `Lição escrita em ${ficheiroLicoes(pasta)}.` : 'Já existia uma lição com essa chave.');
