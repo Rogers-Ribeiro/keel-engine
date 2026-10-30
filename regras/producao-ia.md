@@ -177,7 +177,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 
 ### IAP-019 — Tracing desde a primeira chamada
 
-**Regra:** Liga o tracing (`LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY` e `LANGSMITH_PROJECT`) no início do projecto e instrumenta todas as chamadas e nós, não só depois de algo falhar.
+**Regra:** Liga o tracing (`LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY` e `LANGSMITH_PROJECT`) no início do projecto e instrumenta todas as chamadas e nós, não só depois de algo falhar; em produção, sem o conteúdo dos prompts e das respostas por omissão (OBS-018).
 **Porquê:** Uma resposta errada de um LLM não deixa stack trace; sem traces depura-se a adivinhar pela saída final, e não se vê onde foram os tokens nem o tempo.
 **Como verificar:** As variáveis de tracing estão no `.env.example` e a documentação diz onde ver os traces. Cada função que chama o modelo ou corre um nó aparece no trace.
 **Fonte:** [referência](../docs/langchain-formatos.md)

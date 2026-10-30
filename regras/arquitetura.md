@@ -192,6 +192,13 @@ Prefixo `ARQ`. ## Estrutura e módulos
 **Como verificar:** `interrupt` sem checkpointer; `MemorySaver` em código de produção; execuções sem `thread_id` na configuração.
 **Cursos:** 3
 
+### ARQ-029 — Verificação em código nos portões e nos ciclos de auto-correcção
+
+**Regra:** entre etapas de uma cadeia e no nó que decide se um ciclo de auto-correcção termina, verifica o resultado em código (compilar, correr testes, validar o formato) sempre que a correcção se puder exprimir como regra; não peças ao mesmo LLM que avalie o próprio trabalho, e deixa um LLM avaliador só para o que não tem verificação determinística.
+**Porquê:** o Production AI Agents valida o código gerado com uma compilação real e casos de teste, "geração probabilística, validação determinística"; o CCAR-P põe entre os passos de uma cadeia um portão que é uma verificação simples em código, e não outra chamada ao modelo, para um resultado intermédio mau não contaminar o resto.
+**Como verificar:** a função de routing de cada ciclo de auto-correcção e cada portão entre etapas; um nó verificador que chama o LLM para julgar uma saída que podia ser compilada, testada ou validada por schema é um erro a assinalar.
+**Cursos:** 2
+
 ## Processo com agentes de codificação
 
 ### ARQ-027 — PRD e especificação antes do código
@@ -207,3 +214,21 @@ Prefixo `ARQ`. ## Estrutura e módulos
 **Porquê:** o curso gera as skills a partir do que foi feito, está a funcionar e foi validado no próprio projecto.
 **Como verificar:** skills novas sem código de referência no repositório.
 **Cursos:** 3
+
+## Sistemas com LLM em produção
+
+### ARQ-030 — Toda a saída má tem caminho até uma mudança no sistema
+
+**Regra:** num sistema com LLM em produção, guarda cada saída junto da entrada que a gerou, captura as correcções humanas no momento em que acontecem, e define para onde vai uma saída má: um caso novo de avaliação, um ajuste de prompt ou, em último caso, um conjunto de re-treino. Guardar em log sem esse caminho não conta como ciclo de feedback.
+**Porquê:** o log acaba no armazenamento e não muda nada no sistema; sem a fase de feedback a qualidade só pode descer à medida que o tráfego se afasta do que foi testado, e sem erro nem alerta que o denuncie. A correcção humana é o sinal de maior valor, e perde-se se não for capturada quando é feita.
+**Como verificar:** perguntar à spec ou ao desenho "para onde vai uma saída má?"; os registos de produção têm a entrada ao lado da saída, há um ponto de captura das correcções, e uma falha observada vira um caso no dataset de avaliação.
+**Cursos:** 1
+
+## Decisões de arquitectura
+
+### ARQ-031 — ADR para cada decisão cara de reverter, nunca editado depois de aceite
+
+**Regra:** regista num ADR cada decisão que molda a estrutura, as interfaces principais ou as dependências do sistema, ou que seria cara de reverter, com as cinco partes pela ordem — título, estado, contexto, decisão, consequências —, e as consequências negativas ao lado das positivas. Um ADR aceite não se edita: quando a decisão muda, escreve-se um novo e o antigo passa a substituído (superseded), ou a obsoleto (deprecated) se nada o substituir.
+**Porquê:** o registo só é fiável se for só de acrescento: reescrever um ADR aceite apaga a história, que é a razão de o registo existir. Listar só as vantagens esconde os custos que foram aceites; e um registo cheio de trivialidades é tão inútil como nenhum.
+**Como verificar:** um diff que altera o contexto, a decisão ou as consequências de um ADR com estado aceite é um erro; uma mudança de estrutura, de interface partilhada ou de dependência sem ADR novo também; ADRs sem consequências negativas.
+**Cursos:** 1

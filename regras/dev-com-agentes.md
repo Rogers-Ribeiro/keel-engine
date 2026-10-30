@@ -222,9 +222,9 @@ Prefixo `PROC`. ## Contexto e sessões
 
 ### PROC-046 — `allowed_tools` aprova, não restringe
 
-**Regra:** Não uses `allowed_tools` (Agent SDK) nem a opção equivalente do Claude Code para limitar as ferramentas de um agente: só aprovam sem perguntar. Para tirar ferramentas, usa a lista `tools` do subagente, `--tools` numa execução com `-p`, ou `permissions.deny` (a aula diz: `allowed_tools` define as ferramentas que o agente pode usar; desactualizado).
+**Regra:** Não uses `allowed_tools` (Agent SDK) nem a opção equivalente do Claude Code para limitar as ferramentas de um agente: só aprovam sem perguntar. Para tirar ferramentas, usa a lista `tools` do subagente, `--tools` numa execução com `-p`, `disallowed_tools` no Agent SDK (com o nome simples, a ferramenta sai do pedido) ou `permissions.deny` (a aula diz: `allowed_tools` define as ferramentas que o agente pode usar; desactualizado).
 **Porquê:** Os cursos apresentam a opção como a lista do que o agente pode usar, mas na forma actual ela não retira nenhuma ferramenta; uma configuração que conta com ela para conter um agente deixa as outras ferramentas disponíveis.
-**Como verificar:** Nenhuma configuração usa `allowed_tools` com a intenção de restringir; um agente que não pode usar uma ferramenta tem-na fora por `tools`, `--tools` ou `deny`.
+**Como verificar:** Nenhuma configuração usa `allowed_tools` com a intenção de restringir; um agente que não pode usar uma ferramenta tem-na fora por `tools`, `--tools`, `disallowed_tools` ou `deny`; nenhum combina `allowed_tools` com `bypassPermissions` a contar que a lista limite alguma coisa.
 **Fonte:** [referência](../docs/claude-api-formatos.md) · [referência](../docs/claude-code-formatos.md)
 **Cursos:** 3
 
@@ -372,9 +372,10 @@ Estas regras não saem de curso nenhum. Os cursos ensinam o CLAUDE.md, as skills
 
 ## Claude Code em pipelines
 
-### PROC-047 — Claude Code em CI corre com `-p` e devolve JSON com esquema (API a confirmar)
+### PROC-047 — Claude Code em CI corre com `-p` e devolve JSON com esquema
 
-**Regra:** Num passo de pipeline, invoca o Claude Code sempre em modo não interactivo (`-p`), com `--output-format json` e, quando um script consome o resultado, com `--json-schema` a descrever a forma esperada; captura a saída e verifica o código de saída a cada invocação antes de a ler, sem assumir que vem sempre JSON.
-**Porquê:** Sem `-p` a sessão interactiva fica à espera de alguém e o job só pára no timeout global, a gastar minutos; texto livre muda de forma entre execuções e extraí-lo é frágil. O esquema garante a forma, não a correcção, e uma falha pode chegar como mensagem de erro em texto, por isso o código de saída decide primeiro.
-**Como verificar:** Cada chamada a `claude` nos workflows de CI tem `-p` e `--output-format json` (e `--json-schema` quando o resultado é lido por código), e o script testa o código de saída antes de interpretar a resposta.
+**Regra:** Num passo de pipeline, invoca o Claude Code sempre em modo não interactivo (`-p`), com `--bare` e `--output-format json` e, quando um script consome o resultado, com `--json-schema` a descrever a forma esperada; testa o código de saída a cada invocação e, antes de ler `structured_output`, confirma que o campo existe.
+**Porquê:** Sem `-p` a sessão interactiva fica à espera de alguém e o job só pára no timeout global, a gastar minutos; texto livre muda de forma entre execuções e extraí-lo é frágil. O esquema garante a forma, não a correcção, e quando o Claude recusa o `structured_output` simplesmente não vem. Sem `--bare`, o `-p` corre os hooks e liga os MCP que estiverem no repositório, mesmo num fork que ninguém confiou.
+**Como verificar:** Cada chamada a `claude` nos workflows de CI tem `-p`, `--bare` e `--output-format json` (e `--json-schema` quando o resultado é lido por código), e o script testa o código de saída e a presença de `structured_output` antes de interpretar a resposta.
+**Fonte:** [Formatos do Claude Code — Modo não interactivo](../docs/claude-code-formatos.md#modo-não-interactivo-claude--p)
 **Cursos:** 2

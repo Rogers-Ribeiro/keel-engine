@@ -48,6 +48,13 @@ Prefixo `OBS`. ## Logging da aplicação
 **Como verificar:** a spec de observabilidade lista, por camada, as métricas dos métodos RED e USE, com a saturação entre elas; métricas fora dessa lista têm justificação explícita.
 **Cursos:** 1
 
+### OBS-015 — Latência por percentil, nunca só pela média
+
+**Regra:** mede e reporta a latência que o utilizador sente — tempo até ao primeiro token, latência ponta a ponta, passos de ferramenta e de recuperação — pelos percentis 95 e 99, e não apenas pela média.
+**Porquê:** a média esconde a cauda lenta: o percentil 95 mostra a experiência do pior pedido em cada vinte e o 99 a do pior em cada cem, que são os utilizadores que acham o sistema partido enquanto o painel da média continua verde.
+**Como verificar:** os painéis, os relatórios e os alertas de latência usam percentis; nenhum alerta nem conclusão sobre latência se apoia só numa média.
+**Cursos:** 1
+
 ## Logs agregados
 
 ### OBS-007 — Toda a dimensão de filtragem é uma label
@@ -82,6 +89,13 @@ Prefixo `OBS`. ## Logging da aplicação
 **Como verificar:** todas as regras têm labels de encaminhamento; as políticas de notificação são aninhadas e filtram por essas labels; a política por omissão continua intacta.
 **Cursos:** 1
 
+### OBS-016 — Limiar de alerta tirado da baseline medida
+
+**Regra:** antes de configurar um alerta, mede a gama normal da métrica com tráfego saudável e fixa o limiar a partir dessa baseline, em vez de escolher um número redondo.
+**Porquê:** sem baseline um número não significa nada e não se distingue uma anomalia de ruído normal; um limiar adivinhado dispara por coisas que não importam, a equipa aprende a ignorar o alerta e deixa passar o que importava.
+**Como verificar:** cada regra de alerta diz de onde vem o limiar — a baseline medida e o período em que foi medida; limiares sem origem declarada são sinalizados.
+**Cursos:** 1
+
 ## Tracing distribuído
 
 ### OBS-011 — Um só `TracerProvider` por serviço (API a confirmar)
@@ -110,4 +124,36 @@ Prefixo `OBS`. ## Logging da aplicação
 **Regra:** ao criar o span de uma chamada entre serviços, marca-o explicitamente como `client` no lado que chama e como `server` no lado que atende.
 **Porquê:** é essa distinção que é usada para desenhar o grafo de serviços; sem ela o grafo não se constrói.
 **Como verificar:** os spans dos clientes HTTP internos declaram o tipo `client`; os spans dos pontos de entrada declaram `server`.
+**Cursos:** 1
+
+### OBS-017 — Atributos de recurso e identificador de sessão postos na origem
+
+**Regra:** cada span sai do processo com os atributos de recurso — nome do serviço, ambiente, versão e, num sistema multi-tenant, o identificador do tenant — e o span de topo de cada interacção leva o identificador de sessão, o mesmo ao longo de toda a conversa.
+**Porquê:** os atributos são aquilo por que se filtra e agrupa a jusante, e um atributo esquecido à origem é uma dimensão que nunca mais se consegue cortar; sem o identificador de sessão os traces estão certos mas órfãos, e não se reconstrói a conversa de um utilizador.
+**Como verificar:** a configuração de telemetria feita no arranque define serviço, ambiente, versão e tenant; o span que abre cada interacção recebe o identificador de sessão; filtrar o backend por esse identificador devolve todos os traces da conversa.
+**Cursos:** 1
+
+### OBS-018 — Spans estruturais por omissão; conteúdo só por decisão delimitada
+
+**Regra:** em produção, os spans registam a forma do que aconteceu — que ferramenta correu, quanto demorou, se teve sucesso, contagens e identificadores — e não o texto do prompt, os argumentos das ferramentas nem as respostas; o registo de conteúdo liga-se de propósito, para um serviço ou uma investigação com prazo, e com destino definido.
+**Porquê:** a camada estrutural chega para a maior parte do trabalho de latência, custo e erros e mantém os dados sensíveis fora da telemetria; o pipeline que captura conteúdo herda as obrigações de conformidade de tudo o que capturou. O traço completo fica para o desenvolvimento.
+**Como verificar:** a configuração de produção não liga a captura de prompts nem de entradas e saídas; onde estiver ligada, há uma decisão registada com âmbito, prazo e destino dos dados. Com o LangSmith, o ambiente de produção tem `LANGSMITH_HIDE_INPUTS=true` e `LANGSMITH_HIDE_OUTPUTS=true` (ou `hide_inputs`/`hide_outputs` no `Client`), e só uma decisão escrita e com prazo os desliga.
+**Fonte:** [referência](../docs/langchain-formatos.md)
+**Cursos:** 1
+
+### OBS-019 — Flush do exportador no encerramento do processo
+
+**Regra:** no código de encerramento da aplicação, esvazia o buffer do exportador de telemetria antes de o processo sair.
+**Porquê:** com exportação em lote, os spans mais recentes podem ainda estar no buffer por enviar; sem o flush perdem-se os últimos spans da execução, muitas vezes os mais interessantes, os que estão perto de uma falha.
+**Como verificar:** o caminho de encerramento da aplicação chama o flush do exportador ou do provider de telemetria — `client.flush()` no LangSmith, `TracerProvider.force_flush()` ou `shutdown()` no OpenTelemetry — e não há saída do processo que o salte.
+**Fonte:** [referência](../docs/langchain-formatos.md)
+**Cursos:** 1
+
+## Qualidade em produção
+
+### OBS-020 — Amostra de produção reavaliada com os avaliadores offline
+
+**Regra:** com cadência fixa, amostra uma fatia representativa das respostas de produção, pontua-a com os mesmos avaliadores dos evals offline e compara o resultado com a baseline registada no lançamento.
+**Porquê:** a resposta errada silenciosa devolve sucesso, passa todos os checks de estado e deixa a taxa de erro verde; a deriva da qualidade não lança erro nenhum, e só reavaliar tráfego real com a mesma pontuação a quantifica, semanas antes das queixas.
+**Como verificar:** existe um job agendado que amostra respostas de produção e corre sobre elas os avaliadores do conjunto de avaliação; a pontuação é comparada com a de referência do lançamento e um desvio gera sinal.
 **Cursos:** 1

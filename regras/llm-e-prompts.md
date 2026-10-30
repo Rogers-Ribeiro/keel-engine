@@ -65,6 +65,14 @@ Prefixo `LLM`. ## Escrita de prompts
 **Como verificar:** Nos prompts com vários documentos, cada documento tem o seu bloco com origem; as instruções que dizem respeito a uma só fonte nomeiam-na. Documentos concatenados num único bloco, ou instruções que só falam de "os documentos", são um erro a assinalar.
 **Cursos:** 2
 
+### LLM-025 — Documentos longos no topo, a pergunta no fim
+
+**Regra:** num prompt com documentos ou dados extensos, o papel e as regras permanentes ficam no system prompt (LLM-019) e, no turno do utilizador, os documentos vêm primeiro e a pergunta, as instruções da tarefa e os exemplos vêm depois deles, no fim.
+**Porquê:** a documentação da Anthropic mede até 30% de melhoria na qualidade da resposta com a pergunta no fim, sobretudo com vários documentos; os últimos tokens pesam mais na geração seguinte (efeito de recência), e uma pergunta afogada antes de milhares de tokens de documento perde-se.
+**Como verificar:** nos templates de prompt com contexto recuperado ou documentos anexados, o bloco dos documentos aparece antes da pergunta do utilizador; um template que põe a pergunta antes dos documentos é achado.
+**Fonte:** [Formatos da API — Messages API](../docs/claude-api-formatos.md)
+**Cursos:** 2
+
 ## Saída estruturada e ferramentas
 
 ### LLM-008 — Esquema validado para a saída consumida por código
@@ -175,7 +183,7 @@ Prefixo `LLM`. ## Escrita de prompts
 
 ### LLM-017 — Tracing ligado
 
-**Regra:** Liga o tracing do LangSmith no desenvolvimento, pelas variáveis `LANGSMITH_*`, e inspecciona o prompt, as chamadas de ferramenta e a resposta registados antes de concluir que um comportamento está errado.
+**Regra:** Liga o tracing do LangSmith no desenvolvimento, pelas variáveis `LANGSMITH_*`, e inspecciona o prompt, as chamadas de ferramenta e a resposta registados antes de concluir que um comportamento está errado. Em produção, o traço é estrutural por omissão (OBS-018).
 **Porquê:** Sem tracing só se vê a resposta final; o registo mostra o prompt que foi realmente enviado, as decisões pelo caminho, o tempo e os tokens de cada execução.
 **Como verificar:** O `.env.example` traz as variáveis `LANGSMITH_*` e um nome de projecto; os relatos de comportamento errado referem a execução registada.
 **Fonte:** [referência](../docs/langchain-formatos.md)

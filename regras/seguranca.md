@@ -30,6 +30,20 @@ Prefixo `SEG`. ## Defesa em profundidade nas chamadas ao LLM
 **Como verificar:** existe um validador de saída entre a chamada ao modelo e a resposta; quem chama usa o campo limpo, mesmo quando a validação dá "válido".
 **Cursos:** 2
 
+### SEG-019 — Passar cada resultado de tool pela verificação antes de o agente agir sobre ele
+
+**Regra:** aplica aos resultados das tools a mesma verificação que aplicas à resposta final do modelo (classificador ou validador de conteúdo nocivo e de instruções injectadas), e corre-a antes de o resultado voltar ao agente para decidir o passo seguinte.
+**Porquê:** um resultado de tool traz texto de fontes que o projecto não controla — páginas, emails, registos escritos por outros — e pode carregar dano ou instruções escondidas tal como uma resposta final; verificar só a saída para o utilizador deixa passar o que o agente já executou pelo caminho.
+**Como verificar:** no ciclo do agente, entre a execução da tool e a construção do bloco de resultado que volta ao modelo, existe uma chamada ao verificador; o que ele rejeita não chega ao modelo como resultado normal.
+**Cursos:** 1
+
+### SEG-020 — Manter uma suite de ataques versionada e corrê-la a cada mudança de prompt ou de tools
+
+**Regra:** mantém no repositório um conjunto de ataques conhecidos (injecção directa, documentos, emails e resultados de tool com instruções escondidas, tentativas de jailbreak) e corre-o como teste sempre que muda um prompt, uma tool ou uma defesa.
+**Porquê:** uma pequena alteração ao prompt ou uma tool nova pode reabrir em silêncio um buraco que estava fechado; atacar o próprio agente de forma repetível é o que impede a defesa de regredir sem ninguém dar por isso.
+**Como verificar:** existe um ficheiro ou pasta de casos adversariais versionado e um teste que os corre e falha se algum passar as defesas; o CI corre-o nas alterações a prompts, tools ou guardrails.
+**Cursos:** 1
+
 ## Ferramentas e ambiente dos agentes
 
 ### SEG-005 — Dar a cada agente e ferramenta as permissões mínimas (API a confirmar)
@@ -67,6 +81,13 @@ Prefixo `SEG`. ## Defesa em profundidade nas chamadas ao LLM
 **Como verificar:** nenhum prompt, ficheiro de contexto ou documento do projecto contém valores reais de segredos; o código lê as chaves em runtime e não as escreve em nenhum ficheiro do repositório.
 **Cursos:** 1
 
+### SEG-021 — Registar cada chamada de tool com o utilizador que a originou
+
+**Regra:** cada chamada de tool fica num registo de auditoria com a identidade do utilizador ou do agente por trás dela, a tool, a hora e os inputs, e as credenciais e os registos atribuem a acção a esse utilizador, nunca a uma conta de serviço partilhada.
+**Porquê:** sem atribuição por utilizador vê-se que algo aconteceu mas não quem o causou, o que torna impossível responder a um incidente; o registo é o que permite reconstruir o que o agente fez em vez de adivinhar a partir de indícios parciais.
+**Como verificar:** o ponto onde as tools são executadas escreve uma entrada de auditoria com quem, que tool, quando e com que inputs; nenhuma tool corre com uma identidade genérica partilhada por todos os utilizadores.
+**Cursos:** 2
+
 ## Segredos e configuração
 
 ### SEG-010 — Ler as credenciais de variáveis de ambiente, nunca do código
@@ -95,6 +116,13 @@ Prefixo `SEG`. ## Defesa em profundidade nas chamadas ao LLM
 **Regra:** tudo o que for password, token, chave ou identificador que não possa ser adivinhado gera-se com o módulo `secrets` (`secrets.SystemRandom`); o módulo `random` fica reservado para testes e simulações.
 **Porquê:** o `random` é determinístico a partir da seed e usa o tempo, o que abre a porta a reproduzir os valores gerados; o `secrets` usa a aleatoriedade do sistema operativo e ignora a seed.
 **Como verificar:** nenhuma geração de credencial ou token importa `random`; as que existem usam `secrets`.
+**Cursos:** 1
+
+### SEG-022 — Revogar um segredo vazado antes de investigar
+
+**Regra:** quando uma chave, token ou password aparece onde não devia (código, log, conversa com o modelo), o primeiro passo é revogá-la e emitir outra; a investigação da causa vem depois.
+**Porquê:** enquanto a chave continua válida, cada minuto gasto a perceber como vazou é um minuto em que quem a tem pode usá-la; revogar fecha o acesso de imediato, investigar não.
+**Como verificar:** o procedimento de incidentes do projecto põe a revogação e a rotação como primeiro passo perante um segredo exposto; um commit que remove uma chave do repositório vem acompanhado da revogação dessa chave, não só da remoção.
 **Cursos:** 1
 
 ## Entradas e dados
@@ -134,4 +162,20 @@ Prefixo `SEG`. ## Defesa em profundidade nas chamadas ao LLM
 **Regra:** qualquer API que sirva um agente tem limite de pedidos por IP e um endpoint de estado que o orquestrador de containers possa consultar.
 **Porquê:** o pipeline de validação e guarda é um ponto de partida, não uma solução completa: sem limite de pedidos, o custo por inferência transforma um cliente abusivo num problema de facturação. O health check é o que permite ao Docker marcar o container como não saudável.
 **Como verificar:** existe o limitador configurado nos endpoints que chamam o modelo e um endpoint de estado ligado ao healthcheck do container.
+**Cursos:** 1
+
+## Tokens entre serviços
+
+### SEG-023 — Enviar o token de acesso no cabeçalho de autorização, nunca na query string
+
+**Regra:** o bearer token de uma chamada a uma API ou a um servidor MCP remoto vai no cabeçalho de autorização de cada pedido; nunca entra na query string nem noutra parte do URL.
+**Porquê:** um bearer token dá acesso a quem o tiver, sem mais perguntas, e a query string acaba nos logs do servidor, no histórico do browser e nos proxies — um token que cai num log fica, na prática, público.
+**Como verificar:** nenhum cliente HTTP do projecto monta URLs com o token como parâmetro; o servidor não aceita o token vindo da query string.
+**Cursos:** 1
+
+### SEG-024 — Validar a audiência do token e não o reencaminhar a montante
+
+**Regra:** o servidor que recebe um token (um servidor MCP remoto ou uma API própria) confirma, antes de honrar o pedido, que o token foi emitido para ele e rejeita-o se a audiência não corresponder; e nunca reencaminha o token do cliente para uma API a montante em nome dele.
+**Porquê:** sem a verificação da audiência, um token emitido para outro serviço é aceite aqui; ao reencaminhar o token, o servidor empresta a sua posição de confiança para chegar a algo que o cliente nunca foi autorizado a tocar (o problema do "confused deputy").
+**Como verificar:** a validação do token compara a audiência com o identificador do próprio servidor e falha quando não bate; as chamadas a montante usam credenciais do próprio servidor, não o token recebido.
 **Cursos:** 1

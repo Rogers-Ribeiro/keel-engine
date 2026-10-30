@@ -130,6 +130,17 @@ Referência para escrever os agentes, as skills, as rules, os hooks e as permiss
   - `disableBypassPermissionsMode: "disable"` impede o `bypassPermissions`.
 - **Comandos só de leitura** (por exemplo `echo` e `ls`) correm sem pedir. Em `-p`, para tirar ferramentas por completo, usa-se `--tools "Read,Write"`.
 
+## Modo não interactivo (`claude -p`)
+
+Confirmado a 2026-10-30 em [headless](https://code.claude.com/docs/en/headless) e [cli-reference](https://code.claude.com/docs/en/cli-reference).
+
+- **Código de saída:** 0 quando corre bem, diferente de 0 quando falha. Uma flag inválida vai para o stderr antes de arrancar; uma falha **dentro** da execução (sem autenticação, por exemplo) sai no stdout como resultado. SIGTERM sai com 143 e deixa o turno sem resultado.
+- **`--output-format`:** `text` (por omissão), `json` (resultado em `result`, mais `session_id`, uso e `total_cost_usd`, que é uma estimativa do cliente) e `stream-json` (um JSON por linha; a última é o `result`).
+- **`--json-schema '<esquema>'`:** só em `-p`, com `--output-format json`. A saída validada vem em **`structured_output`**. Um esquema inválido faz sair com erro; o `format` é aceite como anotação e não é validado. Se a execução acaba sem saída válida (o Claude recusou, por exemplo), **o campo não vem**: o script tem de confirmar que existe antes de o usar.
+- **Limites:** `--max-turns N` sai com erro ao chegar ao limite; `--max-budget-usd X` pára ao chegar à estimativa de custo, que pode ser ultrapassada (deixar folga); `--no-session-persistence` não grava a sessão.
+- **`--bare`:** não carrega hooks, skills, comandos, subagentes, plugins, MCP, memória nem CLAUDE.md; o que for preciso passa-se por flag (`--settings`, `--mcp-config`, `--agents`, `--append-system-prompt`). Não usa o login da subscrição: exige `ANTHROPIC_API_KEY` ou `apiKeyHelper`. A documentação recomenda-o para CI e scripts e diz que vai passar a ser o comportamento por omissão de `-p`. **Sem `--bare`, um `-p` corre os hooks do `.claude/settings.json` e liga os servidores do `.mcp.json` do repositório, mesmo numa pasta nunca confiada, sem pedir.**
+- **Permissões:** desde a 2.1.302 um `-p` sem modo definido arranca em Manual, e o que pediria confirmação é recusado. `--allowedTools` aprova sem perguntar (não restringe; restringir é `--tools`); `--permission-mode dontAsk` recusa tudo o que pediria confirmação; `--permission-prompts none` (≥ 2.1.259) diz ao Claude que ninguém pode aprovar e que não insista.
+
 ## Consequências para o desenho
 
 1. **Regras sempre presentes em cada papel.** Cada tema de regras (`regras-arquitetura`, `regras-codigo-limpo`, …) é empacotado como skill de conhecimento, com `user-invocable: false`, e **pré-carregado** no frontmatter dos agentes que o usam. Por exemplo, o `arquiteto` e o `revisor` levam arquitectura e código limpo. Assim há uma só fonte para vários agentes e as regras entram sempre ao arrancar. O `` na lista `tools` fica para o detalhe.

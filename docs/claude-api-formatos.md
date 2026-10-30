@@ -27,6 +27,9 @@ Páginas oficiais lidas:
 - https://code.claude.com/docs/en/agent-sdk/overview
 - https://code.claude.com/docs/en/agent-sdk/python
 - https://code.claude.com/docs/en/agent-sdk/typescript
+- https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls (2026-10-30)
+- https://code.claude.com/docs/en/agent-sdk/permissions (2026-10-30)
+- https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices (2026-10-30, prefill)
 
 ## 1. Modelos
 
@@ -68,6 +71,7 @@ Preços por milhão de tokens (entrada / saída), da página de visão geral dos
 - `messages`: roles `user` e `assistant`, alternados. Máximo de 100.000 mensagens. `content` é string ou array de blocos.
 - Blocos de pedido confirmados: `text`, `image`, `document` (com `source` de tipo `file`, `base64` ou `text`), `container_upload`, `tool_result`, `thinking` e `redacted_thinking`.
 - Prefill (última mensagem `assistant`) é rejeitado com 400 nos modelos 4.6 e posteriores e em Mythos Preview.
+- **Contexto longo** *(confirmado a 2026-10-30 em claude-prompting-best-practices)*: com documentos ou dados grandes (20 mil tokens ou mais), os documentos vão no topo do prompt, por cima da pergunta, das instruções e dos exemplos; a pergunta no fim melhora a qualidade da resposta em até 30% nos testes da Anthropic, sobretudo com vários documentos. Cada documento num `<document>` com `<document_content>` e `<source>`.
 - `document` dentro de uma mensagem `assistant` devolve 400 (versão de API 2026-10-21).
 - Versão de API: enviar `anthropic-version`. A versão mais recente documentada é `2026-10-21`. Muitos exemplos ainda usam `2023-06-01`, que continua válida.
 - Resposta: `id`, `type: "message"`, `role: "assistant"`, `model`, `content`, `stop_reason`, `stop_sequence`, `usage`. Pode trazer também `container`, `stop_details` e `diagnostics`.
@@ -97,7 +101,7 @@ Preços por milhão de tokens (entrada / saída), da página de visão geral dos
   - Em Opus 5.5, Sonnet 5.5, Fable 5.1 e Mythos 5.1, `any` e `tool` dão 400. Usar `auto` com `strict: true`, ou saídas estruturadas.
   - Forçar uma ferramenta salta o bloco de thinking.
   - Mudar `tool_choice` invalida a cache das mensagens.
-- Ciclo: o modelo devolve `stop_reason: "tool_use"` com blocos `tool_use`. A aplicação executa a ferramenta e envia blocos `tool_result` (com `tool_use_id`) na mensagem `user` seguinte. Os campos `content` e `is_error` do `tool_result` não foram confirmados nesta leitura.
+- Ciclo: o modelo devolve `stop_reason: "tool_use"` com blocos `tool_use`. A aplicação executa a ferramenta e envia blocos `tool_result` (com `tool_use_id`) na mensagem `user` seguinte. *(Confirmado a 2026-10-30 em handle-tool-calls.)* O `tool_result` tem `tool_use_id`, `content` (opcional: texto, ou lista de blocos `text`, `image`, `document` ou `search_result`) e `is_error` (opcional, `true` quando a execução falhou). A documentação pede mensagens de erro instrutivas: o que correu mal e o que tentar a seguir. Os `tool_result` vêm imediatamente a seguir ao `tool_use`, à cabeça do `content` da mensagem `user`, e o texto só depois deles (ao contrário, 400). Um pedido inválido com `is_error` leva o Claude a tentar 2 ou 3 vezes antes de desistir. Nas server tools não se trata `is_error`. Conteúdo externo vai dentro do `tool_result`, nunca no `system` nem em texto do utilizador.
 - Vários `tool_use` no mesmo turno são paralelos por omissão. `disable_parallel_tool_use` desliga isso.
 - Server tools (executadas pela Anthropic): `web_search`, `web_fetch`, `code_execution`, `bash_code_execution`, `text_editor_code_execution`, `tool_search_tool_regex` e `tool_search_tool_bm25`. Não aceitam `input_examples`. As versões são datadas. A lista completa está na Tool reference, que não foi lida.
 - **Tool Runner** (SDK, beta):
@@ -220,7 +224,9 @@ Preços por milhão de tokens (entrada / saída), da página de visão geral dos
 - Função principal: `query()`. Python: `query(prompt=..., options=ClaudeAgentOptions(...))`, devolve um iterador assíncrono de mensagens. TypeScript: `query({ prompt, options })`, devolve `Query`.
 - Sessões com várias trocas (Python): `ClaudeSDKClient`. Por omissão, cada `query()` cria uma sessão nova.
 - Opções (Python / TypeScript):
-  - `allowed_tools` / `allowedTools`: aprova sem perguntar. Não restringe as ferramentas.
+  - `allowed_tools` / `allowedTools`: aprova sem perguntar. Não restringe as ferramentas: as que não estão na lista continuam disponíveis e seguem para o modo de permissão. Com `bypassPermissions`, aprova tudo, incluindo `Bash`, `Write` e `Edit`.
+  - `disallowed_tools` / `disallowedTools` *(confirmado a 2026-10-30 em agent-sdk/permissions)*: com o nome simples (`"Bash"`), **retira a ferramenta do pedido** e o Claude nem a vê; com padrão (`"Bash(rm *)"`), recusa as chamadas que casem, em qualquer modo, incluindo `bypassPermissions`. Aceita globs (`"*"`, `"mcp__*"`).
+  - Ordem de avaliação: hooks → regras deny (`disallowed_tools` e settings) → regras ask → modo de permissão → regras allow (`allowed_tools` e settings) → `canUseTool`. Um hook que devolve `allow` não salta o deny. Para um agente fechado: `allowed_tools` com `permission_mode="dontAsk"`.
   - `permission_mode` / `permissionMode`: Python `default`, `acceptEdits`, `plan`, `dontAsk`, `bypassPermissions`, `auto`. TypeScript inclui `default`, `plan`, `bypassPermissions` e `auto`.
   - `mcp_servers` / `mcpServers`, `hooks`, `agents` (subagentes), `model`, `max_turns` / `maxTurns`, `resume` (ID de sessão), `cwd`.
 - Conceitos principais: subagentes, hooks, permissões, sessões (retomar ou fazer fork), MCP, skills e plugins. Skills e comandos carregam-se de `.claude/` e de `~/.claude/`.

@@ -64,7 +64,12 @@ Referência para as regras e os agentes. Os cursos usam APIs de várias épocas 
 - `StateGraph`, checkpointers, `interrupt()`, `Command`, `Send` e `MemorySaver` continuam a funcionar no LangGraph v1, que é compatível com a versão anterior fora do agente pré-feito.
 - `@tool` e `BaseTool` passam a importar-se de `langchain.tools`, e as mensagens de `langchain.messages`. `message.content` continua válido; `message.content_blocks` é a forma independente do fornecedor.
 
-## Consequências para as regras
+## LangSmith e OpenTelemetry: conteúdo e encerramento (confirmado a 2026-10-30)
+
+- **Ocultar o conteúdo dos traces** ([mask-inputs-outputs](https://docs.langchain.com/langsmith/mask-inputs-outputs)): `LANGSMITH_HIDE_INPUTS=true` e `LANGSMITH_HIDE_OUTPUTS=true` no ambiente, ou `Client(hide_inputs=..., hide_outputs=...)` por instância (aceitam função, para ocultar só parte). Um `anonymizer` tem precedência sobre essas funções, e é saltado nos inputs quando `LANGSMITH_HIDE_INPUTS=true`.
+- **Flush antes de sair:** a mesma página manda chamar sempre `client.flush()` antes de o programa terminar, para não perder runs em buffer.
+- **OpenTelemetry Python** ([sdk/trace](https://opentelemetry-python.readthedocs.io/en/latest/sdk/trace.html)): `TracerProvider.force_flush(timeout_millis=30000)` pede aos span processors que processem os spans pendentes; `TracerProvider.shutdown()` desliga-os. O construtor tem `shutdown_on_exit=True` por omissão; o que esse parâmetro garante não está descrito na página, por isso o encerramento explícito continua a ser a forma verificável.
+
 
 1. **Agentes:** as regras sobre agentes usam `create_agent` com middleware. Não usam `create_react_agent`, `initialize_agent` nem chains legadas; o `langchain-classic` só entra em código antigo.
 2. **Estado:** em `TypedDict`, com `add_messages` nas mensagens, checkpointer persistente em produção e `thread_id` por conversa.

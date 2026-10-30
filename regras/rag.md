@@ -11,7 +11,7 @@ Prefixo `RAG`. ## Âmbito e pipeline
 
 ### RAG-002 — Só os chunks recuperados vão no prompt
 
-**Regra:** Envia ao LLM apenas os chunks recuperados para a pergunta, nunca o documento ou a base inteira, mesmo quando a janela de contexto parece dar para isso.
+**Regra:** Envia ao LLM apenas os chunks recuperados para a pergunta, nunca o documento ou a base inteira, mesmo quando a janela de contexto parece dar para isso. Excepção: uma base pequena e estável pode ir inteira no prompt com cache (LLM-024) quando a spec regista o tamanho do corpus em tokens e a frequência de mudança, medidos.
 **Porquê:** Todos os modelos têm limite de contexto e o contexto irrelevante degrada a resposta e aumenta o custo.
 **Como verificar:** Procura no diff chamadas que passem o texto completo de um ficheiro ao prompt em vez do resultado do retriever.
 **Cursos:** 7
@@ -109,6 +109,13 @@ Prefixo `RAG`. ## Âmbito e pipeline
 **Como verificar:** A função que formata o contexto preserva a origem e o objecto devolvido tem um campo de fontes; o prompt pede que as fontes sejam incluídas.
 **Cursos:** 3
 
+### RAG-022 — Cada citação verificada contra o chunk de onde diz vir
+
+**Regra:** Quando a resposta cita passagens dos documentos recuperados, verifica cada citação — em código ou com um segundo modelo — contra o chunk que ela indica, antes de entregar a resposta; uma citação que o chunk não sustenta é uma falha e não segue para o utilizador.
+**Porquê:** As citações também podem estar erradas: pedi-las sem as verificar é só metade da técnica, e é na verificação que a invenção aparece antes de chegar a quem lê.
+**Como verificar:** Depois da geração há um passo que confronta cada citação com o texto do chunk indicado e que tem um caminho próprio quando a citação não bate; um prompt que só pede citações não cumpre a regra.
+**Cursos:** 1
+
 ## Fluxo com validação
 
 ### RAG-015 — Avaliar a relevância dos documentos antes de gerar
@@ -164,4 +171,18 @@ Prefixo `RAG`. ## Âmbito e pipeline
 **Porquê:** Sem resposta de referência não há como medir correcção, e sem medição a escolha do modelo acaba por ser feita só pelo preço.
 **Como verificar:** Existe um dataset versionado com perguntas e respostas de referência e avaliadores com schema de saída; uma mudança de modelo ou de prompt traz números da avaliação.
 **Fonte:** [referência](../docs/langchain-formatos.md)
+**Cursos:** 1
+
+### RAG-023 — Resposta errada investigada primeiro na recuperação
+
+**Regra:** Perante respostas erradas de um RAG, inspecciona os chunks que o modelo recebeu nos casos que falham e exclui a recuperação e o prompt antes de trocar de modelo; a troca de modelo só se justifica depois disso.
+**Porquê:** Num sistema com recuperação, a maioria das respostas erradas vem de chunks errados ou em falta, e nenhum modelo recupera informação que não lhe chegou; trocar de modelo sem isolar a causa sai mais caro e esconde o defeito, que volta mais tarde.
+**Como verificar:** Uma alteração que troca o modelo para corrigir a qualidade de um RAG traz os chunks recuperados nos casos que falhavam, ou a medição da recuperação, a mostrar que esta estava certa; respostas que pioraram logo a seguir a uma actualização dos documentos levam primeiro à verificação do índice.
+**Cursos:** 1
+
+### RAG-024 — Recall do retriever medido à parte, por perna e depois de reindexar
+
+**Regra:** Mede a recuperação separadamente da resposta final, com o recall nos primeiros k resultados sobre perguntas cujos chunks relevantes estão identificados; numa pesquisa híbrida, mede-o em cada perna (densa e esparsa) antes de olhar para a lista fundida, e volta a medi-lo sempre que o corpus é reindexado.
+**Porquê:** As métricas da resposta final não distinguem uma falha da recuperação de uma falha do modelo; o recall vem primeiro porque nada a jusante salva um chunk que nunca entrou no conjunto candidato, e a fusão é tolerante ao ponto de esconder durante semanas uma perna degradada.
+**Como verificar:** Existe uma avaliação do retriever com perguntas e os identificadores dos chunks relevantes, que calcula o recall nos k primeiros; com pesquisa híbrida há um valor por perna; o processo de reindexação corre essa avaliação no fim.
 **Cursos:** 1

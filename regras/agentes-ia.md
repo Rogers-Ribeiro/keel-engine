@@ -66,9 +66,10 @@ Prefixo `AGT`. ## Quando usar um agente
 
 ### AGT-027 — Resultado vazio não é falha de acesso
 
-**Regra:** uma tool distingue no resultado «procurei e não encontrei» (sucesso com resultado vazio) de «não consegui procurar» (timeout, ligação recusada, credencial rejeitada, marcado como erro); nunca apanhes a falha e devolvas uma lista vazia como sucesso.
+**Regra:** uma tool distingue no resultado «procurei e não encontrei» (sucesso com resultado vazio) de «não consegui procurar» (timeout, ligação recusada, credencial rejeitada, marcado como erro — na API Claude, `is_error: true` no `tool_result`, com uma mensagem que diga o que falhou e o que tentar a seguir); nunca apanhes a falha e devolvas uma lista vazia como sucesso.
 **Porquê:** o modelo trata uma lista vazia como facto e conclui que os dados não existem — não repete, não tenta outra via e responde com confiança a partir de uma fonte que ninguém leu.
 **Como verificar:** nos `except` das tools, procura `return []`, `return None` ou texto de «nada encontrado»; o caminho de erro tem de devolver um resultado marcado como falha, diferente do caminho de resultado vazio.
+**Fonte:** [referência](../docs/claude-api-formatos.md)
 **Cursos:** 2
 
 ## Grafo e estado
@@ -166,6 +167,13 @@ Prefixo `AGT`. ## Quando usar um agente
 **Como verificar:** lê o prompt de delegação: tem de incluir os dados de que o subagente precisa e um formato de retorno estruturado com limite; uma delegação do tipo «analisa o que encontrámos» sem os achados não passa.
 **Cursos:** 5
 
+### AGT-032 — Um agente por omissão; delegar só com paralelismo ou isolamento reais
+
+**Regra:** começa com um único agente; passa a subagentes ou a vários agentes só quando as subtarefas são separáveis e correm em paralelo sem trocar resultados, ou quando o material não cabe numa janela, e escreve na spec qual dos dois motivos justifica a delegação.
+**Porquê:** um sistema multiagente gasta cerca de 15 vezes os tokens de uma conversa simples, e cerca de 4 vezes o de um agente único com ferramentas; cada subagente traz o seu prompt e o seu raciocínio, e o custo soma-se. Passos que dependem do anterior não paralelizam, e a maior parte do trabalho de código precisa de uma visão partilhada do mesmo estado, que a sincronização entre agentes come.
+**Como verificar:** cada subagente ou grafo multiagente do projecto tem, na spec que o criou, o motivo da delegação (paralelismo sem dependências ou janela insuficiente); uma cadeia sequencial partida em agentes, ou uma delegação sem motivo escrito, é achado.
+**Cursos:** 2
+
 ## Segurança e supervisão
 
 ### AGT-019 — Aprovação humana antes de acções críticas
@@ -208,7 +216,7 @@ Prefixo `AGT`. ## Quando usar um agente
 
 ### AGT-023 — Tracing activado em tudo o que não é um exemplo isolado
 
-**Regra:** activa o tracing do LangSmith por variáveis de ambiente (`LANGSMITH_TRACING`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`) com um nome de projecto próprio, e consulta o traço antes de atribuir uma falha ao modelo (a aula diz: `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY` e `LANGCHAIN_PROJECT`; desactualizado).
+**Regra:** activa o tracing do LangSmith por variáveis de ambiente (`LANGSMITH_TRACING`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`) com um nome de projecto próprio, e consulta o traço antes de atribuir uma falha ao modelo; em produção, o conteúdo dos prompts e das respostas fica oculto por omissão (OBS-018) (a aula diz: `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY` e `LANGCHAIN_PROJECT`; desactualizado).
 **Porquê:** o traço mostra o prompt, a decisão de chamar cada tool, os argumentos e os documentos recuperados — é a única forma de ver o que aconteceu dentro do agente.
 **Como verificar:** as variáveis estão no `.env.example` e o projecto tem nome próprio; ao investigar um bug, exige-se o link do traço.
 **Fonte:** [referência](../docs/langchain-formatos.md)
