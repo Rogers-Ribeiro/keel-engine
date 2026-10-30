@@ -17,7 +17,7 @@ mechanically**, and how many independent sources confirmed it. The middle one is
 `/keel-audit` possible — either the code violates the rule or it does not, and that is not a matter
 of taste.
 
-Version 0.19.0. This repository is **generated**; it is not edited here.
+Version 0.20.0. This repository is **generated**; it is not edited here.
 
 ## Install
 
@@ -38,6 +38,7 @@ code violates, with the rule ID and the `file:line`, and you decide what to adop
 - `/keel-design` — desenhar antes de haver spec
 - `/keel-init` — escrever o contrato num projecto
 - `/keel-lesson` — que o mesmo erro não se aprenda duas vezes
+- `/keel-optimize` — medir o contexto e o consumo, e arrumar o que a medição apontar
 - `/keel-upgrade` — actualizar o contrato sem perder o que lá está
 
 Full guide: [docs/using-keel.md](docs/using-keel.md).
@@ -80,7 +81,7 @@ audit reports rule IDs with file and line.
 - `docs/` — 22 file(s)
 - `caminhos.json/` — 1 file(s)
 - `LICENSE/` — 1 file(s)
-- `skills/` — 15 file(s)
+- `skills/` — 22 file(s)
 
 ## Como ler uma regra
 
