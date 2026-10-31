@@ -72,6 +72,7 @@ As dimensões dependem da stack, porque as regras também dependem. Olha para o 
 |---|---|
 | Regras escritas e controlos que as impõem | `dev-com-agentes.md` (PROC-023, PROC-034, PROC-035), `seguranca.md` (SEG-008) |
 | Peso do contexto e das skills | `dev-com-agentes.md` (PROC-037, PROC-038) |
+| Agentes próprios do repositório | `dev-com-agentes.md` (PROC-009, PROC-010, PROC-048), `agentes-ia.md` (AGT-032) |
 
 Esta dimensão não lê o código: lê o que o repositório **diz ao agente** e compara com o que **o impede**. O leitor junta as regras de segurança escritas nos ficheiros de instruções (o que não se publica, apaga, lê ou executa) e, para cada uma, procura o controlo em `.claude/settings.json` e `.claude/settings.local.json` (`permissions.deny`, hooks `PreToolUse`), no sandbox, e na CI quando a regra é sobre o que entra no repositório. Devolve, além do formato comum, uma tabela:
 
@@ -88,9 +89,11 @@ Diz no relatório o que esta tabela não mede: uma regra só em texto **não é*
 
 A dimensão do peso do contexto corre `node ${CLAUDE_PLUGIN_ROOT}/skills/keel-init/contexto.mjs <repositório>` e põe a tabela que ele dá no relatório. Acima de 200 linhas é **reparo**, e o achado diz o que cortar: no CLAUDE.md, cada parágrafo que o agente acertaria sem o ler (visão geral, árvore de pastas, descrição da arquitectura) sai primeiro; um núcleo acima de 60 linhas parte-se em regras com `paths:`. Lista também as skills próprias do repositório com mais de 200 linhas no `SKILL.md`.
 
+A dimensão dos agentes próprios lê `.claude/agents/`, `.agents/` e as definições de subagentes no código, e diz, para cada agente, o que o separa do principal: `tools`, `model`, o contexto que recebe, ou o paralelismo. Um agente que só difere no papel e no tom (um "PO", um "UX", um "dev backend" com as mesmas ferramentas e o mesmo modelo) é **reparo**: custa coordenação e tokens e não traz conhecimento que as regras com `paths:` não dêem. Sem agentes próprios, a dimensão não corre.
+
 Um repositório pode cair em mais do que um domínio, e aí leva as dimensões de todos — uma loja B2B é `comercio-digital` e `salesforce`. A dimensão de IA generativa só entra se houver Agentforce ou Prompt Builder; sem isso, diz no relatório que ficou de fora, como fazes com as outras.
 
-Ficam de fora, de propósito: o resto do `dev-com-agentes` (é sobre como se desenvolve, não sobre o que está escrito — só as regras de controlo e de peso do contexto acima entram, porque essas deixam rasto nos ficheiros), e `dados-e-ml`, `nlp` e `ux` (só entram se o repositório tiver essa matéria — se tiver, acrescenta a dimensão). Diz no relatório que ficaram de fora.
+Ficam de fora, de propósito: o resto do `dev-com-agentes` (é sobre como se desenvolve, não sobre o que está escrito — só as regras de controlo, de peso do contexto e dos agentes próprios acima entram, porque essas deixam rasto nos ficheiros), e `dados-e-ml`, `nlp` e `ux` (só entram se o repositório tiver essa matéria — se tiver, acrescenta a dimensão). Diz no relatório que ficaram de fora.
 
 O que cada leitor devolve, no seu ficheiro:
 

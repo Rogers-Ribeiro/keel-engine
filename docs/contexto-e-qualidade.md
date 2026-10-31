@@ -1,6 +1,6 @@
 # Contexto, skills e revisão: o que a investigação mede
 
-Referência para as regras que não saem de nenhum curso sobre quanto texto pôr em contexto, como escrever skills e como rever o trabalho de um agente. Os cursos ensinam o CLAUDE.md, as skills e os subagentes revisores; nenhum mede o efeito de cada um. Estes quatro estudos medem.
+Referência para as regras que não saem de nenhum curso sobre quanto texto pôr em contexto, como escrever skills e como rever o trabalho de um agente. Os cursos ensinam o CLAUDE.md, as skills e os subagentes revisores; nenhum mede o efeito de cada um. Estes estudos medem.
 
 Os abstracts foram lidos no arXiv a 2026-10-29. Os textos completos não foram lidos, e por isso cada ponto diz só o que o abstract sustenta.
 
@@ -59,6 +59,21 @@ Fei et al., *How Do Agents Fail on AutoResearch*, arXiv:2608.14905 (v1 a 14/08/2
 - **Ónus da prova invertido.** Cada dimensão começa em FALHA e só passa com evidência: um teste que corre, a saída do lint ou do verificador de tipos, a linha citada. As ferramentas determinísticas não têm auto-preferência.
 - **Refutador nos portões críticos.** O `refuter` recebe cada PASSA de segurança, isolamento entre tenants ou migrações e tenta derrubá-lo escrevendo o teste que falharia. Outro modelo da mesma família a "rever outra vez" não serviria.
 - **Achado fechado é controlo, não texto.** Os achados ficam em `.keel/revisao.json`, pelo `.keel/revisao.mjs`. Só uma nova ronda do revisor os dá como corrigidos; quem implementou só os fecha como não corrigidos, com o motivo. O guarda recusa o commit e o hook `Stop` não deixa a tarefa acabar enquanto houver um aberto.
+
+## 5. Agentes por papel: a persona não traz conhecimento
+
+Zheng, Pei, Logeswaran, Lee, Jurgens, *When "A Helpful Assistant" Is Not Really Helpful: Personas in System Prompts Do Not Improve Performances of Large Language Models*, arXiv:2311.10054 (v3 a 09/10/2024), Findings of EMNLP 2024. Abstract lido a 2026-10-31.
+
+- 162 papéis (6 tipos de relação e 8 domínios de especialidade), 4 famílias de modelos, 2 410 perguntas factuais.
+- **Pôr uma persona no system prompt não melhora o desempenho** face ao mesmo prompt sem persona.
+- A persona muda o resultado, mas o efeito de cada uma é **em grande parte aleatório**: a melhor persona para cada pergunta ajudaria, só que escolhê-la de antemão sai pouco melhor do que ao acaso.
+
+Cemri, Pan, Yang, Agrawal, Chopra, Tiwari, Keutzer, Parameswaran, Klein, Ramchandran, Zaharia, Gonzalez, Stoica, *Why Do Multi-Agent LLM Systems Fail?*, arXiv:2503.13657 (v3 a 26/10/2025). Abstract lido a 2026-10-31.
+
+- Taxonomia (MAST) construída sobre 150 traços e aplicada a mais de 1 600, de 7 frameworks multiagente; 14 modos de falha em 3 categorias: **desenho do sistema**, **desalinhamento entre agentes** e **verificação da tarefa**.
+- O abstract não dá percentagens por categoria nem testa a especificação de papéis; diz só que as falhas pedem soluções mais elaboradas do que as actuais.
+
+**No Keel** (PROC-048): um agente separa-se do principal pelo que precisa de diferente — contexto limpo, outras ferramentas, outro modelo, trabalho paralelo e independente — e não por um papel. O conhecimento de cada área entra pelas regras com `paths:` no mesmo agente. Os quatro agentes do Keel passam neste critério: o `architect` escreve só o desenho, o `reviewer` vê só o diff e a spec e não edita, o `refuter` contraria o viés da revisão, e o `troubleshoot` só lê o ambiente real. Um time de personas (PO, UX, backend) acrescenta coordenação — duas das três categorias de falha da MAST — sem acrescentar conhecimento.
 
 ## Os limites
 

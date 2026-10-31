@@ -101,6 +101,14 @@ Prefixo `PROC`. ## Contexto e sessões
 **Como verificar:** Cada prompt de delegação de pesquisa (no código, numa skill ou na definição de um agente) tem a pergunta, o âmbito, o formato de retorno com limite e a condição de paragem.
 **Cursos:** 1
 
+### PROC-048 — Um agente novo justifica-se pelo que precisa de diferente, não pelo papel
+
+**Regra:** Só cries um subagente quando ele precisa de algo que o agente principal não tem: contexto limpo (não ver a conversa de quem fez o trabalho), outras ferramentas ou permissões, outro modelo, ou trabalho paralelo e independente (AGT-032). Um papel (PO, UX, backend, arquitecto sénior) não justifica um agente: o conhecimento dessa área entra pelas regras com `paths:` e pelas skills, no mesmo agente.
+**Porquê:** Uma persona no system prompt não melhora o desempenho em tarefas objectivas e o seu efeito é em grande parte aleatório; o que o agente sabe de uma área vem do contexto que recebe, não do nome que lhe dão. Cada agente a mais acrescenta coordenação, que é onde caem duas das três categorias de falha dos sistemas multiagente (desenho do sistema e desalinhamento entre agentes), e custa várias vezes mais tokens.
+**Como verificar:** Cada ficheiro em `.claude/agents/` (ou definição de subagente no código) difere do agente principal em pelo menos um de: `tools`, `model`, contexto recebido (por exemplo só o diff e a spec), ou execução em paralelo com âmbito próprio (PROC-010). Um agente cujo único traço próprio é o papel e o tom no prompt é achado.
+**Fonte:** [Contexto e qualidade §5](../docs/contexto-e-qualidade.md)
+**Cursos:** 1
+
 ## Especificações e execução
 
 ### PROC-011 — PRD ou spec antes de trabalho longo
