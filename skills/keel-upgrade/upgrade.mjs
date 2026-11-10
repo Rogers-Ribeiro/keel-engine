@@ -191,6 +191,7 @@ export const SCRIPTS = [
   { destino: '.keel/guarda.mjs', origem: 'skills/keel-init/guarda.mjs' },
   { destino: '.keel/licoes.mjs', origem: 'skills/keel-lesson/licoes.mjs' },
   { destino: '.keel/revisao.mjs', origem: 'skills/keel-init/revisao.mjs' },
+  { destino: '.keel/estado.mjs', origem: 'skills/keel-init/estado.mjs' },
 ];
 
 // O mesmo bloco que o `keel-init` escreve. Um teste confirma que os dois não se afastam.
@@ -246,12 +247,25 @@ export const HOOK_REVISAO = {
   hooks: [{ type: 'command', command: 'node', args: ['${CLAUDE_PROJECT_DIR}/.keel/revisao.mjs', 'parar'], timeout: 10 }],
 };
 
+// As sessões curtas: o limite de compactação automática e o modelo dos subagentes no `env`, e o hook
+// que devolve o `.keel/estado.md` ao contexto depois de um `/compact` ou numa sessão nova.
+export const ENV_SESSOES = {
+  CLAUDE_CODE_AUTO_COMPACT_WINDOW: '200000',
+  CLAUDE_CODE_SUBAGENT_MODEL: 'sonnet',
+};
+
+export const HOOK_ESTADO = {
+  matcher: 'startup|compact',
+  hooks: [{ type: 'command', command: 'node', args: ['${CLAUDE_PROJECT_DIR}/.keel/estado.mjs'], timeout: 10 }],
+};
+
 const usaScript = (grupos, nome) =>
   grupos.some((g) => (g.hooks ?? []).some((h) => [h.command, ...(h.args ?? [])].some((a) => String(a).includes(nome))));
 
 export function juntarControlos(settings) {
   const s = structuredClone(settings ?? {});
   const acrescentados = [];
+  const avisos = [];
   s.permissions ??= {};
   s.permissions.deny ??= [];
   for (const entrada of DENY_MINIMO) {
@@ -271,7 +285,21 @@ export function juntarControlos(settings) {
     s.hooks.Stop.push(structuredClone(HOOK_REVISAO));
     acrescentados.push('hook `Stop` dos achados de revisão');
   }
-  return { settings: s, acrescentados };
+  s.env ??= {};
+  for (const [chave, valor] of Object.entries(ENV_SESSOES)) {
+    if (!(chave in s.env)) {
+      s.env[chave] = valor;
+      acrescentados.push(`\`env\`: ${chave}=${valor}`);
+    } else if (String(s.env[chave]) !== valor) {
+      avisos.push(`\`env.${chave}\` está a ${s.env[chave]} neste projecto (o Keel propõe ${valor}); **ficou como está**.`);
+    }
+  }
+  s.hooks.SessionStart ??= [];
+  if (!usaScript(s.hooks.SessionStart, 'estado.mjs')) {
+    s.hooks.SessionStart.push(structuredClone(HOOK_ESTADO));
+    acrescentados.push('hook `SessionStart` do estado de trabalho (`startup|compact`)');
+  }
+  return { settings: s, acrescentados, avisos };
 }
 
 export function actualizarControlos(projecto, aplicar) {
@@ -285,13 +313,19 @@ export function actualizarControlos(projecto, aplicar) {
       return ['`.claude/settings.json` não é JSON válido; **não lhe toquei**. Junta à mão o `deny` mínimo e o hook do guarda (ver `keel-init`).'];
     }
   }
-  const { settings, acrescentados } = juntarControlos(actual);
-  if (!acrescentados.length) return [];
-  if (aplicar) {
+  const { settings, acrescentados, avisos } = juntarControlos(actual);
+  if (aplicar && acrescentados.length) {
     fs.mkdirSync(path.dirname(ficheiro), { recursive: true });
     fs.writeFileSync(ficheiro, `${JSON.stringify(settings, null, 2)}\n`);
   }
-  return acrescentados.map((a) => `\`.claude/settings.json\`: acrescentado ${a}.`);
+  const linhas = [
+    ...acrescentados.map((a) => `\`.claude/settings.json\`: acrescentado ${a}.`),
+    ...avisos.map((a) => `\`.claude/settings.json\`: ${a}`),
+  ];
+  if (!actual.agent && fs.existsSync(path.join(projecto, '.claude', 'agents', 'orchestrator.md'))) {
+    linhas.push('o projecto tem o agente `orchestrator` e não tem `agent` definido: se a sessão principal deve coordenar subagentes, junta `"agent": "orchestrator"` ao `.claude/settings.json`. Não o faço sozinho.');
+  }
+  return linhas;
 }
 
 // ---------------------------------------------------------------- relatório

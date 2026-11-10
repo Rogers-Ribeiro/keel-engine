@@ -127,3 +127,42 @@ O registo em si fica em `~/.keel/`, ao lado da base, e não no repositório: é 
 cada sessão e não tem nada que produzir diffs. Quando não há lições nenhumas o hook não escreve
 nada — uma sessão não deve pagar contexto para lhe dizerem que está tudo bem. O resto está na skill
 `keel-lesson`.
+
+## As sessões curtas
+
+Cada chamada ao modelo relê a conversa inteira, e é isso que se paga. Medido num projecto com subagentes: 1341 chamadas na sessão principal, com mediana de 387 mil tokens de contexto. O modelo e os hooks **não conseguem correr `/compact` nem `/clear`** — são comandos de quem está ao teclado —, por isso o controlo são duas peças que não dependem de o modelo se lembrar: o limite de compactação automática, e um ficheiro de estado que volta ao contexto depois dela (PROC-001, PROC-035).
+
+Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/estado.mjs` para `.keel/estado.mjs`, junta `.keel/estado.md` ao `.gitignore` (é estado de trabalho, como o `revisao.json`), e junta ao `.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "200000",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.keel/estado.mjs"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+O `.keel/estado.md` é onde se guardam as frentes abertas, o ramo de cada uma e as decisões pendentes. O hook põe-no em contexto ao arrancar e depois de cada compactação, antes de qualquer pergunta; sem ficheiro, ou vazio, não escreve nada, nunca falha e corta acima de 200 linhas com aviso.
+
+**Só com vários subagentes**, e só se o utilizador o disser (pergunta 5 do `SKILL.md`): copia `${CLAUDE_PLUGIN_ROOT}/agents/orchestrator.md` para `.claude/agents/` e junta ao `settings.json` `"agent": "orchestrator"`, que corre a sessão principal como esse agente (`claude --agent orchestrator` faz o mesmo à mão). Num projecto de uma pessoa a trabalhar directo, um orquestrador atrapalha. A restrição do agente a escrever só estado, specs e decisões é texto, sem controlo: o `tools` não restringe por caminho.
+
+Cuidados:
+- **Junta, não substituas.** Se o `settings.json` já tiver `env`, acrescenta só as chaves que faltam; uma chave que o projecto já tenha com outro valor fica como está, e diz-se no relatório. O mesmo vale para `SessionStart` e para um `agent` que já exista.
+- As variáveis de ambiente só valem em **sessões novas**: a que está aberta não as vê.
+- `CLAUDE_CODE_AUTO_COMPACT_WINDOW` aceita de 100000 a 1000000.

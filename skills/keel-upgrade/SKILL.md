@@ -57,11 +57,11 @@ regra. No máximo diz-te que o engine deixou de a ter.
 O relatório tem ainda uma secção **Scripts e controlos**, porque as regras de segurança só valem com
 o que as impõe (PROC-023, PROC-035):
 
-- os scripts de `.keel/` (`guarda.mjs`, `licoes.mjs`, `revisao.mjs`) seguem a mesma lógica a três que as regras:
+- os scripts de `.keel/` (`guarda.mjs`, `licoes.mjs`, `revisao.mjs`, `estado.mjs`) seguem a mesma lógica a três que as regras:
   em falta, instalam-se; intactos desde a base, passam à versão nova; editados no projecto, ficam e
   o relatório diz-te para comparares à mão;
 - ao `.claude/settings.json` **só se acrescenta** o que falta do `deny` mínimo e o hook `PreToolUse`
-  do guarda — as mesmas entradas que o `keel-init` escreve. Nada do projecto sai nem muda de sítio.
+  do guarda, o `env` das sessões curtas (`CLAUDE_CODE_AUTO_COMPACT_WINDOW`, `CLAUDE_CODE_SUBAGENT_MODEL`) e o hook `SessionStart` do estado — as mesmas entradas que o `keel-init` escreve. Uma chave de `env` que o projecto já tenha com outro valor fica como está, e o relatório diz-o. O `"agent": "orchestrator"` **não** entra: se o projecto tem o agente e não tem `agent`, o relatório só o sugere. Nada do projecto sai nem muda de sítio.
   Um `settings.json` que não seja JSON válido não é tocado, e o relatório diz o que juntar à mão.
 
 Se o projecto não quiser uma das entradas (um pipeline que faz `git push` da sessão, por exemplo),

@@ -5,7 +5,7 @@ description: Use quando um projecto novo precisa de arrancar com as regras do Ke
 
 # keel-init — escrever o contrato num projecto
 
-Escreves, **dentro do repositório do projecto**, as regras que ele passa a seguir. Os agentes (`architect`, `reviewer`) já vêm do plugin e não se copiam.
+Escreves, **dentro do repositório do projecto**, as regras que ele passa a seguir. Os agentes (`architect`, `reviewer`) já vêm do plugin e não se copiam; a única excepção é o `orchestrator`, que se copia para `.claude/agents/` porque o `agent` do `settings.json` o nomeia sem prefixo de plugin.
 
 A distinção que manda em tudo o que se segue: o **engine** vive na máquina e actualiza-se com `plugin update`; o **contrato** vive no repositório, versiona com o código e **nunca é sobrescrito por uma actualização**. Sem o contrato no repositório, o agente não o lê e a CI não o verifica.
 
@@ -13,7 +13,13 @@ A distinção que manda em tudo o que se segue: o **engine** vive na máquina e 
 
 1. Confirma que estás na raiz do repositório do projecto (há `.git`), e **não** dentro do keel nem da base de conhecimento.
 2. Se já existir `.agents/keel.yaml`, o projecto já foi iniciado: não reescrevas nada. Diz o que está instalado e pára.
-3. Se o repositório tiver código a sério e nenhum contrato, este não é o caminho certo: o `keel-init` é para projectos novos. Adoptar um repositório existente pede um levantamento primeiro — usa a skill `keel-audit`, que diz o que lá está medido contra as regras, e volta aqui depois de haver decisão.
+3. **Se o repositório já tem código, corre o `keel-audit` antes de escrever o que quer que seja.** Tem código quando este comando devolve alguma coisa (na falta de git, o mesmo filtro sobre a árvore com `find`); README, LICENSE, `.gitignore`, configuração do editor e documentos soltos não contam:
+   ```
+   git ls-files -- '*.py' '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs' '*.java' '*.kt' '*.go' '*.rs' '*.rb' '*.php' '*.cs' '*.cls' '*.trigger' '*.dwl' '*.sql' | head -1
+   ```
+   - Invoca a skill pelo nome (`/keel-audit`, PROC-007), com este repositório e **sem alvo**. Ela só lê: o relatório fica em `docs/levantamento/`, e nada do código muda.
+   - Mostra ao utilizador o resumo que a skill entrega (o veredicto em cinco linhas e os bloqueantes) e **usa as conclusões nas perguntas seguintes**: os domínios que o mapa encontrou, os temas onde há bloqueantes, o nível de exigência que o estado do código aguenta. Só depois continuas.
+   - Se o audit falhar ou não puder correr, diz isso e pergunta se se continua sem ele. Não segues em silêncio.
 
 ## Os domínios, antes das perguntas
 
@@ -30,7 +36,7 @@ Podem valer dois ao mesmo tempo, e isso é normal: uma loja B2B é `comercio-dig
 
 Diz quais escolheste e porquê, numa linha por domínio, e deixa corrigir. Num repositório vazio, pergunta. A escolha manda no núcleo que copias e nos temas que propões, e fica registada no `keel.yaml`.
 
-## As perguntas — no máximo quatro
+## As perguntas — no máximo cinco
 
 Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e propõe um valor por omissão para cada:
 
@@ -44,6 +50,7 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
    Mostra a lista dos domínios escolhidos e deixa acrescentar ou tirar.
 3. **O projecto tem fronteiras internas** (módulos que não se importam uns aos outros)? Decide se entram as regras de arquitectura modular.
 4. **Nível de exigência:** só revisão humana, ou também verificações automáticas (lint, testes, formatação) desde o início. O bloqueio mínimo — o `deny` e o hook de guarda — **não entra nesta pergunta**: vai sempre (secção abaixo).
+5. **O projecto trabalha com vários subagentes** (uma sessão principal que despacha, revê e integra)? Se sim, entra o agente `orchestrator`; se é uma pessoa a trabalhar directo, não: um orquestrador atrapalha. Por omissão, não.
 
 ## O que escreves
 
@@ -57,7 +64,9 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 ├── .keel/licoes.mjs         põe em contexto o que já se aprendeu noutros projectos desta máquina
 ├── .keel/guarda.mjs         o hook que recusa o que nunca pode acontecer
 ├── .keel/revisao.mjs        os achados de revisão como estado, e o hook Stop que não deixa acabar com achados abertos
-└── .claude/settings.json  o `deny` mínimo e o hook de guarda (sempre), o hook SessionStart, e os hooks do nível escolhido
+├── .keel/estado.mjs         devolve o `.keel/estado.md` (frentes, ramos, decisões pendentes) ao contexto depois de um /compact ou numa sessão nova
+├── .claude/agents/orchestrator.md  só se a resposta à pergunta 5 for sim
+└── .claude/settings.json  o `deny` mínimo e o hook de guarda (sempre), o hook SessionStart, o `env` e o hook de estado das sessões curtas (sempre), `"agent": "orchestrator"` só com o orquestrador, e os hooks do nível escolhido
 ```
 
 Regras de escrita:
@@ -94,11 +103,12 @@ Diz ao utilizador, numa linha, quais é que ajustaste e porquê.
 
 ## O settings.json e os scripts de .keel/
 
-Três coisas entram em qualquer projecto, seja qual for o nível de exigência, e os blocos exactos estão em **`controlos.md`**, ao lado deste ficheiro — **lê-o antes de escreveres o `settings.json`**:
+Quatro coisas entram em qualquer projecto, seja qual for o nível de exigência, e os blocos exactos estão em **`controlos.md`**, ao lado deste ficheiro — **lê-o antes de escreveres o `settings.json`**:
 
 - **O bloqueio que vai sempre** (PROC-023, PROC-035): o `deny` mínimo e o hook `PreToolUse` que corre `.keel/guarda.mjs`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/guarda.mjs`. Regras de segurança em texto sem controlo por trás dependem de o modelo obedecer, e ninguém fica a saber quando não obedece ([regras-vs-controlos](${CLAUDE_PLUGIN_ROOT}/docs/regras-vs-controlos.md)).
 - **O hook que fecha a revisão** (PROC-036): `Stop` a correr `.keel/revisao.mjs parar`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/revisao.mjs`, e `.keel/revisao.json` no `.gitignore`. O `reviewer` grava os achados; o hook não deixa a tarefa acabar, e o guarda não deixa fazer commit, enquanto houver um aberto.
 - **O hook que traz as lições** de outros projectos desta máquina: `SessionStart` a correr `.keel/licoes.mjs sugerir`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-lesson/licoes.mjs`.
+- **As sessões curtas:** `env` com `CLAUDE_CODE_AUTO_COMPACT_WINDOW` e `CLAUDE_CODE_SUBAGENT_MODEL`, e o hook `SessionStart` que corre `.keel/estado.mjs`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/estado.mjs`, com `.keel/estado.md` no `.gitignore`. Só se a resposta à pergunta 5 for sim: copia `${CLAUDE_PLUGIN_ROOT}/agents/orchestrator.md` para `.claude/agents/` e junta `"agent": "orchestrator"` ao `settings.json` (se o projecto já tiver outro `agent`, não o substituas: pergunta). Os blocos e os cuidados estão na secção «As sessões curtas» do `controlos.md`.
 
 Se o `settings.json` já existir, **junta** às listas que lá estão; nunca substituas nem tires entradas do projecto.
 

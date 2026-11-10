@@ -30,6 +30,8 @@ export const LIMITES = {
   regrasSemPathsBytes: 20 * 1024,
   aberturaTokens: 60_000, // contexto da primeira chamada «a sério» de uma sessão
   chamadasSessaoLonga: 3000,
+  resultadosPorChamada: 4000, // caracteres de resultados de ferramentas por chamada, em média
+  resultadosMinimo: 400_000, // e pelo menos isto na sessão, para não disparar em sessões pequenas
 };
 const MINIMO_ABERTURA = 5000;
 const QUEDA_COMPACTACAO = 0.5;
@@ -109,6 +111,7 @@ export async function medirSessao(ficheiro) {
   let entrada = 0;
   let saida = 0;
   let linhasIlegiveis = 0;
+  let resultadosChars = 0;
   // O Claude Code escreve uma linha por bloco da mesma resposta (pensamento, texto, cada chamada de
   // ferramenta), todas com o mesmo `message.id`, e **intercala-as com outras linhas**: medido numa
   // sessão real, cerca de metade das linhas com `usage` são repetições e uma resposta chega a ter
@@ -123,6 +126,7 @@ export async function medirSessao(ficheiro) {
     crlfDelay: Infinity,
   });
   for await (const linha of leitor) {
+    if (linha.includes('"tool_result"')) resultadosChars += caracteresDeResultados(linha);
     if (!linha.includes('"usage"')) continue;
     let registo;
     try {
@@ -160,7 +164,28 @@ export async function medirSessao(ficheiro) {
     fraccaoCache: entrada ? cacheLida / entrada : 0,
     tokensSaida: saida,
     linhasIlegiveis,
+    resultadosChars,
   };
+}
+
+// Quanto texto de resultados de ferramentas uma linha traz: só o **tamanho**, nunca o texto. Um
+// resultado é um bloco `tool_result` numa mensagem de utilizador; o conteúdo é texto ou uma lista de
+// blocos com `text`. Linhas que não se lêem contam zero.
+export function caracteresDeResultados(linha) {
+  let registo;
+  try {
+    registo = JSON.parse(linha);
+  } catch {
+    return 0;
+  }
+  const blocos = registo?.type === 'user' && Array.isArray(registo.message?.content) ? registo.message.content : [];
+  let total = 0;
+  for (const b of blocos) {
+    if (b?.type !== 'tool_result') continue;
+    if (typeof b.content === 'string') total += b.content.length;
+    else if (Array.isArray(b.content)) for (const c of b.content) if (typeof c?.text === 'string') total += c.text.length;
+  }
+  return total;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -304,7 +329,22 @@ export async function medirTudo({
     memoria: medirMemoria(pasta),
     plugins: medirPlugins(projecto, home),
     agentes: medirAgentes(projecto),
+    sessoesCurtas: medirSessoesCurtas(projecto),
   };
+}
+
+// O que o `keel-upgrade` junta ao settings.json para as sessões curtas, e o que falta.
+export function medirSessoesCurtas(projecto) {
+  const avisos = [];
+  const settings = lerJson(path.join(projecto, '.claude', 'settings.json'), avisos);
+  const faltam = [];
+  for (const chave of ['CLAUDE_CODE_AUTO_COMPACT_WINDOW', 'CLAUDE_CODE_SUBAGENT_MODEL']) {
+    if (!(settings.env && chave in settings.env)) faltam.push(chave);
+  }
+  const grupos = settings.hooks?.SessionStart ?? [];
+  const temHook = grupos.some((g) => (g.hooks ?? []).some((h) => [h.command, ...(h.args ?? [])].some((a) => String(a).includes('estado.mjs'))));
+  if (!temHook) faltam.push('hook SessionStart do estado');
+  return { faltam, avisos };
 }
 
 // Só devolve as que se verificam. `tipo`: 'como' é mecânico, 'decide' é escolha da pessoa.
@@ -369,6 +409,30 @@ export function conclusoes(m) {
       evidencia: longas.map((s) => `${s.sessao}: ${s.chamadas} chamadas, mediana ${s.mediana} tokens`).join('; '),
       accao: 'Ver o que fazia a sessão em tantas chamadas (ciclo sem fim, espera activa) e partir o trabalho',
       tipo: 'decide',
+    });
+  }
+  const caras = sessoes.filter(
+    (s) => s.chamadas > 0 && s.resultadosChars > LIMITES.resultadosMinimo && s.resultadosChars / s.chamadas > LIMITES.resultadosPorChamada,
+  );
+  if (caras.length) {
+    lista.push({
+      id: 'g',
+      causa: 'A sessão principal lê muito texto de resultados de ferramentas',
+      evidencia: caras
+        .map((s) => `${s.sessao}: ${Math.round(s.resultadosChars / 1000)} mil caracteres em ${s.chamadas} chamadas`)
+        .join('; '),
+      accao: 'Mandar logs, diffs e testes para subagentes que devolvem só a conclusão, em vez de os ler na sessão principal',
+      tipo: 'decide',
+    });
+  }
+  const sess = m.sessoesCurtas;
+  if (sess && sess.faltam.length) {
+    lista.push({
+      id: 'h',
+      causa: 'Sem o limite de compactação nem o estado de sessão no settings.json',
+      evidencia: `falta: ${sess.faltam.join(', ')}`,
+      accao: 'Corre /keel-upgrade: junta o env e o hook SessionStart do estado (só vale em sessões novas)',
+      tipo: 'como',
     });
   }
   return lista;

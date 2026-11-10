@@ -40,6 +40,8 @@ Faz tudo numa worktree ou ramo próprio, e diz o que mudou a seguir a cada passo
 | Memória inchada | cópia de segurança, fusão por tema, verificação mecânica | [`memoria.md`](memoria.md) |
 | Revisor ou agentes antigos, controlos em falta | **não se refaz aqui**: corre `/keel-upgrade`, que já os traz | `keel-upgrade` |
 | Ciclo ou vigia em sessão de contexto grande | passa a correr numa sessão limpa, e a esperar por aviso em vez de perguntar em ciclo | [`ciclos.md`](ciclos.md) |
+| Sem o limite de compactação nem o estado de sessão no `settings.json` (**como**) | corre `/keel-upgrade`: junta o `env` e o hook `SessionStart` do estado; só vale em sessões novas | `keel-upgrade` |
+| A sessão principal lê muito texto de resultados de ferramentas (**decide**) | mandar logs, diffs e testes para subagentes que devolvem só a conclusão; mede-se o tamanho dos resultados, nunca o texto, e o limiar (4000 caracteres por chamada) ainda não está calibrado | `ciclos.md` |
 
 ### 4. Medir outra vez, numa sessão nova
 

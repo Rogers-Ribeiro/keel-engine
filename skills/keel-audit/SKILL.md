@@ -1,6 +1,6 @@
 ---
 name: keel-audit
-description: Use quando for preciso auditar um repositório que já existe — o que está errado contra as regras, o que podia melhorar na arquitectura, e o que falta para chegar a um alvo (por exemplo tornar-se multi-tenant ou uma plataforma). Use antes de adoptar o Keel num projecto com código feito, antes de decidir entre continuar um sistema ou recomeçar, e quando o utilizador disser "analisa este código", "o que está mal aqui", "o que falta para isto ser X" ou "/keel-audit".
+description: Use quando for preciso auditar um repositório que já existe — o que está errado contra as regras, o que podia melhorar na arquitectura, e o que falta para chegar a um alvo (por exemplo tornar-se multi-tenant ou uma plataforma). Use antes de adoptar o Keel num projecto com código feito (o `keel-init` chama-o sozinho quando o repositório já tem código), antes de decidir entre continuar um sistema ou recomeçar, e quando o utilizador disser "analisa este código", "o que está mal aqui", "o que falta para isto ser X" ou "/keel-audit".
 ---
 
 # keel-audit — auditar código que já existe
