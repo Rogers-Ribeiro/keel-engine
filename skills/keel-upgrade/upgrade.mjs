@@ -119,10 +119,22 @@ export function tituloDoCorpo(corpo) {
 
 const normalizarTitulo = (corpo) => tituloDoCorpo(corpo)?.replace(/\s+/g, ' ').toLowerCase() ?? null;
 
-// Uma regra do projecto cujo ID não existe na base mas cujo título é o de uma regra do engine (da base
-// ou da nova) sob outro ID foi renumerada pelo projecto — tipicamente por colisão com uma regra própria.
+// Uma regra do projecto cujo título é o de uma regra do engine (da base ou da nova) sob outro ID foi
+// renumerada — pelo projecto, por colisão com uma regra própria, ou pelo engine, ao promovê-la com um
+// ID livre. Um ID que a base também tem só entra na procura quando a regra da base está no projecto
+// sob outro ID: aí o ID foi ocupado por uma regra própria, que o engine pode ter promovido. Sem esse
+// sinal, um título mudado é só uma edição, mesmo que coincida com o de outra regra do engine.
 // Devolve `ID do projecto -> ID do engine`.
 export function renumeracoes(base, projecto, novo) {
+  const titulosNoProjecto = new Map();
+  for (const [id, corpo] of projecto) {
+    const t = normalizarTitulo(corpo);
+    if (t !== null) titulosNoProjecto.set(t, [...(titulosNoProjecto.get(t) ?? []), id]);
+  }
+  const aBaseMudouDeId = (id) => {
+    const t = normalizarTitulo(base.get(id));
+    return t !== null && (titulosNoProjecto.get(t) ?? []).some((o) => o !== id);
+  };
   const porTitulo = new Map();
   for (const mapa of [base, novo]) {
     for (const [id, corpo] of mapa) {
@@ -134,9 +146,9 @@ export function renumeracoes(base, projecto, novo) {
   }
   const resultado = new Map();
   for (const [id, corpo] of projecto) {
-    if (base.has(id)) continue;
     const t = normalizarTitulo(corpo);
     if (t === null) continue;
+    if (base.has(id) && !aBaseMudouDeId(id)) continue;
     // o mesmo ID com o mesmo título na versão nova é uma promoção, não uma renumeração
     if (novo.has(id) && normalizarTitulo(novo.get(id)) === t) continue;
     const alvo = (porTitulo.get(t) ?? []).find((o) => o !== id && normalizarTitulo(projecto.get(o)) !== t);
@@ -165,14 +177,15 @@ export function classificar(base, projecto, novo) {
       if (v !== null && b === null && !alvos.has(id)) estados.set(id, ESTADOS.NOVA);
       continue;
     }
-    if (renumeradas.has(id)) estados.set(id, ESTADOS.RENUMERADA);
+    const colide = b !== null && diferem(p, b);
+    if (renumeradas.has(id) && !colide) estados.set(id, ESTADOS.RENUMERADA);
     else if (b === null) {
       if (v === null) estados.set(id, ESTADOS.SO_PROJECTO);
       else if (v === p) estados.set(id, ESTADOS.INTACTA);
       else estados.set(id, diferem(p, v) ? ESTADOS.COLISAO : ESTADOS.AMBOS);
     } else if (v === null) estados.set(id, ESTADOS.REMOVIDA);
     else if (p === b) estados.set(id, ESTADOS.INTACTA);
-    else estados.set(id, alvos.has(id) && diferem(p, b) ? ESTADOS.COLISAO : ESTADOS.EDITADA);
+    else estados.set(id, (alvos.has(id) || renumeradas.has(id)) && colide ? ESTADOS.COLISAO : ESTADOS.EDITADA);
   }
   return estados;
 }
@@ -199,7 +212,7 @@ export function fundir(textoProjecto, base, novo) {
     if (estado !== ESTADOS.INTACTA) {
       if (!estado) continue;
       const accao = { id: b.id, estado, feito: 'mantida' };
-      if (estado === ESTADOS.RENUMERADA) accao.equivale = renumeradas.get(b.id);
+      if (renumeradas.has(b.id)) accao.equivale = renumeradas.get(b.id);
       if (estado === ESTADOS.COLISAO) {
         accao.tituloProjecto = tituloDoCorpo(corposProjecto.get(b.id));
         accao.tituloEngine = tituloDoCorpo(novo.get(b.id) ?? base.get(b.id));
@@ -572,7 +585,9 @@ export function relatorio(porTema, deVersao, paraVersao, avisos = [], controlos 
       ESTADOS.COLISAO,
       'Colisões: o mesmo ID, outra regra',
       'O ID existe no engine para uma regra com outro título. Não é uma edição: renumera a tua (ou a do engine) à mão.',
-      (t, a) => `${t.tema} · \`${a.id}\`: aqui «${a.tituloProjecto}», no engine «${a.tituloEngine}»`,
+      (t, a) =>
+        `${t.tema} · \`${a.id}\`: aqui «${a.tituloProjecto}», no engine «${a.tituloEngine}»` +
+        (a.equivale ? `; a tua é a \`${a.equivale}\` do engine` : ''),
     ],
   ];
   for (const [estado, titulo, nota, formato = (t, a) => `${t.tema} · ${a.id}`] of seccoes) {
