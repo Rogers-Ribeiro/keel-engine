@@ -74,11 +74,19 @@ export function numeroDoId(id) {
 // Comparar sem desfazer isso dá 100% de falsos positivos: num contrato real deu 348 regras
 // "editadas", e nenhuma o era. Normaliza-se dos dois lados, só para comparar.
 
-const RE_URL_BASE = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/blob\/[^/]+\//g;
+// Os links para a documentação do próprio engine vêm com a tag da versão (`…-engine/blob/v0.23.2/docs/`).
+// Não são fontes da base: não passam a locais, e a tag não conta como edição — sem isto, cada versão
+// nova mudava todas as regras que citam a documentação, e nenhuma tinha mudado.
+const RE_URL_ENGINE = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+-engine\/blob\/[^/]+\//g;
+const RE_URL_BASE = /https:\/\/github\.com\/[\w.-]+\/(?![\w.-]+-engine\/)[\w.-]+\/blob\/[^/]+\//g;
 const RE_LOCAL_BASE = /(?:\.\.\/)+\.keel\/base\//g;
 
 export function normalizarFontes(texto) {
-  return texto.replace(/\r\n/g, '\n').replace(RE_URL_BASE, 'FONTE/').replace(RE_LOCAL_BASE, 'FONTE/');
+  return texto
+    .replace(/\r\n/g, '\n')
+    .replace(RE_URL_ENGINE, 'ENGINE/')
+    .replace(RE_URL_BASE, 'FONTE/')
+    .replace(RE_LOCAL_BASE, 'FONTE/');
 }
 
 // Um corpo que entra do engine tem de falar a língua do ficheiro onde vai cair: se o projecto já

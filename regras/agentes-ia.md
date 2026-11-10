@@ -14,7 +14,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** usa LangGraph quando o fluxo precisa de estado entre passos, ciclos, recuperação de falhas ou pausa para revisão humana; usa cadeias LCEL só para pipelines lineares e protótipos.
 **Porquê:** uma cadeia não tem memória entre passos, não volta atrás e perde o progresso quando algo falha; o LangGraph traz estado durável, persistência e interrupção/retoma.
 **Como verificar:** um fluxo com ciclo, retoma ou aprovação implementado como cadeia linear é motivo de rejeição; um fluxo de um só passo não precisa de grafo.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 4
 
 ### AGT-003 — Todo o ciclo tem contador e limite
@@ -31,7 +31,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** toda a função exposta como tool tem nome distinto, type hints em todos os argumentos e uma docstring que diz o que faz, o que recebe e o que devolve, escrita de forma explícita e sem ambiguidade.
 **Porquê:** é essa descrição, e não o código, que o LLM lê para decidir se e como chama a tool; com descrição vaga escolhe a tool errada ou nenhuma.
 **Como verificar:** no diff, cada `@tool` tem docstring e anotações de tipo; uma docstring que repete o nome da função sem dizer quando usar a tool não passa.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 8
 
 ### AGT-005 — Integração oficial antes de tool própria
@@ -46,7 +46,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** quando a saída do modelo é lida por código (routing, condições, campos de resposta, extracção), pede-a com `response_format` no `create_agent` — ou `with_structured_output` fora de agentes — e um schema Pydantic; para escolhas fechadas, um campo `Literal` com os valores válidos. Nunca faças parsing de texto livre.
 **Porquê:** o parsing de texto parte-se com um token mal formado, e o `Literal` impede o modelo de inventar um destino que não existe, o que torna o routing determinístico; só o Pydantic valida os tipos em runtime.
 **Como verificar:** procura `json.loads`, regex ou `split` sobre respostas do modelo — é motivo de rejeição; confirma que o schema é `BaseModel` e não `TypedDict` quando é preciso validar.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 7
 
 ### AGT-007 — A tool devolve o erro como texto
@@ -54,7 +54,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** uma tool trata o erro dentro dela e devolve uma string que o explica; não levanta excepções para fora.
 **Porquê:** a tool é a fronteira com o mundo exterior — uma excepção derruba o grafo inteiro, enquanto uma string de erro deixa o modelo perceber a falha e explicá-la ao utilizador.
 **Como verificar:** cada tool que toca em rede, ficheiros ou base de dados tem `try/except` e devolve texto em todos os caminhos; lógica de erro transversal vai para middleware e não repetida em cada tool.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 5
 
 ### AGT-026 — Repetir automaticamente só erros transitórios
@@ -69,7 +69,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** uma tool distingue no resultado «procurei e não encontrei» (sucesso com resultado vazio) de «não consegui procurar» (timeout, ligação recusada, credencial rejeitada, marcado como erro — na API Claude, `is_error: true` no `tool_result`, com uma mensagem que diga o que falhou e o que tentar a seguir); nunca apanhes a falha e devolvas uma lista vazia como sucesso.
 **Porquê:** o modelo trata uma lista vazia como facto e conclui que os dados não existem — não repete, não tenta outra via e responde com confiança a partir de uma fonte que ninguém leu.
 **Como verificar:** nos `except` das tools, procura `return []`, `return None` ou texto de «nada encontrado»; o caminho de erro tem de devolver um resultado marcado como falha, diferente do caminho de resultado vazio.
-**Fonte:** [referência](../docs/claude-api-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-api-formatos.md)
 **Cursos:** 2
 
 ## Grafo e estado
@@ -79,7 +79,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** declara o campo de mensagens como `Annotated[list[...], add_messages]` e põe um reducer em qualquer campo do estado escrito por mais do que um nó; nunca uses `operator.add` nas mensagens.
 **Porquê:** sem reducer cada escrita apaga a anterior, e `operator.add` não faz merge por ID — com tools, o total de mensagens fica preso em 1; o `add_messages` concatena e actualiza pelo ID.
 **Como verificar:** lê a definição do estado: campos sem reducer só podem ser escritos por um nó, e o campo de mensagens tem de usar `add_messages` ou `MessagesState`.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 3
 
 ### AGT-009 — Aresta condicional com `Literal` e mapa de rotas
@@ -87,7 +87,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** em `add_conditional_edges`, a função de routing devolve um `Literal` com as rotas possíveis e passa-se sempre o dicionário que mapeia cada valor ao nó de destino.
 **Porquê:** o `Literal` fixa as rotas válidas e o mapa liga-as aos nós; sem o mapa, a execução até corre, mas o desenho do grafo sai errado e deixa de servir para depurar.
 **Como verificar:** procura chamadas a `add_conditional_edges` com dois argumentos apenas, ou funções de routing que devolvem `str`.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 2
 
 ## Memória e persistência
@@ -97,7 +97,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** compila o grafo com um checkpointer e passa em `configurable.thread_id` um identificador por conversa, nunca partilhado entre utilizadores; em produção o checkpointer é persistente (SQLite ou Postgres), e a memória em RAM fica para testes.
 **Porquê:** sem checkpointer cada invocação é sem estado — não há memória, uma falha perde o progresso e não é possível pausar para revisão humana; o saver em RAM perde tudo ao reiniciar o processo.
 **Como verificar:** procura `compile(checkpointer=...)` e a origem do `thread_id`; um `InMemorySaver` no caminho de produção, ou um `thread_id` fixo no código, é motivo de rejeição.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 7
 
 ### AGT-011 — Histórico limitado em conversas longas (API a confirmar)
@@ -181,7 +181,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** toda a tool que executa uma acção crítica ou irreversível (enviar mensagens, transacções, escrita em base de dados, publicação) pára à espera de aprovação humana, com as decisões de aprovar, editar ou rejeitar; a retoma faz-se com `Command`.
 **Porquê:** o agente é autónomo e engana-se — num domínio como o financeiro um erro custa dinheiro real e não há como desfazê-lo.
 **Como verificar:** cruza a lista de tools com efeitos externos contra as tools cobertas pela interrupção; qualquer uma de fora é motivo de rejeição. A interrupção precisa de checkpointer (ver AGT-010).
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 7
 
 ### AGT-020 — Menor privilégio nas tools e nas credenciais
@@ -219,7 +219,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** activa o tracing do LangSmith por variáveis de ambiente (`LANGSMITH_TRACING`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`) com um nome de projecto próprio, e consulta o traço antes de atribuir uma falha ao modelo; em produção, o conteúdo dos prompts e das respostas fica oculto por omissão (OBS-018) (a aula diz: `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY` e `LANGCHAIN_PROJECT`; desactualizado).
 **Porquê:** o traço mostra o prompt, a decisão de chamar cada tool, os argumentos e os documentos recuperados — é a única forma de ver o que aconteceu dentro do agente.
 **Como verificar:** as variáveis estão no `.env.example` e o projecto tem nome próprio; ao investigar um bug, exige-se o link do traço.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 7
 
 ## Claude Code
@@ -245,7 +245,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** num ciclo escrito sobre a API Claude, continua enquanto o `stop_reason` for `tool_use` e termina quando for `end_turn`; nunca pares por procurar palavras no texto do modelo nem por a resposta trazer texto. Mantém um limite de iterações bem acima do caso normal, e quando ele dispara regista a falha e escala para uma pessoa em vez de mostrar a última resposta parcial.
 **Porquê:** o texto do modelo é linguagem natural e não sinal de controlo, e uma resposta pode trazer texto ao lado de um bloco `tool_use` por correr; nenhum número fixo de voltas serve para todos os casos, por isso o contador só protege contra bugs.
 **Como verificar:** o `while` do ciclo testa o `stop_reason`; procura comparações do texto com «done», «final answer» ou semelhantes, e confirma que o ramo do limite atingido regista e escala em vez de devolver a resposta.
-**Fonte:** [referência](../docs/claude-api-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-api-formatos.md)
 **Cursos:** 5
 
 ### AGT-031 — Resposta do modelo intacta e todos os `tool_result` numa mensagem
@@ -253,7 +253,7 @@ Prefixo `AGT`. ## Quando usar um agente
 **Regra:** depois de uma resposta com `tool_use`, acrescenta ao histórico a resposta do modelo inteira como mensagem `assistant` e, a seguir, uma única mensagem `user` com um bloco `tool_result` por cada pedido, cada um ligado pelo seu `tool_use_id`.
 **Porquê:** a API não guarda nada entre pedidos — cada volta reenvia a conversa toda, e a ordem das mensagens importa; quando o modelo pede várias tools numa resposta, os resultados voltam todos juntos.
 **Como verificar:** no código do ciclo, confirma que se reenvia o `content` completo da resposta (e não só o texto) e que os resultados são agregados numa só mensagem `user`; um `tool_result` por mensagem, ou sem `tool_use_id`, não passa.
-**Fonte:** [referência](../docs/claude-api-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-api-formatos.md)
 **Cursos:** 3
 
 ## Engenharia de contexto

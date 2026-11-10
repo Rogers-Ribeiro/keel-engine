@@ -183,14 +183,14 @@ Prefixo `JS`. As secções a partir de «Biome» são a excepção: não saem de
 ## Biome
 
 Nenhum curso da base ensina Biome; o que ensinam é ESLint e Prettier, que são as duas ferramentas
-que ele substitui. Estas regras saem da referência [biome](../docs/biome.md).
+que ele substitui. Estas regras saem da referência [biome](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/biome.md).
 
 ### JS-025 — A versão do Biome é fixa
 
 **Regra:** instala-se com `-E`, que fixa a versão exacta em vez de aceitar as seguintes.
 **Porquê:** um formatador que muda de versão sozinho reformata ficheiros que ninguém tocou. O diff seguinte fica ilegível, e a revisão passa a ser sobre espaços em vez de ser sobre código. É por isso que a documentação oficial traz o `-E` no comando de instalação.
 **Como verificar:** no `package.json`, a entrada do Biome é uma versão exacta, sem acento circunflexo nem til à frente.
-**Fonte:** [biome](../docs/biome.md)
+**Fonte:** [biome](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/biome.md)
 **Cursos:** 0
 
 ### JS-026 — Em integração contínua corre-se `biome ci`
@@ -198,7 +198,7 @@ que ele substitui. Estas regras saem da referência [biome](../docs/biome.md).
 **Regra:** o pipeline corre `biome ci`, nunca `biome check --write`.
 **Porquê:** em CI não se corrigem ficheiros, verifica-se que já estão certos e falha-se quando não estão. Um pipeline que escreve no código esconde o problema em vez de o mostrar, e o programador seguinte recebe alterações que não fez.
 **Como verificar:** nos ficheiros de workflow, o comando do Biome não tem `--write`.
-**Fonte:** [biome](../docs/biome.md)
+**Fonte:** [biome](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/biome.md)
 **Cursos:** 0
 
 ### JS-027 — O `--unsafe` não entra em nada automático
@@ -206,7 +206,7 @@ que ele substitui. Estas regras saem da referência [biome](../docs/biome.md).
 **Regra:** `--unsafe` corre-se à mão, lê-se o diff, e não entra em hooks, scripts de commit nem CI.
 **Porquê:** são as correcções que o próprio Biome classifica como capazes de mudar comportamento. Aplicadas sem ninguém ver, mudam o que o código faz e o diff aparece misturado com formatação.
 **Como verificar:** procura `--unsafe` em hooks, scripts do `package.json` e workflows; devolve vazio.
-**Fonte:** [biome](../docs/biome.md)
+**Fonte:** [biome](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/biome.md)
 **Cursos:** 0
 
 ### JS-028 — Uma ferramenta só formata
@@ -214,5 +214,5 @@ que ele substitui. Estas regras saem da referência [biome](../docs/biome.md).
 **Regra:** adoptado o Biome, saem o Prettier e as regras de formatação do ESLint. Não coexistem dois formatadores.
 **Porquê:** dois formatadores com opiniões diferentes sobre o mesmo ficheiro dão um ciclo: um corre, o outro desfaz, e o ficheiro muda a cada gravação sem ninguém perceber porquê.
 **Como verificar:** o `package.json` não tem Prettier ao lado do Biome, e não há `.prettierrc` nem regras de formatação activas no ESLint.
-**Fonte:** [biome](../docs/biome.md)
+**Fonte:** [biome](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/biome.md)
 **Cursos:** 0

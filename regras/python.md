@@ -162,7 +162,7 @@ Prefixo `PY`. ## Ambiente, dependências e segredos
 **Regra:** Nos modelos que aceitam o parâmetro, usa temperatura entre 0 e 0,3 em sumarização, respostas factuais, código e saídas lidas por código, e reserva temperaturas altas para tarefas criativas. Nos modelos que não o aceitam, não o declares (ver LLM-011).
 **Porquê:** Valores baixos tornam a resposta determinística e factual, e valores altos tornam-na criativa; o IA Prática resume: baixa para dados, alta para criatividade. O parâmetro deixou de ser universal — nos modelos da Anthropic lançados depois do Claude Opus 4.6, um valor diferente de 1,0 devolve erro 400.
 **Como verificar:** Os modelos usados em extracção, classificação, RAG ou saída estruturada têm `temperature` explícita e baixa quando o modelo a aceita, e não a declaram quando não a aceita.
-**Fonte:** [decisão D-AV04](../docs/decisoes/g6-avaliacao-e-prompts.md)
+**Fonte:** [decisão D-AV04](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/decisoes/g6-avaliacao-e-prompts.md)
 **Cursos:** 3
 
 ### PY-023 — Saída lida por código com esquema Pydantic (API a confirmar)

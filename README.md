@@ -2,48 +2,80 @@
 
 **Rules your coding agent actually reads.**
 
-Claude Code will happily follow a style guide you paste into `CLAUDE.md` — for about three turns.
-Then the context grows, the guide sinks into the middle of it, and it stops mattering. Anything in
-the middle of a long context gets ignored, and nothing tells you when that happens.
+Keel is a Claude Code plugin that gives a software project a contract: a small set of rules that is
+always in context, a larger set that loads only when it applies, and agents and commands that work
+against both.
 
-Keel splits the difference. Each domain has a **core** of at most 60 lines that is always in
-context, and it holds nothing but rule IDs. The rules themselves — 36 files of them — sit in
-`.claude/rules/` with a `paths:` frontmatter, and Claude Code loads each one **only when it opens a
-file that rule applies to**. You pay attention for the Apex rules when you are writing Apex, and not
-otherwise.
+Version 0.23.2. This repository is generated from a private source; changes made here are
+overwritten by the next release.
 
-Every rule carries three things beyond the rule itself: **why** it holds, **how to check it
-mechanically**, and how many independent sources confirmed it. The middle one is what makes
-`/keel-audit` possible — either the code violates the rule or it does not, and that is not a matter
-of taste.
+## The problem
 
-Version 0.23.1. This repository is **generated**; it is not edited here.
+A style guide pasted into `CLAUDE.md` works for the first few turns. As the session grows, the guide
+ends up in the middle of a long context, where models pay the least attention to it — and nothing
+tells you when that happens.
 
-## Install
+## How Keel works
+
+- **A short core per domain.** At most 60 lines, always in context, made of rule IDs and the few
+  rules that apply everywhere.
+- **Topic rules that load on demand.** 849 rules in 36 topic files live in `.claude/rules/`.
+  Each file declares a `paths:` pattern, and Claude Code loads it only when it opens a file that
+  matches. The Apex rules are in context while you write Apex, and not otherwise.
+- **Rules that can be checked.** Every rule states the rule, why it holds, and how to verify it
+  mechanically. The last part is what makes an audit possible: the code either violates the rule or
+  it does not.
+
+## Installation
 
 ```
 /plugin marketplace add Rogers-Ribeiro/keel-engine
 /plugin install keel@keel-engine
 ```
 
-Then start a new session — plugins load at startup.
+Start a new session afterwards: plugins are loaded at startup.
 
-**If the repository already has code**, run `/keel-audit` before anything else. It reports what the
-code violates, with the rule ID and the `file:line`, and you decide what to adopt. Only then
-`/keel-init`.
+For a repository that already has code, run `/keel-audit` first. It reports each violation with
+the rule ID and `file:line`, and you decide what to adopt before running `/keel-init`.
 
 ## Commands
 
-- `/keel-audit` — auditar código que já existe
-- `/keel-design` — desenhar antes de haver spec
-- `/keel-init` — escrever o contrato num projecto
-- `/keel-lesson` — que o mesmo erro não se aprenda duas vezes
-- `/keel-optimize` — medir o contexto e o consumo, e arrumar o que a medição apontar
-- `/keel-upgrade` — actualizar o contrato sem perder o que lá está
+| Command | What it does |
+|---|---|
+| `/keel-audit` | Audit an existing repository: each violation with its rule ID and `file:line`, the architectural gaps, and what is missing to reach a stated target. |
+| `/keel-design` | Design a process or a vertical before there is a spec — who does what, in what order, and what each person sees. |
+| `/keel-init` | Write the contract into a project: `CLAUDE.md`, the cores of the chosen domains, the topic rules with their `paths:`, and `keel.yaml`. |
+| `/keel-lesson` | Record a mistake when it happens; when the same one recurs, propose a rule that applies to every project. |
+| `/keel-optimize` | Measure what each session spends on context, then fix what the measurement points at, one change at a time. |
+| `/keel-upgrade` | Bring a project's contract to a new engine version without losing the rules that were edited or written there. |
 
-Full guide: [docs/using-keel.md](docs/using-keel.md).
+## Agents
 
-## What a rule looks like
+| Agent | Role |
+|---|---|
+| `architect` | Designs modules, boundaries, layers and agent graphs before anything is implemented. |
+| `orchestrator` | Runs as the main session in projects that work with several subagents: dispatches steps, sends them to review, integrates. |
+| `refuter` | Runs after the reviewer on critical changes and tries to break each verdict it passed, preferably with a failing test. |
+| `reviewer` | Reviews the diff against the spec, the rules and security. It has no write tools. |
+| `troubleshoot` | Diagnoses a broken production or UAT environment with read-only access, and hands the fix over as a command for a person to run. |
+
+## Domains
+
+A project adopts only the domains that apply to it, and can combine several — a B2B storefront takes
+digital commerce **and** Salesforce, because the store is platform configuration.
+
+| Domain | Covers |
+|---|---|
+| `automacao-de-testes` | End-to-end test automation |
+| `comercio-digital` | Digital commerce storefronts |
+| `javascript` | JavaScript and TypeScript |
+| `mobile-react-native` | React Native mobile apps |
+| `mulesoft` | MuleSoft integrations |
+| `python-agentes` | Python services and LLM agents |
+| `salesforce` | Salesforce (Apex, LWC, metadata) |
+| `web-react` | React web applications |
+
+## Anatomy of a rule
 
 ```markdown
 ### APX-004 — Nunca SOQL nem DML dentro de um for loop
@@ -57,43 +89,31 @@ as chavetas de um `for`; qualquer ocorrência é um defeito.
 **Cursos:** 1
 ```
 
-`Cursos: 0` means the rule was written by hand from confirmed official documentation, because the
-distillation would never produce it — Postgres row-level security is the example. Those rules carry
-a **Fonte** line that links to the documentation and opens.
+| Field | Meaning |
+|---|---|
+| `ID — title` | A stable identifier, cited by the core, the reviewer and the audit. |
+| **Regra** | The rule itself. |
+| **Porquê** | Why it holds — the failure it prevents. |
+| **Como verificar** | How to check it mechanically, usually a search or a command. |
+| **Fonte** | Where present, a link to the official documentation the rule is based on. |
+| **Cursos** | How many independent sources confirm the rule. `0` means it was written from official documentation alone. |
 
-## Domains
+## Language
 
-A project takes only the domains that apply to it, and can take several: `automacao-de-testes`, `comercio-digital`, `javascript`, `mobile-react-native`, `mulesoft`, `python-agentes`, `salesforce`, `web-react`.
-A B2B Commerce store takes commerce **and** Salesforce, because the store is platform configuration.
-A pure integration project takes MuleSoft alone.
+This README and the [user guide](docs/using-keel.md) are in English. The rules, the agents and the
+skill instructions are in Portuguese. Rule IDs, code and verification commands read the same in any
+language, and audit findings are reported by rule ID and location.
 
-## A note on language
+## Repository layout
 
-The README and [the guide](docs/using-keel.md) are in English. **The rules and the skill bodies are
-in Portuguese** — that is where they were written, and translating 600 rules is not something to do
-carelessly. The rule IDs, the code, and the `Como verificar` commands are language-neutral, and the
-audit reports rule IDs with file and line.
+| Path | Contents |
+|---|---|
+| `agents/` | Agent definitions |
+| `regras/` | Domain cores and topic rules |
+| `skills/` | The commands above |
+| `docs/` | The user guide, reference notes cited by the rules, and recorded decisions |
+| `caminhos.json` | The `paths:` patterns `/keel-init` writes for each topic |
 
-## What travels here
+## Licence
 
-- `agents/` — 5 file(s)
-- `regras/` — 44 file(s)
-- `docs/` — 23 file(s)
-- `caminhos.json/` — 1 file(s)
-- `LICENSE/` — 1 file(s)
-- `skills/` — 23 file(s)
-
-## Como ler uma regra
-
-```markdown
-### APX-004 — Nunca SOQL nem DML dentro de um for loop
-
-**Regra:** ...
-**Porquê:** ...
-**Como verificar:** ...
-**Cursos:** 3
-```
-
-O **Como verificar** é o que torna a auditoria possível: ou o código viola a regra ou não viola.
-O número no fim diz por quantas fontes independentes a regra foi confirmada — `0` significa que
-foi escrita à mão a partir de documentação oficial, e aí a **Fonte** aponta para ela e abre.
+See [LICENSE](LICENSE).

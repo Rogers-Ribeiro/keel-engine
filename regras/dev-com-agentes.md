@@ -21,7 +21,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Mantém o CLAUDE.md específico (comandos, convenções, regras críticas), actualizado, com menos de 200 linhas e sem senhas, tokens ou chaves.
 **Porquê:** É o que sobrevive entre sessões; um ficheiro vago, gigante ou desactualizado confunde o agente, e um segredo nele fica exposto a todas as sessões e ao repositório.
 **Como verificar:** O CLAUDE.md tem menos de 200 linhas, não contém valores de credenciais e os comandos que lista existem no projecto.
-**Fonte:** [referência](../docs/claude-code-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 2
 
 ### PROC-039 — Normas da equipa no CLAUDE.md do projecto, nunca no pessoal
@@ -29,7 +29,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Escreve as convenções, os requisitos de testes e as regras de arquitectura que a equipa partilha no CLAUDE.md do repositório (ou em `.claude/rules/`), versionado; o `~/.claude/CLAUDE.md` e o `CLAUDE.local.md` ficam só para preferências pessoais.
 **Porquê:** O ficheiro do utilizador não vai para o repositório, por isso uma norma escrita lá só vale para quem a escreveu e falha em silêncio para os colegas; mandar cópias do ficheiro pessoal faz as versões divergirem.
 **Como verificar:** O CLAUDE.md da raiz está no Git e contém as normas de equipa; o `CLAUDE.local.md` está no `.gitignore` e não tem regras que a equipa precise de seguir.
-**Fonte:** [referência](../docs/claude-code-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 2
 
 ### PROC-042 — Convenção de um tipo de ficheiro numa regra com `paths`
@@ -37,7 +37,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Escreve a convenção que segue um tipo de ficheiro espalhado pela árvore (os testes ao lado do código, os ficheiros de infraestrutura) num ficheiro de `.claude/rules/`, um assunto por ficheiro, com `paths` no frontmatter a listar os globs que o apanham; a convenção que pertence só a uma pasta vai para um CLAUDE.md dessa pasta. Não a ponhas no CLAUDE.md da raiz nem em cópias por várias pastas.
 **Porquê:** Com `paths`, a regra só entra quando o Claude lê um ficheiro que corresponde, por isso não gasta contexto nem se mistura com trabalho que não é dela; as cópias por pasta divergem com o tempo e cada pasta nova precisa da sua, enquanto um glob com `**` apanha os ficheiros novos sem ninguém mexer na regra.
 **Como verificar:** As convenções por tipo de ficheiro estão em `.claude/rules/<assunto>.md` com `paths`; o CLAUDE.md da raiz não tem secções dessas, e o mesmo bloco não se repete em CLAUDE.md de várias pastas.
-**Fonte:** [referência](../docs/claude-code-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 2
 
 ## Skills e subagentes
@@ -61,7 +61,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Escreve na `description` de cada skill e de cada subagente, de forma concreta, em que situações deve ser usado.
 **Porquê:** É a `description` que o agente lê para decidir, sem pedido explícito, que skill ou subagente usar.
 **Como verificar:** Cada `SKILL.md` e cada `.claude/agents/<nome>.md` tem uma `description` com gatilhos concretos (tarefas, termos, ficheiros), e não apenas o nome repetido.
-**Fonte:** [referência](../docs/claude-code-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 4
 
 ### PROC-007 — Invocação explícita nos passos críticos
@@ -69,7 +69,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Nos passos de uma spec que dependem de uma skill ou de um subagente, invoca-os pelo nome (`/nome` para a skill, `@agent-<nome>` para o subagente) em vez de confiar no disparo pela `description`.
 **Porquê:** O disparo indirecto deixa margem para o agente não chamar a skill.
 **Como verificar:** As tarefas da spec que precisam de uma skill ou de um subagente indicam-no pelo nome.
-**Fonte:** [referência](../docs/claude-code-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 2
 
 ### PROC-008 — Skills com passos numerados e condições de paragem
@@ -84,7 +84,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Declara no campo `tools` de cada subagente só as ferramentas de que o seu papel precisa; um subagente que só lê e analisa não recebe ferramentas de escrita.
 **Porquê:** O campo `tools` é uma lista branca: o que não está listado fica bloqueado, o que limita os danos de um subagente que se engane.
 **Como verificar:** Cada `.claude/agents/<nome>.md` tem `tools` explícito; revisores e auditores não têm `Write` nem `Edit`.
-**Fonte:** [referência](../docs/claude-code-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 1
 
 ### PROC-010 — Times de agentes pequenos e sem sobreposição
@@ -106,7 +106,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Só cries um subagente quando ele precisa de algo que o agente principal não tem: contexto limpo (não ver a conversa de quem fez o trabalho), outras ferramentas ou permissões, outro modelo, ou trabalho paralelo e independente (AGT-032). Um papel (PO, UX, backend, arquitecto sénior) não justifica um agente: o conhecimento dessa área entra pelas regras com `paths:` e pelas skills, no mesmo agente.
 **Porquê:** Uma persona no system prompt não melhora o desempenho em tarefas objectivas e o seu efeito é em grande parte aleatório; o que o agente sabe de uma área vem do contexto que recebe, não do nome que lhe dão. Cada agente a mais acrescenta coordenação, que é onde caem duas das três categorias de falha dos sistemas multiagente (desenho do sistema e desalinhamento entre agentes), e custa várias vezes mais tokens.
 **Como verificar:** Cada ficheiro em `.claude/agents/` (ou definição de subagente no código) difere do agente principal em pelo menos um de: `tools`, `model`, contexto recebido (por exemplo só o diff e a spec), ou execução em paralelo com âmbito próprio (PROC-010). Um agente cujo único traço próprio é o papel e o tom no prompt é achado.
-**Fonte:** [Contexto e qualidade §5](../docs/contexto-e-qualidade.md)
+**Fonte:** [Contexto e qualidade §5](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/contexto-e-qualidade.md)
 **Cursos:** 1
 
 ## Especificações e execução
@@ -179,7 +179,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Cada spec nova tem no cabeçalho uma linha `Desenho:` com o caminho da página de desenho do processo (a que o `keel-design` escreve), ou `não é processo — <porquê numa frase>`. O critério é a pergunta «consegues nomear quem faz cada passo?»: se sim, há processo e há página.
 **Porquê:** As decisões de quem vê o quê aparecem de uma vez no quadro, e não uma a uma durante a implementação. Uma skill que depende da sua `description` para ser chamada esquece-se em sessões longas; o que uma máquina apanha vira verificação, e não texto.
 **Como verificar:** Um teste do projecto percorre as specs criadas depois da data de adopção e falha se faltar a linha `Desenho:`, ou se o caminho indicado não existir.
-**Fonte:** [keel-design](../skills/keel-design/SKILL.md) · [licoes-do-agente](../docs/licoes-do-agente.md)
+**Fonte:** [keel-design](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/skills/keel-design/SKILL.md) · [licoes-do-agente](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/licoes-do-agente.md)
 **Cursos:** 0
 
 ### PROC-045 — Bug reproduzido num teste que falha antes da correcção
@@ -226,7 +226,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Põe os comandos e ficheiros proibidos em `permissions.deny` do `settings.json` e bloqueia com um hook `PreToolUse` (matcher `Bash|PowerShell`, saída com código 2) o que tem de ser impedido sempre.
 **Porquê:** O `deny` tem prioridade sobre o `allow`, e o hook com código 2 bloqueia a chamada de forma determinística; o CLAUDE.md e as skills só sugerem.
 **Como verificar:** O `settings.json` tem `deny` para `git push`, apagamentos recursivos e `.env`; o hook de guarda usa `Bash|PowerShell` e sai com `exit 2` quando bloqueia.
-**Fonte:** [referência](../docs/claude-code-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 2
 
 ### PROC-024 — Chaves de API só em variáveis de ambiente
@@ -241,7 +241,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Não uses `allowed_tools` (Agent SDK) nem a opção equivalente do Claude Code para limitar as ferramentas de um agente: só aprovam sem perguntar. Para tirar ferramentas, usa a lista `tools` do subagente, `--tools` numa execução com `-p`, `disallowed_tools` no Agent SDK (com o nome simples, a ferramenta sai do pedido) ou `permissions.deny` (a aula diz: `allowed_tools` define as ferramentas que o agente pode usar; desactualizado).
 **Porquê:** Os cursos apresentam a opção como a lista do que o agente pode usar, mas na forma actual ela não retira nenhuma ferramenta; uma configuração que conta com ela para conter um agente deixa as outras ferramentas disponíveis.
 **Como verificar:** Nenhuma configuração usa `allowed_tools` com a intenção de restringir; um agente que não pode usar uma ferramenta tem-na fora por `tools`, `--tools`, `disallowed_tools` ou `deny`; nenhum combina `allowed_tools` com `bypassPermissions` a contar que a lista limite alguma coisa.
-**Fonte:** [referência](../docs/claude-api-formatos.md) · [referência](../docs/claude-code-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-api-formatos.md) · [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 3
 
 ## MCP
@@ -265,7 +265,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Usa o transporte stdio para servidores MCP locais e streamable HTTP para servidores remotos partilhados por vários clientes (a aula diz: SSE para o remoto; desactualizado).
 **Porquê:** O stdio serve um processo local; um servidor remoto é o que se publica para vários clientes da organização, e a especificação MCP descontinuou o HTTP+SSE.
 **Como verificar:** Servidores locais usam stdio; os remotos usam streamable HTTP e nenhum servidor novo usa SSE.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 3
 
 ### PROC-028 — Documentação actual ligada ao agente de programação
@@ -282,7 +282,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Escreve cada tool como uma função com type hints em todos os argumentos e no retorno e com uma docstring que diga o que faz, o que recebe e o que devolve, decorada com `@tool` (de `langchain.tools`).
 **Porquê:** O nome, os tipos e a docstring são o que chega ao LLM para decidir quando e como chamar a tool.
 **Como verificar:** Nenhuma tool no diff tem argumentos sem tipo ou docstring vazia ou genérica.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 3
 
 ### PROC-030 — Saída estruturada para o que o código consome
@@ -290,7 +290,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Quando o código usa a resposta do LLM (uma decisão binária, uma rota, dados para outro passo), define um `BaseModel` com `Field(description=...)` em cada campo e pede saída estruturada: `response_format` no `create_agent`, ou `with_structured_output` fora de agentes.
 **Porquê:** Texto livre ou "responde em JSON" dá parsing frágil; o esquema e as descrições dos campos obrigam o modelo a responder no formato esperado.
 **Como verificar:** Não há parsing de texto livre nem pedidos de JSON só no prompt; cada resposta consumida pelo código tem um modelo Pydantic com descrições.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 4
 
 ### PROC-031 — Nada de chains legadas em código novo
@@ -298,7 +298,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Em código novo, compõe cadeias com LCEL (`prompt | modelo | parser`) e agentes com `create_agent`; não uses `LLMChain`, `SequentialChain`, `ConversationChain`, `ConversationalRetrievalChain`, `initialize_agent` nem `create_react_agent`.
 **Porquê:** Essas classes foram marcadas como obsoletas e passaram para o pacote legado `langchain-classic`; os modelos continuam a sugeri-las.
 **Como verificar:** O diff não importa `langchain_classic` nem as classes listadas, salvo em código antigo assinalado.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 3
 
 ### PROC-032 — Origem nos metadados de cada chunk
@@ -320,7 +320,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Configura o modelo da aplicação pelo ID exacto com que ela foi testada, nunca por um alias do tipo "latest"; a mudança de modelo é uma alteração deliberada, testada antes de entrar.
 **Porquê:** Com um alias o modelo muda por baixo da aplicação e o comportamento muda sem aviso; fixado, a actualização passa a ser uma decisão.
 **Como verificar:** A configuração tem o ID completo do modelo (os IDs sem data das gerações recentes são snapshots fixos; nas anteriores usa-se o ID com data), e uma troca de modelo no diff vem acompanhada de nova avaliação.
-**Fonte:** [referência](../docs/claude-api-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-api-formatos.md)
 **Cursos:** 1
 
 ## Aprender com os erros
@@ -328,14 +328,14 @@ Prefixo `PROC`. ## Contexto e sessões
 Estas duas regras não saem de curso nenhum. Nenhum dos cursos extraídos trata de como um agente
 acumula o que aprendeu entre projectos: a PROC-005 manda corrigir a skill e não só o resultado, mas
 não diz onde fica o que se corrigiu nem como chega ao projecto seguinte. Saem da referência
-[licoes-do-agente](../docs/licoes-do-agente.md) e da skill `keel-lesson`, que as executa.
+[licoes-do-agente](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/licoes-do-agente.md) e da skill `keel-lesson`, que as executa.
 
 ### PROC-033 — Erro evitável regista-se com prova; lição só à reincidência
 
 **Regra:** Quando cometeres um erro evitável que alguém teve de corrigir, regista a ocorrência com a prova que a demonstra (ficheiro e linha, comando ou mensagem de erro). Só à terceira ocorrência da mesma chave é que propões transformá-la numa lição — e a lição escreve-se com a aprovação do utilizador, nunca sozinho.
 **Porquê:** Uma ocorrência isolada é um acidente e duas ainda podem ser distracção; a terceira é que torna o padrão inegável. Sem esse filtro o registo aceita tudo, enche-se de entradas que não valem nada e aprende-se a ignorá-lo — e um registo ignorado não protege nem nas entradas boas. Sem a prova, o que fica escrito é a teoria do próprio agente sobre por que falhou.
 **Como verificar:** Cada entrada do registo tem o campo de prova preenchido, e cada lição escrita tem pelo menos três ocorrências da mesma chave por trás.
-**Fonte:** [licoes-do-agente](../docs/licoes-do-agente.md)
+**Fonte:** [licoes-do-agente](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/licoes-do-agente.md)
 **Cursos:** 0
 
 ### PROC-034 — O que uma máquina apanha vira verificação, não texto
@@ -343,7 +343,7 @@ não diz onde fica o que se corrigiu nem como chega ao projecto seguinte. Saem d
 **Regra:** Antes de escrever uma lição ou uma regra nova, pergunta se um linter, um teste, um hook ou um ficheiro de configuração apanham o caso. Se apanharem, escreve a verificação e não escrevas o texto.
 **Porquê:** Texto em contexto compete por atenção com tudo o resto, a cada sessão; uma verificação corre sozinha e não falha por distracção. É a PROC-023 ao contrário: se o hook garante e o texto só sugere, o que se pode garantir não se pede. Escrever as duas coisas é pior do que escrever só a verificação, porque deixa uma regra que vai ser ignorada ao lado de um teste que não vai.
 **Como verificar:** Nenhuma lição ou regra do registo descreve um caso que a ferramenta de lint, os testes ou os hooks do projecto já detectam.
-**Fonte:** [licoes-do-agente](../docs/licoes-do-agente.md)
+**Fonte:** [licoes-do-agente](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/licoes-do-agente.md)
 **Cursos:** 0
 
 ## Da prática de um projecto
@@ -355,7 +355,7 @@ Estas duas regras não saem de curso nenhum: nasceram da prática de um projecto
 **Regra:** a verificação que decide se o código entra corre no servidor de integração e **impede** a fusão quando falha. Um hook de `pre-commit`, um `core.hooksPath` que cada pessoa activa à mão, ou um job que corre sem ser obrigatório, são ajudas — não são o portão. Se o repositório ainda não consegue impor verificações obrigatórias, isso é um risco a registar por escrito, não um detalhe a descobrir mais tarde; e enquanto o portão só informa e não impede, as regras que o pressupõem — esta, a PROC-051 e a TST-012 — correm como aviso, e o registo di-lo para que ninguém as leia como um portão que não existe.
 **Porquê:** um hook local contorna-se com `--no-verify`, desaparece em quem clonar sem o activar, e não corre de todo numa fusão feita pela interface web. A consequência não é teórica: num repositório real com disciplina verdadeira — prova por mutação, baselines de governação, gates escritos com cuidado — as violações de regra acumularam-se às dezenas, porque nada abaixo do CI bloqueava uma fusão. Disciplina sem mecanismo dura exactamente enquanto durarem as pessoas que a praticam.
 **Como verificar:** existe protecção de ramo com verificações obrigatórias, e o comando que corre no servidor é o mesmo e com o mesmo âmbito do que se corre localmente; uma fusão com o portão vermelho é recusada — prova-se tentando uma vez.
-**Fonte:** [pratica-de-projectos](../docs/pratica-de-projectos.md#o-portão-e-o-baseline)
+**Fonte:** [pratica-de-projectos](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/pratica-de-projectos.md#o-portão-e-o-baseline)
 **Cursos:** 0
 
 ### PROC-051 — Um baseline só encolhe, e todo o rebaseline diz de quanto cresceu
@@ -363,31 +363,31 @@ Estas duas regras não saem de curso nenhum: nasceram da prática de um projecto
 **Regra:** um ficheiro que isenta dívida existente — baseline, allowlist de supressões, lista de excepções — só pode diminuir. Quando tiver mesmo de crescer, o commit que o altera regista o número anterior, o número novo e a razão; e a justificação de cada entrada é específica dessa entrada, não uma frase repetida. Se não houver portão que bloqueie (PROC-050), o crescimento sem justificação passa em aviso; a regra mantém-se para que o dia em que o portão existir não exija reescrever o baseline.
 **Porquê:** um baseline é uma promessa de que a dívida está contida. Sem esta regra ele vira o sítio onde a dívida se esconde de si própria, e o gate continua verde a reportar o que já não mede. É o padrão que se repete: um baseline de supressões com centenas de entradas e a mesma frase de justificação em todas, debaixo de um campo que exige razão e âmbito; um baseline de tamanho que quase duplica por rebaselines sucessivos, cada um declarado e nenhum questionado.
 **Como verificar:** o histórico do ficheiro de baseline mostra a contagem a descer; nenhum crescimento entra sem o número e a razão na mensagem de commit; e as justificações das entradas não são todas iguais — se forem, não são justificações.
-**Fonte:** [pratica-de-projectos](../docs/pratica-de-projectos.md#o-portão-e-o-baseline)
+**Fonte:** [pratica-de-projectos](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/pratica-de-projectos.md#o-portão-e-o-baseline)
 **Cursos:** 0
 
 ## Regras e controlos
 
-Esta regra não sai de curso nenhum. Os cursos ensinam o `deny` e os hooks (PROC-023), mas nenhum mede quantas das regras de segurança escritas num projecto têm, de facto, um controlo por trás. Sai da referência [regras-vs-controlos](../docs/regras-vs-controlos.md), que resume um estudo de 481 ficheiros CLAUDE.md públicos.
+Esta regra não sai de curso nenhum. Os cursos ensinam o `deny` e os hooks (PROC-023), mas nenhum mede quantas das regras de segurança escritas num projecto têm, de facto, um controlo por trás. Sai da referência [regras-vs-controlos](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/regras-vs-controlos.md), que resume um estudo de 481 ficheiros CLAUDE.md públicos.
 
 ### PROC-035 — Cada regra de segurança escrita diz que controlo a impõe
 
 **Regra:** Ao escrever uma regra de segurança em texto (CLAUDE.md, `.claude/rules/`, uma skill), põe ao lado o controlo que a impõe: a entrada de `permissions.deny`, o hook ou o teste. Se não houver nenhum, escreve-o primeiro (PROC-034); se não for possível, diz na própria regra que depende de o modelo obedecer.
 **Porquê:** Uma instrução em texto é interpretada pelo modelo; o `deny` e o hook `PreToolUse` bloqueiam antes de a acção correr. Num estudo de 481 CLAUDE.md públicos, só 4% a 16% das regras de segurança tinham um controlo nativo equivalente, e quem as escreveu não tinha forma de o saber — o ficheiro é um canal só de escrita. Uma regra que diz que não tem controlo, pelo menos, não engana quem a lê.
 **Como verificar:** Para cada regra de segurança dos ficheiros de instruções do projecto existe uma entrada correspondente no `deny` do `.claude/settings.json`, um hook `PreToolUse` que a cobre, ou a menção explícita de que não há controlo. O `keel-audit` lista as que não têm nenhuma das três.
-**Fonte:** [regras-vs-controlos](../docs/regras-vs-controlos.md)
+**Fonte:** [regras-vs-controlos](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/regras-vs-controlos.md)
 **Cursos:** 0
 
 ## Contexto, skills e revisão
 
-Estas regras não saem de curso nenhum. Os cursos ensinam o CLAUDE.md, as skills e os revisores; nenhum mede quanto texto em contexto ajuda, nem o que um revisor deixa passar. Saem da referência [contexto-e-qualidade](../docs/contexto-e-qualidade.md), que resume quatro estudos sobre isso.
+Estas regras não saem de curso nenhum. Os cursos ensinam o CLAUDE.md, as skills e os revisores; nenhum mede quanto texto em contexto ajuda, nem o que um revisor deixa passar. Saem da referência [contexto-e-qualidade](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/contexto-e-qualidade.md), que resume quatro estudos sobre isso.
 
 ### PROC-036 — A revisão dá um veredicto por dimensão, e cada achado volta fechado
 
 **Regra:** O revisor recebe só o diff e a spec, sem o plano nem a conversa de quem implementou, e avalia uma dimensão de cada vez (spec, segurança e segredos, código limpo, linguagem e testes, e o que o projecto acrescentar). Cada dimensão começa em FALHA e só passa a PASSA com evidência — saída de teste, lint ou verificador de tipos, ou a linha do diff citada; sem ela, fica SEM EVIDÊNCIA. Cada achado é gravado como estado e fica aberto até uma nova ronda do revisor o dar como corrigido, ou até quem implementou o fechar como não corrigido, com o motivo. Nos portões críticos — segurança, isolamento entre tenants, migrações —, um refutador tenta derrubar cada PASSA escrevendo o teste que falharia.
 **Porquê:** Um modelo que julga favorece o que se parece com o que ele próprio escreveria, e ser mais capaz não o livra disso; repartir a avaliação por dimensões reduziu esse viés em 31,5% em média. Quem escreve e quem revê são quase sempre da mesma família, por isso o viés não se tira trocando de modelo: diminui-se dependendo menos do juízo e mais de ferramentas determinísticas, que não preferem ninguém. E a falha mais repetida de agentes em tarefas longas é encontrar o problema na revisão e entregar sem o corrigir — o que um texto a pedir para fechar os achados não impede (PROC-035).
 **Como verificar:** A revisão tem uma linha por dimensão com PASSA, FALHA ou SEM EVIDÊNCIA e a evidência ao lado, e nenhum parecer geral. O `.keel/revisao.json` não tem achados abertos no commit: o guarda recusa o `git commit` e o hook `Stop` não deixa a tarefa acabar enquanto houver um (`node .keel/revisao.mjs estado`).
-**Fonte:** [contexto-e-qualidade](../docs/contexto-e-qualidade.md)
+**Fonte:** [contexto-e-qualidade](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/contexto-e-qualidade.md)
 **Cursos:** 0
 
 ### PROC-037 — O contexto fixo mede-se, e o CLAUDE.md diz só o que foge do padrão
@@ -395,7 +395,7 @@ Estas regras não saem de curso nenhum. Os cursos ensinam o CLAUDE.md, as skills
 **Regra:** O que entra em todas as sessões — CLAUDE.md, os núcleos importados e as regras sem `paths:` — soma menos de 200 linhas. O CLAUDE.md de um projecto leva os imports, os comandos que não se adivinham pelo código e as práticas que contrariam o padrão da linguagem ou da plataforma; não leva visão geral, árvore de pastas nem descrição da arquitectura.
 **Porquê:** O cumprimento de instruções cai à medida que se acumulam, e as primeiras ganham às últimas. Arquivos de contexto com visões gerais do repositório não melhoraram a taxa de sucesso de agentes de código e subiram o custo em mais de 20%; o que ajudou foi declarar o que não é padrão. O agente descobre a estrutura lendo o código; o que não descobre sozinho é o que contraria o costume.
 **Como verificar:** `node ${CLAUDE_PLUGIN_ROOT}/skills/keel-init/contexto.mjs` na raiz do projecto dá o total e avisa acima do limite. No CLAUDE.md, cada parágrafo responde a "o agente acertaria isto sem ler aqui?" com não.
-**Fonte:** [contexto-e-qualidade](../docs/contexto-e-qualidade.md) · [referência](../docs/claude-code-formatos.md)
+**Fonte:** [contexto-e-qualidade](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/contexto-e-qualidade.md) · [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 0
 
 ### PROC-038 — Uma skill diz o que fazer; o pormenor de um passo vai para um ficheiro ao lado
@@ -403,7 +403,7 @@ Estas regras não saem de curso nenhum. Os cursos ensinam o CLAUDE.md, as skills
 **Regra:** O `SKILL.md` tem o fluxo — quando se usa, os passos, as decisões e o que se entrega — e cabe numa leitura. O que só serve num passo (tabelas de dimensões, mecânicas de uma ferramenta, formatos de saída longos) vai para um ficheiro de apoio na pasta da skill, e o passo diz quando o ler.
 **Porquê:** Skills curadas e focadas, com no máximo três módulos, deram mais do que pacotes exaustivos. Um `SKILL.md` que carrega o pormenor de todos os passos paga-o inteiro em cada uso, mesmo quando só um passo corre.
 **Como verificar:** Cada `SKILL.md` do projecto tem menos de 200 linhas — o teto que a documentação do Claude Code dá ao CLAUDE.md, que também entra inteiro —, ou justifica o excesso; os ficheiros de apoio são referidos pelo nome no passo que os usa.
-**Fonte:** [contexto-e-qualidade](../docs/contexto-e-qualidade.md) · [referência](../docs/claude-code-formatos.md)
+**Fonte:** [contexto-e-qualidade](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/contexto-e-qualidade.md) · [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md)
 **Cursos:** 0
 
 ## Claude Code em pipelines
@@ -413,5 +413,5 @@ Estas regras não saem de curso nenhum. Os cursos ensinam o CLAUDE.md, as skills
 **Regra:** Num passo de pipeline, invoca o Claude Code sempre em modo não interactivo (`-p`), com `--bare` e `--output-format json` e, quando um script consome o resultado, com `--json-schema` a descrever a forma esperada; testa o código de saída a cada invocação e, antes de ler `structured_output`, confirma que o campo existe.
 **Porquê:** Sem `-p` a sessão interactiva fica à espera de alguém e o job só pára no timeout global, a gastar minutos; texto livre muda de forma entre execuções e extraí-lo é frágil. O esquema garante a forma, não a correcção, e quando o Claude recusa o `structured_output` simplesmente não vem. Sem `--bare`, o `-p` corre os hooks e liga os MCP que estiverem no repositório, mesmo num fork que ninguém confiou.
 **Como verificar:** Cada chamada a `claude` nos workflows de CI tem `-p`, `--bare` e `--output-format json` (e `--json-schema` quando o resultado é lido por código), e o script testa o código de saída e a presença de `structured_output` antes de interpretar a resposta.
-**Fonte:** [Formatos do Claude Code — Modo não interactivo](../docs/claude-code-formatos.md#modo-não-interactivo-claude--p)
+**Fonte:** [Formatos do Claude Code — Modo não interactivo](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/claude-code-formatos.md#modo-não-interactivo-claude--p)
 **Cursos:** 2

@@ -83,7 +83,7 @@ Prefixo `RAG`. ## Âmbito e pipeline
 **Regra:** Junta BM25 à pesquisa densa quando as perguntas trazem nomes, códigos, siglas ou termos técnicos raros.
 **Porquê:** A pesquisa densa apanha o significado e tolera erros de escrita, mas falha o termo exacto; o BM25 dá peso alto a palavras raras, que é onde a pesquisa semântica se perde.
 **Como verificar:** Em bases técnicas ou com identificadores, existe um retriever que combina as duas pesquisas; os pesos estão explícitos no código, não escondidos num valor por omissão.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 2
 
 ### RAG-012 — Pergunta de seguimento reformulada antes de pesquisar (API a confirmar)
@@ -137,7 +137,7 @@ Prefixo `RAG`. ## Âmbito e pipeline
 **Regra:** Toda a decisão tomada por um LLM dentro do fluxo (relevância, alucinação, escolha de rota) usa saída estruturada com um schema Pydantic de campos fechados, com descrição em cada campo, e um modelo que suporte function calling.
 **Porquê:** As arestas condicionais comparam valores; texto livre do modelo não é comparável de forma fiável. A descrição do campo é o que o modelo usa para decidir, e sem function calling a saída estruturada não funciona.
 **Como verificar:** Cada nó de decisão tem uma classe de schema com campos tipados e descritos, e a chain usa saída estruturada; nenhuma aresta condicional faz parsing de texto livre.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 3
 
 ### RAG-018 — Limite de tentativas em qualquer ciclo
@@ -152,7 +152,7 @@ Prefixo `RAG`. ## Âmbito e pipeline
 **Regra:** Quando o retrieval é exposto como tool, cada base ou domínio tem a sua tool, com nome e descrição que digam o que lá está; não juntes domínios distintos na mesma vector store nem na mesma tool.
 **Porquê:** É pela descrição que o modelo decide qual usar; descrições vagas ou uma tool única sobre tudo fazem-no encaminhar mal a pergunta.
 **Como verificar:** Cada tool de retrieval tem nome e descrição específicos do conteúdo; não há uma tool genérica de "pesquisar documentos" sobre bases de assuntos diferentes.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 3
 
 ## Memória e avaliação
@@ -162,7 +162,7 @@ Prefixo `RAG`. ## Âmbito e pipeline
 **Regra:** Cada conversa tem o seu identificador (`thread_id` ou `session_id`), passado em todas as chamadas, e o histórico de uma conversa nunca é lido por outra.
 **Porquê:** É o identificador que liga as mensagens à conversa; partilhá-lo entre utilizadores mistura os históricos e expõe o que um disse ao outro.
 **Como verificar:** O identificador vem da sessão do utilizador e não é uma constante no código; num teste com dois identificadores, cada um só vê o seu histórico.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 4
 
 ### RAG-021 — Avaliação com dataset de referência (API a confirmar)
@@ -170,7 +170,7 @@ Prefixo `RAG`. ## Âmbito e pipeline
 **Regra:** Avalia o RAG contra um dataset de perguntas com resposta de referência, com avaliadores que devolvem um valor booleano e uma explicação; para comparar modelos, corre a mesma avaliação com cada um.
 **Porquê:** Sem resposta de referência não há como medir correcção, e sem medição a escolha do modelo acaba por ser feita só pelo preço.
 **Como verificar:** Existe um dataset versionado com perguntas e respostas de referência e avaliadores com schema de saída; uma mudança de modelo ou de prompt traz números da avaliação.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ### RAG-023 — Resposta errada investigada primeiro na recuperação

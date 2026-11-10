@@ -138,7 +138,7 @@ Prefixo `OBS`. ## Logging da aplicação
 **Regra:** em produção, os spans registam a forma do que aconteceu — que ferramenta correu, quanto demorou, se teve sucesso, contagens e identificadores — e não o texto do prompt, os argumentos das ferramentas nem as respostas; o registo de conteúdo liga-se de propósito, para um serviço ou uma investigação com prazo, e com destino definido.
 **Porquê:** a camada estrutural chega para a maior parte do trabalho de latência, custo e erros e mantém os dados sensíveis fora da telemetria; o pipeline que captura conteúdo herda as obrigações de conformidade de tudo o que capturou. O traço completo fica para o desenvolvimento.
 **Como verificar:** a configuração de produção não liga a captura de prompts nem de entradas e saídas; onde estiver ligada, há uma decisão registada com âmbito, prazo e destino dos dados. Com o LangSmith, o ambiente de produção tem `LANGSMITH_HIDE_INPUTS=true` e `LANGSMITH_HIDE_OUTPUTS=true` (ou `hide_inputs`/`hide_outputs` no `Client`), e só uma decisão escrita e com prazo os desliga.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ### OBS-019 — Flush do exportador no encerramento do processo
@@ -146,7 +146,7 @@ Prefixo `OBS`. ## Logging da aplicação
 **Regra:** no código de encerramento da aplicação, esvazia o buffer do exportador de telemetria antes de o processo sair.
 **Porquê:** com exportação em lote, os spans mais recentes podem ainda estar no buffer por enviar; sem o flush perdem-se os últimos spans da execução, muitas vezes os mais interessantes, os que estão perto de uma falha.
 **Como verificar:** o caminho de encerramento da aplicação chama o flush do exportador ou do provider de telemetria — `client.flush()` no LangSmith, `TracerProvider.force_flush()` ou `shutdown()` no OpenTelemetry — e não há saída do processo que o salte.
-**Fonte:** [referência](../docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ## Qualidade em produção
