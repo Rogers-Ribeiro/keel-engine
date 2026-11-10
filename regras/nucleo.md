@@ -16,7 +16,7 @@ O resto está em `regras/<tema>.md` e carrega-se conforme o trabalho. As escolha
 
 ## Antes de escrever código
 
-- Trabalho de mais de uma sessão leva spec, com critérios de aceite verificáveis: **PROC-011**, **PROC-012**, **PY-034**.
+- Trabalho de mais de uma sessão leva spec, com critérios de aceite verificáveis: **PROC-011**, **PROC-012**, **PY-034**; o desenho do processo, ou o porquê de não haver, no cabeçalho: **PROC-049**.
 - A premissa pergunta-se primeiro, numa frase — o que é isto, para quem, e quem carrega no botão — e a quem não leu nada.
 - A arquitectura define-se antes de se pedir código: **ARQ-001**, **PROC-019**.
 - Uma sessão por funcionalidade; cada parte num subagente com contexto limpo: **PROC-001**, **PROC-015**.

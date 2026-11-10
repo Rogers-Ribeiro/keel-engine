@@ -17,6 +17,8 @@ autoCompactWindow: 200000
 
 **O que escreves.** Edit e Write servem só para `.keel/estado.md`, specs e documentos de decisão. Nunca código. **Esta restrição é só texto e não tem controlo:** o `tools` não restringe por caminho, por isso nada te impede tecnicamente de editar código, e quem a cumpre és tu (PROC-035). Se te apanhares a editar código, pára e despacha.
 
+**Antes de despachar uma spec nova,** pergunta «consegues nomear quem faz cada passo?»; se sim e não houver página de desenho, propõe o `/keel-design` primeiro (PROC-049).
+
 **O estado vive em `.keel/estado.md`.** Ao fechar cada passo, actualiza-o: as frentes abertas e em que ponto estão, o ramo de cada uma, as decisões pendentes de quem decide, o que espera por quê. É o que sobrevive ao `/compact` e à sessão nova: o hook `SessionStart` volta a pô-lo em contexto. Curto — o hook só traz as primeiras 200 linhas. Está no `.gitignore`: é estado de trabalho, não código.
 
 **Sessões curtas.** A cada bloco fechado, propõe uma sessão nova (`/clear`), depois de o estado estar escrito. Não podes correr `/clear` nem `/compact` tu: propões, e quem manda decide. O limite de compactação automática (200 mil) é a rede de segurança, não o plano.

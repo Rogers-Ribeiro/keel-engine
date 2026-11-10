@@ -159,6 +159,8 @@ Antes de tirares o instantâneo ou de escreveres a página, **lê `pagina.md`**,
 ficheiro: diz quando é que o desenho assentou (o critério, para não se tirar por cansaço), o que a
 página declara à cabeça sobre divergir da spec, e o índice de `docs/desenho/`.
 
+**A spec que vem a seguir aponta para a página** numa linha `Desenho:` do cabeçalho, e um teste do projecto falha se faltar ou se o caminho não existir (PROC-049).
+
 ## Na fase de desenho, pesquisa-se sem filtro de domínio
 
 A pesquisa da base aceita `--dominio`, e serve para **executar**: um projecto de Salesforce não quer
