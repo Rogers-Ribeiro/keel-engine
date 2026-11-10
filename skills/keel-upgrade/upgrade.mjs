@@ -16,6 +16,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
@@ -100,10 +101,59 @@ export const ESTADOS = {
   AMBOS: 'ambos', // nasceu aqui e entretanto subiu à base, escrita de outra maneira
   NOVA: 'nova', // veio no engine novo: entra
   REMOVIDA: 'removida', // saiu do engine: fica na mesma, mas dizemos
+  RENUMERADA: 'renumerada', // o mesmo título do engine sob outro ID: fica, e não conta como órfã
+  COLISAO: 'colisao', // o mesmo ID do engine para uma regra que é outra: fica, e dizemos
 };
+
+// O título de uma regra é o resto da linha `### ID — Título`. Compara-se sem maiúsculas e com os
+// espaços colapsados; um corpo sem título legível (ou um texto que não é uma regra) fica sem título,
+// e sem título nunca há renumeração nem colisão.
+const RE_TITULO = /^###\s+[A-Z]+-\d+\s*(?:[—–:-]\s*)?(.*)$/;
+
+export function tituloDoCorpo(corpo) {
+  if (typeof corpo !== 'string') return null;
+  const m = RE_TITULO.exec(corpo.split('\n', 1)[0].trimEnd());
+  const titulo = m ? m[1].trim() : '';
+  return titulo === '' ? null : titulo;
+}
+
+const normalizarTitulo = (corpo) => tituloDoCorpo(corpo)?.replace(/\s+/g, ' ').toLowerCase() ?? null;
+
+// Uma regra do projecto cujo ID não existe na base mas cujo título é o de uma regra do engine (da base
+// ou da nova) sob outro ID foi renumerada pelo projecto — tipicamente por colisão com uma regra própria.
+// Devolve `ID do projecto -> ID do engine`.
+export function renumeracoes(base, projecto, novo) {
+  const porTitulo = new Map();
+  for (const mapa of [base, novo]) {
+    for (const [id, corpo] of mapa) {
+      const t = normalizarTitulo(corpo);
+      if (t === null) continue;
+      if (!porTitulo.has(t)) porTitulo.set(t, []);
+      porTitulo.get(t).push(id);
+    }
+  }
+  const resultado = new Map();
+  for (const [id, corpo] of projecto) {
+    if (base.has(id)) continue;
+    const t = normalizarTitulo(corpo);
+    if (t === null) continue;
+    // o mesmo ID com o mesmo título na versão nova é uma promoção, não uma renumeração
+    if (novo.has(id) && normalizarTitulo(novo.get(id)) === t) continue;
+    const alvo = (porTitulo.get(t) ?? []).find((o) => o !== id && normalizarTitulo(projecto.get(o)) !== t);
+    if (alvo) resultado.set(id, alvo);
+  }
+  return resultado;
+}
 
 export function classificar(base, projecto, novo) {
   const ler = (mapa, id) => (mapa.has(id) ? normalizarFontes(mapa.get(id)) : null);
+  const renumeradas = renumeracoes(base, projecto, novo);
+  const alvos = new Set(renumeradas.values());
+  const diferem = (a, b) => {
+    const ta = normalizarTitulo(a);
+    const tb = normalizarTitulo(b);
+    return ta !== null && tb !== null && ta !== tb;
+  };
   const estados = new Map();
   for (const id of new Set([...base.keys(), ...projecto.keys(), ...novo.keys()])) {
     const b = ler(base, id);
@@ -111,14 +161,18 @@ export function classificar(base, projecto, novo) {
     const v = ler(novo, id);
     if (p === null) {
       // já não está no contrato. Se nunca esteve e o engine a traz agora, é nova; se o projecto a
-      // tirou de propósito, não é connosco repô-la.
-      if (v !== null && b === null) estados.set(id, ESTADOS.NOVA);
+      // tirou de propósito, não é connosco repô-la; se o projecto a renumerou, já cá está.
+      if (v !== null && b === null && !alvos.has(id)) estados.set(id, ESTADOS.NOVA);
       continue;
     }
-    if (b === null) estados.set(id, v === null ? ESTADOS.SO_PROJECTO : v === p ? ESTADOS.INTACTA : ESTADOS.AMBOS);
-    else if (v === null) estados.set(id, ESTADOS.REMOVIDA);
+    if (renumeradas.has(id)) estados.set(id, ESTADOS.RENUMERADA);
+    else if (b === null) {
+      if (v === null) estados.set(id, ESTADOS.SO_PROJECTO);
+      else if (v === p) estados.set(id, ESTADOS.INTACTA);
+      else estados.set(id, diferem(p, v) ? ESTADOS.COLISAO : ESTADOS.AMBOS);
+    } else if (v === null) estados.set(id, ESTADOS.REMOVIDA);
     else if (p === b) estados.set(id, ESTADOS.INTACTA);
-    else estados.set(id, ESTADOS.EDITADA);
+    else estados.set(id, alvos.has(id) && diferem(p, b) ? ESTADOS.COLISAO : ESTADOS.EDITADA);
   }
   return estados;
 }
@@ -131,7 +185,9 @@ export function classificar(base, projecto, novo) {
 
 export function fundir(textoProjecto, base, novo) {
   const texto = textoProjecto.replace(/\r\n/g, '\n');
-  const estados = classificar(base, corposPorId(texto), novo);
+  const corposProjecto = corposPorId(texto);
+  const estados = classificar(base, corposProjecto, novo);
+  const renumeradas = renumeracoes(base, corposProjecto, novo);
   const linhas = texto.split('\n');
   const blocos = fatiarRegras(texto);
   const estilo = estiloDasFontes(texto);
@@ -141,7 +197,14 @@ export function fundir(textoProjecto, base, novo) {
   for (const b of blocos) {
     const estado = estados.get(b.id);
     if (estado !== ESTADOS.INTACTA) {
-      if (estado) accoes.push({ id: b.id, estado, feito: 'mantida' });
+      if (!estado) continue;
+      const accao = { id: b.id, estado, feito: 'mantida' };
+      if (estado === ESTADOS.RENUMERADA) accao.equivale = renumeradas.get(b.id);
+      if (estado === ESTADOS.COLISAO) {
+        accao.tituloProjecto = tituloDoCorpo(corposProjecto.get(b.id));
+        accao.tituloEngine = tituloDoCorpo(novo.get(b.id) ?? base.get(b.id));
+      }
+      accoes.push(accao);
       continue;
     }
     const antes = linhas.slice(b.inicio, b.fim).join('\n').trimEnd();
@@ -222,6 +285,7 @@ export function estadoDoScript(textoBase, textoProjecto, textoNovo) {
 
 export function actualizarScripts(projecto, base, novo, aplicar) {
   const linhas = [];
+  const tocados = [];
   for (const { destino, origem } of SCRIPTS) {
     const fProjecto = path.join(projecto, destino);
     const textoNovo = lerSeExiste(path.join(novo, origem));
@@ -232,16 +296,86 @@ export function actualizarScripts(projecto, base, novo, aplicar) {
       continue;
     }
     linhas.push(`\`${destino}\`: ${estado === 'instalar' ? 'instalado (não existia)' : 'actualizado (estava intacto)'}.`);
+    tocados.push(destino);
     if (aplicar) {
       fs.mkdirSync(path.dirname(fProjecto), { recursive: true });
       fs.writeFileSync(fProjecto, textoNovo);
+    }
+  }
+  linhas.push(...garantirExcepcoes(projecto, tocados, aplicar));
+  return linhas;
+}
+
+// ---------------------------------------------------------------- .gitignore dos scripts
+//
+// Muitos projectos ignoram `.keel/` (a base de conhecimento é cache local). Um script instalado ali e
+// ignorado não chega às worktrees novas, e o hook que o corre falha. Por isso, o que se instala ou
+// actualiza e o `.gitignore` ignora ganha uma excepção `!.keel/<script>.mjs`.
+
+const RE_IGNORA_KEEL = /^\/?\.keel(?:\/\*?)?$/;
+
+function estaEmGit(projecto) {
+  const r = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd: projecto, encoding: 'utf8' });
+  return r.status === 0 && r.stdout.trim() === 'true';
+}
+
+// Com git, pergunta-se ao git (apanha `.gitignore` pai, `info/exclude` e global). Sem git, procura-se
+// um padrão que ignore `.keel`, e uma excepção posterior já desfaz o efeito.
+export function estaIgnorado(projecto, destino) {
+  if (estaEmGit(projecto)) {
+    const r = spawnSync('git', ['check-ignore', '-q', '--', destino], { cwd: projecto });
+    if (r.status === 0) return true;
+    if (r.status === 1) return false;
+  }
+  const texto = lerSeExiste(path.join(projecto, '.gitignore'));
+  if (texto === null) return false;
+  let ignorado = false;
+  for (const l of texto.split('\n').map((x) => x.trim())) {
+    if (RE_IGNORA_KEEL.test(l)) ignorado = true;
+    else if (l === `!${destino}`) ignorado = false;
+  }
+  return ignorado;
+}
+
+// Devolve o `.gitignore` com a excepção acrescentada: a seguir à última excepção `!.keel/`, ou à
+// linha que ignora `.keel/`, ou no fim.
+export function juntarExcepcao(texto, destino) {
+  const eol = texto.includes('\r\n') ? '\r\n' : '\n';
+  const linhas = texto.split(/\r?\n/);
+  const excepcao = `!${destino}`;
+  if (linhas.some((l) => l.trim() === excepcao)) return texto;
+  let em = -1;
+  linhas.forEach((l, i) => {
+    if (/^!\.keel\//.test(l.trim())) em = i;
+  });
+  if (em < 0) em = linhas.findIndex((l) => RE_IGNORA_KEEL.test(l.trim()));
+  if (em < 0) {
+    const fim = texto === '' || texto.endsWith('\n') ? '' : eol;
+    return `${texto}${fim}${excepcao}${eol}`;
+  }
+  linhas.splice(em + 1, 0, excepcao);
+  return linhas.join(eol);
+}
+
+export function garantirExcepcoes(projecto, destinos, aplicar) {
+  const linhas = [];
+  const ficheiro = path.join(projecto, '.gitignore');
+  for (const destino of destinos) {
+    if (!estaIgnorado(projecto, destino)) continue;
+    const texto = fs.existsSync(ficheiro) ? fs.readFileSync(ficheiro, 'utf8') : '';
+    linhas.push(`\`.gitignore\`: acrescentada a excepção \`!${destino}\` (o projecto ignorava \`${destino}\`).`);
+    if (!aplicar) continue;
+    fs.writeFileSync(ficheiro, juntarExcepcao(texto, destino));
+    if (estaIgnorado(projecto, destino)) {
+      linhas.push(`\`${destino}\` continua ignorado depois da excepção (se o \`.gitignore\` ignora a pasta \`.keel/\` inteira, o git não reabre ficheiros lá dentro): troca \`.keel/\` por \`.keel/*\`.`);
     }
   }
   return linhas;
 }
 
 // Junta ao `settings.json` as entradas do `deny` mínimo e o hook de guarda que faltarem. Não tira
-// nem reordena nada: uma entrada que o projecto não quer, tira-a o projecto, à vista no diff.
+// nem reordena nada. Uma entrada do `deny` que já era do mínimo na base e falta no projecto foi tirada
+// por ele de propósito: não se repõe. Só entram as que são novas desde a base.
 // O hook `Stop` que não deixa a tarefa acabar com achados de revisão abertos (PROC-036).
 export const HOOK_REVISAO = {
   hooks: [{ type: 'command', command: 'node', args: ['${CLAUDE_PROJECT_DIR}/.keel/revisao.mjs', 'parar'], timeout: 10 }],
@@ -262,7 +396,21 @@ export const HOOK_ESTADO = {
 const usaScript = (grupos, nome) =>
   grupos.some((g) => (g.hooks ?? []).some((h) => [h.command, ...(h.args ?? [])].some((a) => String(a).includes(nome))));
 
-export function juntarControlos(settings) {
+// O `deny` mínimo que a base trazia: o bloco json da secção do bloqueio no `controlos.md` da base.
+// Devolve `null` se a base é anterior aos controlos, e aí não se sabe o que o projecto tirou.
+export function denyDaBase(base) {
+  const texto = lerSeExiste(path.join(base, 'skills', 'keel-init', 'controlos.md'));
+  const bloco = texto?.match(/## O bloqueio que vai sempre[\s\S]*?```json\n([\s\S]*?)```/);
+  if (!bloco) return null;
+  try {
+    const deny = JSON.parse(bloco[1])?.permissions?.deny;
+    return Array.isArray(deny) ? deny : null;
+  } catch {
+    return null;
+  }
+}
+
+export function juntarControlos(settings, denyBase = null) {
   const s = structuredClone(settings ?? {});
   const acrescentados = [];
   const avisos = [];
@@ -270,6 +418,10 @@ export function juntarControlos(settings) {
   s.permissions.deny ??= [];
   for (const entrada of DENY_MINIMO) {
     if (!s.permissions.deny.includes(entrada)) {
+      if (denyBase?.includes(entrada)) {
+        avisos.push(`\`deny\` \`${entrada}\`: o projecto tirou-a depois da base; não reposta.`);
+        continue;
+      }
       s.permissions.deny.push(entrada);
       acrescentados.push(`\`deny\`: ${entrada}`);
     }
@@ -302,7 +454,7 @@ export function juntarControlos(settings) {
   return { settings: s, acrescentados, avisos };
 }
 
-export function actualizarControlos(projecto, aplicar) {
+export function actualizarControlos(projecto, aplicar, denyBase = null) {
   const ficheiro = path.join(projecto, '.claude', 'settings.json');
   const texto = lerSeExiste(ficheiro);
   let actual = {};
@@ -313,7 +465,7 @@ export function actualizarControlos(projecto, aplicar) {
       return ['`.claude/settings.json` não é JSON válido; **não lhe toquei**. Junta à mão o `deny` mínimo e o hook do guarda (ver `keel-init`).'];
     }
   }
-  const { settings, acrescentados, avisos } = juntarControlos(actual);
+  const { settings, acrescentados, avisos } = juntarControlos(actual, denyBase);
   if (aplicar && acrescentados.length) {
     fs.mkdirSync(path.dirname(ficheiro), { recursive: true });
     fs.writeFileSync(ficheiro, `${JSON.stringify(settings, null, 2)}\n`);
@@ -328,19 +480,74 @@ export function actualizarControlos(projecto, aplicar) {
   return linhas;
 }
 
+// ---------------------------------------------------------------- núcleo
+//
+// O núcleo do projecto não se toca: está sempre em contexto e costuma ter emendas dele. Mas quem faz o
+// upgrade precisa de saber o que o engine mudou nele, para levar à mão. Diff simples por linhas
+// (maior subsequência comum), sem dependências.
+
+export function diffLinhas(antes, depois) {
+  const a = antes.replace(/\r\n/g, '\n').split('\n');
+  const b = depois.replace(/\r\n/g, '\n').split('\n');
+  while (a.length && a.at(-1) === '') a.pop();
+  while (b.length && b.at(-1) === '') b.pop();
+  const lcs = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = a.length - 1; i >= 0; i--) {
+    for (let j = b.length - 1; j >= 0; j--) {
+      lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+    }
+  }
+  const mudancas = [];
+  let i = 0;
+  let j = 0;
+  while (i < a.length || j < b.length) {
+    if (i < a.length && j < b.length && a[i] === b[j]) {
+      i++;
+      j++;
+    } else if (i < a.length && (j === b.length || lcs[i + 1][j] >= lcs[i][j + 1])) {
+      mudancas.push({ tipo: '-', linha: a[i++] });
+    } else {
+      mudancas.push({ tipo: '+', linha: b[j++] });
+    }
+  }
+  return mudancas;
+}
+
+// Para cada `.agents/nucleo*.md` do projecto: o que mudou no do engine, entre a base e a versão nova.
+export function diffDosNucleos(projecto, base, novo) {
+  const pasta = path.join(projecto, '.agents');
+  if (!fs.existsSync(pasta)) return [];
+  return fs
+    .readdirSync(pasta)
+    .filter((n) => n.startsWith('nucleo') && n.endsWith('.md'))
+    .sort()
+    .map((nome) => {
+      const antes = lerSeExiste(path.join(base, 'regras', nome));
+      const depois = lerSeExiste(path.join(novo, 'regras', nome));
+      if (antes === null || depois === null) {
+        const onde = antes === null ? 'a base' : 'a versão nova';
+        return { nome, mudancas: null, nota: `o engine não tem \`regras/${nome}\` em ${onde}; compara à mão.` };
+      }
+      return { nome, mudancas: diffLinhas(antes, depois) };
+    });
+}
+
 // ---------------------------------------------------------------- relatório
 
-export function relatorio(porTema, deVersao, paraVersao, avisos = [], controlos = []) {
+export function relatorio(porTema, deVersao, paraVersao, avisos = [], controlos = [], nucleos = [], origemBase = null) {
   const todas = porTema.flatMap((t) => t.accoes);
   const conta = (estado) => todas.filter((a) => a.estado === estado).length;
   const l = [`# Actualização do contrato — ${deVersao} → ${paraVersao}`, ''];
+  if (origemBase) l.push(`Base (${deVersao}): ${origemBase}.`, '');
   l.push('| Estado | Regras | O que aconteceu |', '|---|---|---|');
   l.push(`| Intactas desde o ${deVersao} | ${conta(ESTADOS.INTACTA)} | passaram à versão nova |`);
   l.push(`| Editadas neste projecto | ${conta(ESTADOS.EDITADA)} | **mantidas como estão** |`);
   l.push(`| Só neste projecto | ${conta(ESTADOS.SO_PROJECTO)} | mantidas; candidatas a promoção |`);
   l.push(`| Nasceram aqui e já subiram | ${conta(ESTADOS.AMBOS)} | **a tua ficou; decide tu** |`);
   l.push(`| Novas no engine | ${conta(ESTADOS.NOVA)} | inseridas |`);
-  l.push(`| Saíram do engine | ${conta(ESTADOS.REMOVIDA)} | mantidas na mesma |`, '');
+  l.push(`| Saíram do engine | ${conta(ESTADOS.REMOVIDA)} | mantidas na mesma |`);
+  l.push(`| Renumeradas | ${conta(ESTADOS.RENUMERADA)} | mantidas; já existem no engine sob outro ID |`);
+  l.push(`| Colisões de ID | ${conta(ESTADOS.COLISAO)} | **mantidas; o ID é de outra regra no engine** |`, '');
 
   const seccoes = [
     [
@@ -355,11 +562,21 @@ export function relatorio(porTema, deVersao, paraVersao, avisos = [], controlos 
     ],
     [ESTADOS.EDITADA, 'Editadas aqui, não tocadas', 'O engine não lhes mexeu.'],
     [ESTADOS.REMOVIDA, 'Saíram do engine', 'Continuam no contrato. Confirma se ainda fazem sentido.'],
+    [
+      ESTADOS.RENUMERADA,
+      'Renumeradas: o título do engine sob outro ID',
+      'Não são órfãs nem editadas: é a regra do engine com outro número. Ficaram como estão e o engine não as duplicou.',
+      (t, a) => `${t.tema} · \`${a.id}\` = \`${a.equivale}\` renumerada`,
+    ],
+    [
+      ESTADOS.COLISAO,
+      'Colisões: o mesmo ID, outra regra',
+      'O ID existe no engine para uma regra com outro título. Não é uma edição: renumera a tua (ou a do engine) à mão.',
+      (t, a) => `${t.tema} · \`${a.id}\`: aqui «${a.tituloProjecto}», no engine «${a.tituloEngine}»`,
+    ],
   ];
-  for (const [estado, titulo, nota] of seccoes) {
-    const itens = porTema.flatMap((t) =>
-      t.accoes.filter((a) => a.estado === estado).map((a) => `${t.tema} · ${a.id}`),
-    );
+  for (const [estado, titulo, nota, formato = (t, a) => `${t.tema} · ${a.id}`] of seccoes) {
+    const itens = porTema.flatMap((t) => t.accoes.filter((a) => a.estado === estado).map((a) => formato(t, a)));
     if (!itens.length) continue;
     l.push(`## ${titulo}`, '', nota, '', ...itens.map((i) => `- ${i}`), '');
   }
@@ -367,11 +584,24 @@ export function relatorio(porTema, deVersao, paraVersao, avisos = [], controlos 
     l.push(
       '## Scripts e controlos',
       '',
-      'O que impõe as regras de segurança, e não só as descreve (PROC-023, PROC-035). Só se acrescenta: nada foi tirado.',
+      'O que impõe as regras de segurança, e não só as descreve (PROC-023, PROC-035). Só se acrescenta: nada foi tirado, e o que o projecto tirou de propósito não se repõe.',
       '',
       ...controlos.map((c) => `- ${c}`),
       '',
     );
+  }
+  if (nucleos.length) {
+    l.push(
+      `## Núcleo: o que o engine mudou entre o ${deVersao} e o ${paraVersao}`,
+      '',
+      'O núcleo está sempre em contexto e é teu: não lhe toquei. Leva à mão o que interessar.',
+      '',
+    );
+    for (const n of nucleos) {
+      if (!n.mudancas) l.push(`### \`.agents/${n.nome}\``, '', n.nota, '');
+      else if (!n.mudancas.length) l.push(`### \`.agents/${n.nome}\``, '', 'sem mudanças.', '');
+      else l.push(`### \`.agents/${n.nome}\``, '', '```diff', ...n.mudancas.map((m) => `${m.tipo} ${m.linha}`), '```', '');
+    }
   }
   if (avisos.length) l.push('## Avisos', '', ...avisos.map((a) => `- ${a}`), '');
   return l.join('\n');
@@ -379,8 +609,66 @@ export function relatorio(porTema, deVersao, paraVersao, avisos = [], controlos 
 
 // ---------------------------------------------------------------- execução
 
-export function pastaDaCache(versao, casa = os.homedir()) {
-  return path.join(casa, '.claude', 'plugins', 'cache', 'keel-engine', 'keel', versao);
+// A pasta de configuração do Claude Code deduz-se de onde o script está instalado
+// (`<config>/plugins/cache/<marketplace>/<plugin>/<versão>/...`), e só depois de `CLAUDE_CONFIG_DIR`.
+// O nome do marketplace sai do mesmo caminho; fora de uma instalação fica o do engine.
+export function configDoClaude(aqui = AQUI, env = process.env, casa = os.homedir()) {
+  const partes = path.resolve(aqui).split(path.sep);
+  const i = partes.findIndex((p, k) => p === 'plugins' && ['cache', 'marketplaces'].includes(partes[k + 1]));
+  if (i > 0) {
+    const config = partes.slice(0, i).join(path.sep) || path.sep;
+    return { config: path.resolve(config + path.sep), marketplace: partes[i + 2] || 'keel-engine' };
+  }
+  const config = env.CLAUDE_CONFIG_DIR ? path.resolve(env.CLAUDE_CONFIG_DIR) : path.join(casa, '.claude');
+  return { config, marketplace: 'keel-engine' };
+}
+
+export function pastaDaCache(versao, config = configDoClaude().config, marketplace = 'keel-engine') {
+  return path.join(config, 'plugins', 'cache', marketplace, 'keel', versao);
+}
+
+export function pastaDoClone(config = configDoClaude().config, marketplace = 'keel-engine') {
+  return path.join(config, 'plugins', 'marketplaces', marketplace);
+}
+
+function git(cwd, ...args) {
+  return spawnSync('git', args, { cwd, encoding: 'utf8' });
+}
+
+// Procura a versão base, por esta ordem: `--base`, a cache dos plugins, e a tag `v<versão>` do clone git
+// do marketplace (extraída para uma worktree temporária, que `limpar` remove). Devolve
+// `{ pasta, origem, limpar }`; sem base, `pasta` é null e `motivo` diz porquê.
+export function obterBase({ explicita, versao, config, marketplace }) {
+  const sem = () => {};
+  if (explicita) return { pasta: path.resolve(explicita), origem: `\`--base\` (${path.resolve(explicita).replaceAll('\\', '/')})`, limpar: sem };
+
+  const cache = pastaDaCache(versao, config, marketplace);
+  if (fs.existsSync(path.join(cache, 'regras'))) {
+    return { pasta: cache, origem: 'cache dos plugins', limpar: sem };
+  }
+
+  const clone = pastaDoClone(config, marketplace);
+  const falta = (motivo) => ({ pasta: null, motivo, tentada: cache, clone, limpar: sem });
+  if (!fs.existsSync(clone) || git(clone, 'rev-parse', '--git-dir').status !== 0) {
+    return falta(`não há clone git do marketplace em ${clone.replaceAll('\\', '/')}`);
+  }
+  const tag = `v${versao}`;
+  if (git(clone, 'rev-parse', '--verify', '--quiet', `refs/tags/${tag}^{commit}`).status !== 0) {
+    return falta(`o clone do marketplace em ${clone.replaceAll('\\', '/')} não tem a tag ${tag}`);
+  }
+  const temporaria = fs.mkdtempSync(path.join(os.tmpdir(), 'keel-anterior-'));
+  const adicionada = git(clone, 'worktree', 'add', '--detach', temporaria, tag);
+  if (adicionada.status !== 0) {
+    fs.rmSync(temporaria, { recursive: true, force: true });
+    return falta(`não consegui extrair a tag ${tag} do clone (${(adicionada.stderr || '').trim()})`);
+  }
+  const limpar = () => {
+    if (git(clone, 'worktree', 'remove', temporaria).status !== 0) {
+      fs.rmSync(temporaria, { recursive: true, force: true });
+      git(clone, 'worktree', 'prune');
+    }
+  };
+  return { pasta: temporaria, origem: `tag ${tag} do clone git do marketplace`, limpar };
 }
 
 export function lerArgs(argv) {
@@ -406,6 +694,17 @@ function valor(args, nome, omissao) {
 }
 
 function main(argv) {
+  let limpar = () => {};
+  try {
+    return executar(argv, (f) => {
+      limpar = f;
+    });
+  } finally {
+    limpar();
+  }
+}
+
+function executar(argv, registarLimpeza) {
   const args = lerArgs(argv);
   const projecto = path.resolve(valor(args, 'projecto', '.'));
   const novo = path.resolve(valor(args, 'novo', path.join(AQUI, '..', '..')));
@@ -414,37 +713,41 @@ function main(argv) {
   const ficheiroYaml = path.join(projecto, '.agents', 'keel.yaml');
   if (!fs.existsSync(ficheiroYaml)) {
     console.error(`Não encontrei ${ficheiroYaml}. Este projecto não tem contrato: é /keel-init, não /keel-upgrade.`);
-    process.exit(2);
+    return 2;
   }
   const yaml = fs.readFileSync(ficheiroYaml, 'utf8');
   const deVersao = versaoDoContrato(yaml);
   if (!deVersao) {
     console.error('O keel.yaml não diz de que engine veio (campo `keel: engine:`). Sem base não há merge seguro.');
-    process.exit(2);
+    return 2;
   }
   const paraVersao = JSON.parse(fs.readFileSync(path.join(novo, '.claude-plugin', 'plugin.json'), 'utf8')).version;
   if (deVersao === paraVersao) {
     console.log(`O contrato já está no ${paraVersao}. Nada a fazer.`);
-    return;
+    return 0;
   }
 
-  const base = path.resolve(valor(args, 'base', pastaDaCache(deVersao)));
-  if (!fs.existsSync(path.join(base, 'regras'))) {
+  const { config, marketplace } = configDoClaude();
+  const obtida = obterBase({ explicita: valor(args, 'base', null), versao: deVersao, config, marketplace });
+  registarLimpeza(obtida.limpar);
+  const base = obtida.pasta;
+  if (!base || !fs.existsSync(path.join(base, 'regras'))) {
+    const procurada = (base ?? obtida.tentada).replaceAll('\\', '/');
     console.error(
-      `Não encontrei o engine ${deVersao} em ${base.replaceAll('\\', '/')}.\n` +
+      `Não encontrei o engine ${deVersao} em ${procurada}${obtida.motivo ? ` (${obtida.motivo})` : ''}.\n` +
         'É a base da comparação: sem ela não se distingue o que editaste do que o engine mudou.\n' +
         `Traz-lha com:\n` +
         `  git clone https://github.com/Rogers-Ribeiro/keel-engine <pasta>\n` +
         `  cd <pasta> && git checkout v${deVersao}\n` +
         'e volta a correr com --base <pasta>.',
     );
-    process.exit(3);
+    return 3;
   }
 
   const dir = pastaDasRegras(projecto);
   if (!dir) {
     console.error('Não encontrei .claude/rules nem .agents/regras neste projecto.');
-    process.exit(2);
+    return 2;
   }
 
   const caminhos = JSON.parse(fs.readFileSync(path.join(novo, 'caminhos.json'), 'utf8'));
@@ -480,18 +783,15 @@ function main(argv) {
     if (migrar) fs.rmSync(path.join(dir.caminho, nome));
   }
 
-  const controlos = [...actualizarScripts(projecto, base, novo, aplicar), ...actualizarControlos(projecto, aplicar)];
+  const controlos = [...actualizarScripts(projecto, base, novo, aplicar), ...actualizarControlos(projecto, aplicar, denyDaBase(base))];
+  const nucleos = diffDosNucleos(projecto, base, novo);
 
-  const pastaAgents = path.join(projecto, '.agents');
-  for (const n of fs.readdirSync(pastaAgents).filter((n) => n.startsWith('nucleo'))) {
-    avisos.push(`\`.agents/${n}\` não foi tocado: o núcleo está sempre em contexto e é teu. Compara-o à mão.`);
-  }
   if (aplicar) {
     fs.writeFileSync(ficheiroYaml, actualizarVersao(yaml, paraVersao));
     if (migrar) avisos.push('As regras passaram de `.agents/regras/` para `.claude/rules/`, com `paths:` no frontmatter.');
   }
 
-  const md = relatorio(porTema, deVersao, paraVersao, avisos, controlos);
+  const md = relatorio(porTema, deVersao, paraVersao, avisos, controlos, nucleos, obtida.origem);
   console.log(md);
   if (aplicar) {
     const destino = path.join(projecto, '.keel', 'upgrade.md');
@@ -501,8 +801,9 @@ function main(argv) {
   } else {
     console.log('\n(simulação: não escrevi nada. Repete com --aplicar.)');
   }
+  return 0;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
-  main(process.argv.slice(2));
+  process.exitCode = main(process.argv.slice(2));
 }

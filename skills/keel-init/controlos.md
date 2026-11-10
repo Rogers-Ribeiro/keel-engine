@@ -6,7 +6,7 @@ Ficheiro de apoio da skill `keel-init`, lido quando se escreve o `.claude/settin
 
 Os temas instalados trazem regras de segurança em texto — não publicar sem revisão, não apagar em massa, não tocar em segredos. Em texto, quem as cumpre é o modelo, e ninguém fica a saber quando não cumpre: num estudo de 481 CLAUDE.md públicos, só 4% a 16% das regras de segurança tinham um controlo por trás ([regras-vs-controlos](${CLAUDE_PLUGIN_ROOT}/docs/regras-vs-controlos.md)). Instalar as regras sem o controlo seria reproduzir exactamente isso. Por isso esta parte **não depende do nível de exigência** (PROC-023, PROC-035).
 
-Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/guarda.mjs` para `.keel/guarda.mjs`, e junta ao `.claude/settings.json`:
+Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/guarda.mjs` para `.keel/guarda.mjs`, e junta ao `.claude/settings.json`. Os scripts de `.keel/` são código do projecto e têm de ir para o git: se o `.gitignore` ignora `.keel/*` (ou `.keel/`), junta-lhe `!.keel/<script>.mjs` por cada script que copiares para `.keel/`, a seguir à linha que ignora; confirma com `git check-ignore -q .keel/<script>.mjs` (sai com 1 se não está ignorado):
 
 ```json
 {

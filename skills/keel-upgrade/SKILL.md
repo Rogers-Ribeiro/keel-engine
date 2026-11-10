@@ -40,7 +40,7 @@ atenção.
 node ${CLAUDE_PLUGIN_ROOT}/skills/keel-upgrade/upgrade.mjs --projecto .
 ```
 
-Sem `--aplicar` não escreve ficheiro nenhum. Sai um relatório com seis linhas:
+Sem `--aplicar` não escreve ficheiro nenhum. Sai um relatório com oito linhas:
 
 | Estado | O que o script faz |
 |---|---|
@@ -50,6 +50,8 @@ Sem `--aplicar` não escreve ficheiro nenhum. Sai um relatório com seis linhas:
 | **nasceram aqui e já subiram** | mantém a tua, e **pede-te uma decisão** |
 | **nova no engine** | insere, a seguir à de número imediatamente abaixo |
 | **saiu do engine** | mantém na mesma, e diz-te |
+| **renumerada** — o título de uma regra do engine sob outro ID | mantém, diz «`<ID teu>` = `<ID engine>` renumerada», não a conta como órfã e não insere a do engine outra vez |
+| **colisão** — o ID é de outra regra no engine | mantém a tua, e diz-te os dois títulos em vez de a tratar como editada |
 
 Repara no que não está na tabela: **não há linha de «apagada»**. Nenhum caminho do script apaga uma
 regra. No máximo diz-te que o engine deixou de a ter.
@@ -63,15 +65,32 @@ o que as impõe (PROC-023, PROC-035):
 - ao `.claude/settings.json` **só se acrescenta** o que falta do `deny` mínimo e o hook `PreToolUse`
   do guarda, o `env` das sessões curtas (`CLAUDE_CODE_AUTO_COMPACT_WINDOW`, `CLAUDE_CODE_SUBAGENT_MODEL`) e o hook `SessionStart` do estado — as mesmas entradas que o `keel-init` escreve. Uma chave de `env` que o projecto já tenha com outro valor fica como está, e o relatório diz-o. O `"agent": "orchestrator"` **não** entra: se o projecto tem o agente e não tem `agent`, o relatório só o sugere. Nada do projecto sai nem muda de sítio.
   Um `settings.json` que não seja JSON válido não é tocado, e o relatório diz o que juntar à mão.
+- **O que o projecto tirou não volta.** Uma entrada do `deny` que já fazia parte do mínimo **na versão
+  base** (lida do bloco do bloqueio nos ficheiros de apoio do `keel-init` da base) e falta no projecto foi tirada de propósito: o script não a
+  repõe, e o relatório diz «`deny` `<entrada>`: o projecto tirou-a depois da base; não reposta». Só
+  entram as entradas novas desde a base. Se a base é anterior aos controlos e não dá para saber o
+  mínimo dela, vale o comportamento de antes: junta-se tudo o que falta.
+- **O `.gitignore` dos scripts.** Um script de `.keel/` que o script instala ou actualiza e o
+  `.gitignore` do projecto ignora (`git check-ignore`; sem git, um padrão `.keel/` ou `.keel/*`) ganha a
+  excepção `!.keel/<script>.mjs`, a seguir às excepções `!.keel/` que já existam ou à linha que ignora
+  `.keel/`. Sem isto o script não chega às worktrees novas e o hook que o corre falha. O relatório diz
+  o que acrescentou; se a pasta `.keel/` inteira está ignorada (`.keel/` em vez de `.keel/*`), o git
+  não reabre os ficheiros lá dentro e o relatório avisa.
 
 Se o projecto não quiser uma das entradas (um pipeline que faz `git push` da sessão, por exemplo),
-tira-a ele depois, à vista no diff, e regista o porquê no `keel.yaml`. O script não pergunta, porque
-acrescentar um bloqueio é reversível numa linha e esquecê-lo não é.
+tira-a ele, à vista no diff, e regista o porquê no `keel.yaml`: nos upgrades seguintes não volta. O
+script não pergunta, porque acrescentar um bloqueio é reversível numa linha e esquecê-lo não é.
 
 ### 2. Se não encontrar a base
 
-O script procura o engine antigo na cache dos plugins, que guarda todas as versões instaladas. Numa
-máquina onde essa versão nunca esteve, não está lá. Traz-la do repositório pela tag:
+O script procura o engine antigo sozinho, por esta ordem: `--base`, se o deres; a cache dos plugins,
+que guarda as versões instaladas; e o clone git do marketplace (`<pasta de config>/plugins/marketplaces/<marketplace>/`,
+irmã da cache; a pasta de config deduz-se de onde o script está instalado, ou de `CLAUDE_CONFIG_DIR`).
+Se esse clone tiver a tag `v<versão do keel.yaml>`, extrai-a para uma pasta temporária, usa-a como base
+e remove-a no fim, mesmo que haja erro. O relatório diz de onde veio a base.
+
+Só se não houver clone, ou se lhe faltar a tag (o script diz qual dos dois), é que a base se traz à mão,
+como último recurso:
 
 ```
 git clone https://github.com/Rogers-Ribeiro/keel-engine /tmp/keel-antigo
@@ -126,7 +145,8 @@ padrão que não casa com nada é uma regra que nunca carrega, e ninguém dá po
 
 **O núcleo.** `.agents/nucleo*.md` fica intacto, e o relatório avisa. É o ficheiro que está em
 contexto em **todas** as sessões, costuma ter emendas do projecto, e não tem IDs para comparar bloco
-a bloco. Abre-o ao lado do núcleo do domínio no engine e decide à mão. Se estiver acima das 60
+a bloco. O relatório traz, para cada núcleo, as linhas que o engine mudou entre a base e a versão nova
+(ou «sem mudanças»): é isso que há a levar. Aplica-o à mão, ao lado do núcleo do projecto. Se estiver acima das 60
 linhas, diz isso ao utilizador: cada linha ali custa atenção em cada turno.
 
 **O contexto fixo.** Corre `node ${CLAUDE_PLUGIN_ROOT}/skills/keel-init/contexto.mjs` na raiz do

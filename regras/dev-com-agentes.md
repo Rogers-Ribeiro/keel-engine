@@ -179,6 +179,7 @@ Prefixo `PROC`. ## Contexto e sessões
 **Regra:** Cada spec nova tem no cabeçalho uma linha `Desenho:` com o caminho da página de desenho do processo (a que o `keel-design` escreve), ou `não é processo — <porquê numa frase>`. O critério é a pergunta «consegues nomear quem faz cada passo?»: se sim, há processo e há página.
 **Porquê:** As decisões de quem vê o quê aparecem de uma vez no quadro, e não uma a uma durante a implementação. Uma skill que depende da sua `description` para ser chamada esquece-se em sessões longas; o que uma máquina apanha vira verificação, e não texto.
 **Como verificar:** Um teste do projecto percorre as specs criadas depois da data de adopção e falha se faltar a linha `Desenho:`, ou se o caminho indicado não existir.
+**Fonte:** [keel-design](../skills/keel-design/SKILL.md) · [licoes-do-agente](../docs/licoes-do-agente.md)
 **Cursos:** 0
 
 ### PROC-045 — Bug reproduzido num teste que falha antes da correcção
@@ -343,6 +344,26 @@ não diz onde fica o que se corrigiu nem como chega ao projecto seguinte. Saem d
 **Porquê:** Texto em contexto compete por atenção com tudo o resto, a cada sessão; uma verificação corre sozinha e não falha por distracção. É a PROC-023 ao contrário: se o hook garante e o texto só sugere, o que se pode garantir não se pede. Escrever as duas coisas é pior do que escrever só a verificação, porque deixa uma regra que vai ser ignorada ao lado de um teste que não vai.
 **Como verificar:** Nenhuma lição ou regra do registo descreve um caso que a ferramenta de lint, os testes ou os hooks do projecto já detectam.
 **Fonte:** [licoes-do-agente](../docs/licoes-do-agente.md)
+**Cursos:** 0
+
+## Da prática de um projecto
+
+Estas duas regras não saem de curso nenhum: nasceram da prática de um projecto real, onde a falta delas custou caro, e subiram para aqui por isso. O caso que as acompanha vem de um repositório real, em 2026-09.
+
+### PROC-050 — O portão bloqueia a integração; hook local não é portão
+
+**Regra:** a verificação que decide se o código entra corre no servidor de integração e **impede** a fusão quando falha. Um hook de `pre-commit`, um `core.hooksPath` que cada pessoa activa à mão, ou um job que corre sem ser obrigatório, são ajudas — não são o portão. Se o repositório ainda não consegue impor verificações obrigatórias, isso é um risco a registar por escrito, não um detalhe a descobrir mais tarde; e enquanto o portão só informa e não impede, as regras que o pressupõem — esta, a PROC-051 e a TST-012 — correm como aviso, e o registo di-lo para que ninguém as leia como um portão que não existe.
+**Porquê:** um hook local contorna-se com `--no-verify`, desaparece em quem clonar sem o activar, e não corre de todo numa fusão feita pela interface web. A consequência não é teórica: num repositório real com disciplina verdadeira — prova por mutação, baselines de governação, gates escritos com cuidado — as violações de regra acumularam-se às dezenas, porque nada abaixo do CI bloqueava uma fusão. Disciplina sem mecanismo dura exactamente enquanto durarem as pessoas que a praticam.
+**Como verificar:** existe protecção de ramo com verificações obrigatórias, e o comando que corre no servidor é o mesmo e com o mesmo âmbito do que se corre localmente; uma fusão com o portão vermelho é recusada — prova-se tentando uma vez.
+**Fonte:** [pratica-de-projectos](../docs/pratica-de-projectos.md#o-portão-e-o-baseline)
+**Cursos:** 0
+
+### PROC-051 — Um baseline só encolhe, e todo o rebaseline diz de quanto cresceu
+
+**Regra:** um ficheiro que isenta dívida existente — baseline, allowlist de supressões, lista de excepções — só pode diminuir. Quando tiver mesmo de crescer, o commit que o altera regista o número anterior, o número novo e a razão; e a justificação de cada entrada é específica dessa entrada, não uma frase repetida. Se não houver portão que bloqueie (PROC-050), o crescimento sem justificação passa em aviso; a regra mantém-se para que o dia em que o portão existir não exija reescrever o baseline.
+**Porquê:** um baseline é uma promessa de que a dívida está contida. Sem esta regra ele vira o sítio onde a dívida se esconde de si própria, e o gate continua verde a reportar o que já não mede. É o padrão que se repete: um baseline de supressões com centenas de entradas e a mesma frase de justificação em todas, debaixo de um campo que exige razão e âmbito; um baseline de tamanho que quase duplica por rebaselines sucessivos, cada um declarado e nenhum questionado.
+**Como verificar:** o histórico do ficheiro de baseline mostra a contagem a descer; nenhum crescimento entra sem o número e a razão na mensagem de commit; e as justificações das entradas não são todas iguais — se forem, não são justificações.
+**Fonte:** [pratica-de-projectos](../docs/pratica-de-projectos.md#o-portão-e-o-baseline)
 **Cursos:** 0
 
 ## Regras e controlos
