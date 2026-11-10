@@ -6,7 +6,7 @@ Keel is a Claude Code plugin that gives a software project a contract: a small s
 always in context, a larger set that loads only when it applies, and agents and commands that work
 against both.
 
-Version 0.23.2. This repository is generated from a private source; changes made here are
+Version 0.23.3. This repository is generated from a private source; changes made here are
 overwritten by the next release.
 
 ## The problem

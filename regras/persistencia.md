@@ -1,6 +1,6 @@
 # Regras — persistencia
 
-Prefixo `DB`. A secção «Isolamento entre tenants» vem da referência [postgres-multitenancy](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md).
+Prefixo `DB`. A secção «Isolamento entre tenants» vem da referência [postgres-multitenancy](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md).
 
 ## Consultas e escrita
 
@@ -134,7 +134,7 @@ Prefixo `DB`. A secção «Isolamento entre tenants» vem da referência [postgr
 ## Isolamento entre tenants
 
 Estas sete regras não saem de curso nenhum. Nenhum dos 25 cursos extraídos ensina row-level security, e por isso o
-pipeline síntese → regras nunca as poderia produzir. Saem da referência [postgres-multitenancy](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md),
+pipeline síntese → regras nunca as poderia produzir. Saem da referência [postgres-multitenancy](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md),
 confirmada na documentação do PostgreSQL 16, e todas são verificáveis por consulta ao catálogo — não por leitura.
 
 O que as une: **todas as formas de falhar aqui falham em silêncio**. Nenhuma dá erro, nenhuma aparece nos logs, e
@@ -145,7 +145,7 @@ todas passam nos testes que só usam um tenant. A DB-024 é a que apanha as outr
 **Regra:** toda a tabela que guarda dados de tenants leva `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` **e** `ALTER TABLE ... FORCE ROW LEVEL SECURITY`, na mesma migração que a cria.
 **Porquê:** o `ENABLE` sozinho não sujeita o dono da tabela às políticas — a documentação diz que "table owners normally bypass row security as well". Quando as migrações e a aplicação partilham utilizador, que é o caso por omissão, a RLS fica activa e não faz absolutamente nada: as consultas devolvem tudo e o isolamento é uma ilusão.
 **Como verificar:** `SELECT c.relname FROM pg_class c JOIN pg_attribute a ON a.attrelid = c.oid WHERE a.attname = 'tenant_id' AND NOT a.attisdropped AND c.relkind = 'r' AND (NOT c.relrowsecurity OR NOT c.relforcerowsecurity)` devolve vazio.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md)
 **Cursos:** 0
 
 ### DB-019 — A aplicação liga com um papel que não é dono nem tem `BYPASSRLS`
@@ -153,7 +153,7 @@ todas passam nos testes que só usam um tenant. A DB-024 é a que apanha as outr
 **Regra:** a aplicação liga-se com um papel dedicado que não é dono de nenhuma tabela, não é superutilizador e não tem `BYPASSRLS`. As migrações correm com o dono, por credenciais separadas e uma variável de ambiente distinta.
 **Porquê:** superutilizadores e papéis com `BYPASSRLS` ignoram sempre a RLS; o dono ignora-a salvo `FORCE`. É a segunda defesa contra o mesmo erro da DB-018, e são precisas as duas porque qualquer uma sozinha falha sem sinal.
 **Como verificar:** `SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = <utilizador da aplicação>` devolve `false, false`; esse papel não é `relowner` de nenhuma tabela em `pg_class`; a URL das migrações e a URL da aplicação são duas variáveis de ambiente diferentes.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md)
 **Cursos:** 0
 
 ### DB-020 — Cada política de escrita declara `USING` e `WITH CHECK`
@@ -161,7 +161,7 @@ todas passam nos testes que só usam um tenant. A DB-024 é a que apanha as outr
 **Regra:** cada política que permite escrita (`FOR ALL`, `FOR INSERT`, `FOR UPDATE`) declara `USING` e `WITH CHECK` explicitamente, mesmo quando a expressão é a mesma nas duas.
 **Porquê:** o `USING` decide o que se lê, actualiza e apaga; o `WITH CHECK` decide o que se pode escrever. Sem `WITH CHECK`, um `INSERT` cria uma linha com o `tenant_id` de outro tenant — uma linha que quem a criou depois nem consegue ler.
 **Como verificar:** `SELECT policyname FROM pg_policies WHERE cmd IN ('ALL','INSERT','UPDATE') AND with_check IS NULL` devolve vazio.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md)
 **Cursos:** 0
 
 ### DB-021 — O tenant entra por `set_config` com `is_local` a `true`, uma vez por transacção
@@ -169,7 +169,7 @@ todas passam nos testes que só usam um tenant. A DB-024 é a que apanha as outr
 **Regra:** o tenant da sessão é posto com `set_config('app.tenant_id', <uuid>, true)` — terceiro argumento `true` — na abertura de cada transacção, e as políticas lêem-no com `current_setting('app.tenant_id')`. Nunca com `false`, nunca no evento de ligação da pool.
 **Porquê:** com `is_local` a `false` o valor sobrevive à devolução da ligação à pool, e o pedido seguinte — de outro tenant — herda-o. É a forma mais directa de entregar os dados de um cliente a outro. Com um pooler à frente do Postgres, o `true` é obrigatório e não uma preferência.
 **Como verificar:** toda a ocorrência de `set_config` sobre `app.tenant_id` tem `true` no terceiro argumento; nenhuma está num handler de `connect` ou `checkout` da pool, e nenhum `SET app.tenant_id` aparece fora de uma transacção.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md)
 **Cursos:** 0
 
 ### DB-022 — Unicidade com o `tenant_id` à cabeça
@@ -177,7 +177,7 @@ todas passam nos testes que só usam um tenant. A DB-024 é a que apanha as outr
 **Regra:** qualquer índice ou restrição `UNIQUE` sobre dados de tenant leva `tenant_id` como primeira coluna (`UNIQUE (tenant_id, email)`); nunca a coluna de negócio sozinha.
 **Porquê:** a integridade referencial passa por cima da RLS. Uma unicidade global faz duas coisas más ao mesmo tempo: impede dois tenants de usarem o mesmo email, e a mensagem de violação revela que existe uma linha noutro tenant, sem que ela alguma vez seja legível.
 **Como verificar:** em `pg_indexes`, todo o índice único sobre uma tabela com `tenant_id` tem `tenant_id` como primeira coluna do `indexdef`; nas migrações, nenhuma dessas tabelas recebe `UNIQUE` de coluna única.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md)
 **Cursos:** 0
 
 ### DB-023 — Políticas sem sub-consultas
@@ -185,7 +185,7 @@ todas passam nos testes que só usam um tenant. A DB-024 é a que apanha as outr
 **Regra:** a expressão de uma política compara colunas da própria linha com `current_setting`; não faz `SELECT` a outra tabela para decidir a visibilidade.
 **Porquê:** a documentação avisa que sub-consultas em políticas abrem condições de corrida entre transacções concorrentes, com leituras que a política pretendia impedir. Além disso, a expressão é avaliada por cada linha analisada.
 **Como verificar:** em `SELECT policyname, qual, with_check FROM pg_policies`, nenhuma das duas expressões contém `SELECT`.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md)
 **Cursos:** 0
 
 ### DB-024 — Teste de isolamento com dois tenants por cada tabela nova
@@ -193,7 +193,7 @@ todas passam nos testes que só usam um tenant. A DB-024 é a que apanha as outr
 **Regra:** cada tabela com `tenant_id` traz um teste que, ligado com as credenciais da aplicação, grava uma linha no tenant A, muda `app.tenant_id` para B, e prova duas coisas: que a linha de A não é visível, e que um `INSERT` com o `tenant_id` de A é recusado.
 **Porquê:** as seis regras acima falham todas sem dar erro — RLS sem `FORCE`, política sem `WITH CHECK`, ligação pelo dono, `is_local` a `false`, unicidade global. Os testes de um tenant só passam. Este teste é o único que as apanha, e é o que torna as outras executáveis em vez de escritas.
 **Como verificar:** existe um teste por tabela com `tenant_id`; corre com o utilizador da aplicação e não com o das migrações; e falha quando se remove o `FORCE` da tabela.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md)
 **Cursos:** 0
 
 ### DB-025 — Vectores na mesma base, particionados por hash do tenant
@@ -201,5 +201,5 @@ todas passam nos testes que só usam um tenant. A DB-024 é a que apanha as outr
 **Regra:** os embeddings vivem numa tabela `pgvector` na **mesma base de dados** da aplicação, sujeita às DB-018 a DB-024 como qualquer outra tabela com `tenant_id`. O particionamento é por **hash do `tenant_id` com um módulo fixo** — da ordem de dezenas a poucas centenas de partições —, nunca uma partição por tenant. O `tenant_id` entra na chave de partição, e o índice vectorial cria-se na tabela particionada, não partição a partição.
 **Porquê:** uma partição por tenant reproduz o tecto que faz cair o schema-por-tenant, encontrado noutro sítio. O planeador aguenta alguns milhares de partições, mas o custo que morde primeiro é a **memória por sessão**: o catálogo de cada partição é carregado na memória local de cada sessão que lhe toque. Com dezenas de milhares de tenants isso degrada-se muito antes de os dados serem grandes. O módulo fixo dá a localidade que se procurava sem que o número de partições cresça com os clientes, e manter o `tenant_id` na chave é o que permite à RLS e aos índices continuarem a podar. Guardar os vectores na mesma base é o que mantém **uma só** política de isolamento, em vez de haver um segundo mecanismo a proteger os embeddings.
 **Como verificar:** a tabela de embeddings tem RLS activa e forçada, como a DB-018 exige; `SELECT partstrat FROM pg_partitioned_table` para essa tabela devolve `h`; a chave de partição inclui o `tenant_id`; o número de partições é uma constante do esquema e não função do número de tenants; e existe o teste de dois tenants da DB-024 sobre ela.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.2/docs/postgres-multitenancy.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/postgres-multitenancy.md)
 **Cursos:** 0

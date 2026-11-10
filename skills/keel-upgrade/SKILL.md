@@ -63,7 +63,7 @@ o que as impõe (PROC-023, PROC-035):
   em falta, instalam-se; intactos desde a base, passam à versão nova; editados no projecto, ficam e
   o relatório diz-te para comparares à mão;
 - ao `.claude/settings.json` **só se acrescenta** o que falta do `deny` mínimo e o hook `PreToolUse`
-  do guarda, o `env` das sessões curtas (`CLAUDE_CODE_AUTO_COMPACT_WINDOW`, `CLAUDE_CODE_SUBAGENT_MODEL`) e o hook `SessionStart` do estado — as mesmas entradas que o `keel-init` escreve. Uma chave de `env` que o projecto já tenha com outro valor fica como está, e o relatório diz-o. O `"agent": "orchestrator"` **não** entra: se o projecto tem o agente e não tem `agent`, o relatório só o sugere. Nada do projecto sai nem muda de sítio.
+  do guarda, o `env` das sessões curtas (`CLAUDE_CODE_AUTO_COMPACT_WINDOW`, `CLAUDE_CODE_SUBAGENT_MODEL`) e o hook `SessionStart` do estado — as mesmas entradas que o `keel-init` escreve. Uma chave de `env` que o projecto já tenha com outro valor fica como está, e o relatório diz-o. O `"agent": "orchestrator"` **não** entra sozinho: se o projecto não tem `agent` e tem subagentes próprios em `.claude/agents/` (o orquestrador ou outros), o relatório traz a pergunta de ligá-lo, e ela vai ao utilizador no passo 3. Nada do projecto sai nem muda de sítio.
   Um `settings.json` que não seja JSON válido não é tocado, e o relatório diz o que juntar à mão.
 - **O que o projecto tirou não volta.** Uma entrada do `deny` que já fazia parte do mínimo **na versão
   base** (lida do bloco do bloqueio nos ficheiros de apoio do `keel-init` da base) e falta no projecto foi tirada de propósito: o script não a
@@ -105,13 +105,20 @@ faças o merge a dois.
 
 ### 3. Lê o relatório com o utilizador
 
-Antes de aplicar, mostra-lhe **duas** secções, que são as únicas que precisam dele:
+Antes de aplicar, mostra-lhe **duas** secções que precisam dele (e a pergunta do orquestrador, se vier):
 
 - **as que nasceram ali e entretanto subiram à base.** Existem dos dois lados, escritas de maneira
   diferente — a da base costuma vir reescrita da promoção, com a fonte noutro sítio. Abre as duas
   lado a lado e pergunta com qual fica. Por omissão fica a dele.
 - **as órfãs.** Só existem naquele projecto. Enquanto não subirem, morrem com ele. É o momento certo
   para perguntar se quer promovê-las — e a promoção é o caminho do `keel-lesson`, não deste.
+
+Se a secção **Scripts e controlos** trouxer uma linha «pergunta ao utilizador» sobre o orquestrador,
+essa também é dele: pergunta se a sessão principal deve coordenar subagentes, e diz o que muda — a
+sessão passa a despachar, rever e integrar em vez de escrever código directo. Se disser sim, copia
+`${CLAUDE_PLUGIN_ROOT}/agents/orchestrator.md` para `.claude/agents/` (se ainda lá não estiver) e junta
+`"agent": "orchestrator"` ao `.claude/settings.json`; reverte-se apagando as duas coisas. Se disser não,
+nada muda.
 
 As editadas não precisam dele: não lhes tocaste e não lhes vais tocar.
 

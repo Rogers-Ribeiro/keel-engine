@@ -495,10 +495,26 @@ export function actualizarControlos(projecto, aplicar, denyBase = null) {
     ...acrescentados.map((a) => `\`.claude/settings.json\`: acrescentado ${a}.`),
     ...avisos.map((a) => `\`.claude/settings.json\`: ${a}`),
   ];
-  if (!actual.agent && fs.existsSync(path.join(projecto, '.claude', 'agents', 'orchestrator.md'))) {
-    linhas.push('o projecto tem o agente `orchestrator` e não tem `agent` definido: se a sessão principal deve coordenar subagentes, junta `"agent": "orchestrator"` ao `.claude/settings.json`. Não o faço sozinho.');
-  }
+  const sugestao = sugestaoDoOrquestrador(projecto, actual);
+  if (sugestao) linhas.push(sugestao);
   return linhas;
+}
+
+// O orquestrador nunca se liga sozinho: muda o agente da sessão principal, e num projecto de uma pessoa
+// a trabalhar directo atrapalha. Mas um projecto que já despacha para subagentes próprios e nunca
+// respondeu à pergunta 5 do `keel-init` (instalado antes dela, ou sem copiar o agente) tem de a ouvir aqui.
+export function sugestaoDoOrquestrador(projecto, settings) {
+  if (settings.agent) return null;
+  const pasta = path.join(projecto, '.claude', 'agents');
+  const agentes = fs.existsSync(pasta)
+    ? fs.readdirSync(pasta).filter((n) => n.endsWith('.md')).map((n) => n.slice(0, -3)).sort()
+    : [];
+  if (agentes.includes('orchestrator')) {
+    return 'pergunta ao utilizador: o projecto tem o agente `orchestrator` e não tem `agent` definido. Se a sessão principal deve coordenar subagentes, junta `"agent": "orchestrator"` ao `.claude/settings.json`. Não o faço sozinho.';
+  }
+  if (!agentes.length) return null;
+  const lista = agentes.map((a) => `\`${a}\``).join(', ');
+  return `pergunta ao utilizador: o projecto tem subagentes próprios (${lista}) e não tem o orquestrador. Se a sessão principal despacha, revê e integra, ligá-lo é copiar \`\${CLAUDE_PLUGIN_ROOT}/agents/orchestrator.md\` para \`.claude/agents/\` e juntar \`"agent": "orchestrator"\` ao \`.claude/settings.json\` (vale em sessões novas). Se é uma pessoa a trabalhar directo, fica como está. Não o faço sozinho.`;
 }
 
 // ---------------------------------------------------------------- núcleo
