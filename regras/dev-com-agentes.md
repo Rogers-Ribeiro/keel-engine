@@ -177,7 +177,7 @@ Prefixo `PROC`. ## Contexto e sessões
 ### PROC-049 — Cada spec aponta para o desenho do processo
 
 **Regra:** Cada spec nova tem no cabeçalho uma linha `Desenho:` com o caminho da página de desenho do processo (a que o `keel-design` escreve), ou `não é processo — <porquê numa frase>`. O critério é a pergunta «consegues nomear quem faz cada passo?»: se sim, há processo e há página.
-**Porquê:** As decisões de quem vê o quê aparecem de uma vez no quadro, e não uma a uma durante a implementação. Uma skill que depende da sua `description` para ser chamada esquece-se em sessões longas; o que uma máquina apanha vira verificação, e não texto (PROC-091).
+**Porquê:** As decisões de quem vê o quê aparecem de uma vez no quadro, e não uma a uma durante a implementação. Uma skill que depende da sua `description` para ser chamada esquece-se em sessões longas; o que uma máquina apanha vira verificação, e não texto.
 **Como verificar:** Um teste do projecto percorre as specs criadas depois da data de adopção e falha se faltar a linha `Desenho:`, ou se o caminho indicado não existir.
 **Cursos:** 0
 

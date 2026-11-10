@@ -76,12 +76,12 @@ audit reports rule IDs with file and line.
 
 ## What travels here
 
-- `agents/` — 4 file(s)
+- `agents/` — 5 file(s)
 - `regras/` — 44 file(s)
 - `docs/` — 22 file(s)
 - `caminhos.json/` — 1 file(s)
 - `LICENSE/` — 1 file(s)
-- `skills/` — 22 file(s)
+- `skills/` — 23 file(s)
 
 ## Como ler uma regra
 
