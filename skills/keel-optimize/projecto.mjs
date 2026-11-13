@@ -57,13 +57,17 @@ export function serializar(objecto, original = null) {
 }
 
 const settingsDoProjecto = (projecto) => path.join(projecto, '.claude', 'settings.json');
-const settingsDoUtilizador = (casa) => path.join(casa, '.claude', 'settings.json');
+// A pasta de config do Claude Code: `CLAUDE_CONFIG_DIR` se estiver definido, senão `<casa>/.claude`.
+// Uma `casa` passada à mão (testes) ganha ao ambiente.
+const pastaConfigDoClaude = (casa, env = process.env) =>
+  casa !== undefined ? path.join(casa, '.claude') : env.CLAUDE_CONFIG_DIR ? path.resolve(env.CLAUDE_CONFIG_DIR) : path.join(os.homedir(), '.claude');
+const settingsDoUtilizador = (casa, env) => path.join(pastaConfigDoClaude(casa, env), 'settings.json');
 
 // ---------------------------------------------------------------- plugins: o que está activo
 
 // `enabledPlugins` do utilizador sobreposto pelo do projecto. O do projecto manda, e `false` desliga.
-export function pluginsActivos({ projecto = '.', casa = os.homedir() } = {}) {
-  const doUtilizador = lerJson(settingsDoUtilizador(casa)).enabledPlugins ?? {};
+export function pluginsActivos({ projecto = '.', casa, env = process.env } = {}) {
+  const doUtilizador = lerJson(settingsDoUtilizador(casa, env)).enabledPlugins ?? {};
   const doProjecto = lerJson(settingsDoProjecto(projecto)).enabledPlugins ?? {};
   const origem = new Map();
   const estado = new Map();
@@ -118,10 +122,10 @@ export function versaoMaisRecente(pasta) {
 
 // O peso que um plugin põe na lista de cada sessão: quantos skills tem e quantos bytes de
 // `description:` somam. `null` quando o plugin não está na cache (nunca falha por isso).
-export function pesoDoPlugin(id, { casa = os.homedir() } = {}) {
+export function pesoDoPlugin(id, { casa, env = process.env } = {}) {
   const corte = id.lastIndexOf('@');
   if (corte <= 0) return null;
-  const pasta = path.join(casa, '.claude', 'plugins', 'cache', id.slice(corte + 1), id.slice(0, corte));
+  const pasta = path.join(pastaConfigDoClaude(casa, env), 'plugins', 'cache', id.slice(corte + 1), id.slice(0, corte));
   if (!fs.existsSync(pasta)) return null;
   const versao = versaoMaisRecente(pasta);
   if (!versao) return null;

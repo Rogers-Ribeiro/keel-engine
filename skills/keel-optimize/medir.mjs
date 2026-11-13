@@ -8,7 +8,8 @@
 // um relatório, e quem decide o que fazer a cada conclusão é a pessoa — as que são prática ou
 // escolha (sessões mais curtas, que plugins ficam) vêm marcadas `decide`.
 //
-// O Claude Code guarda cada sessão em `~/.claude/projects/<slug>/<id>.jsonl`, e o `<slug>` é o
+// O Claude Code guarda cada sessão em `<config>/projects/<slug>/<id>.jsonl` (`<config>` é
+// `CLAUDE_CONFIG_DIR` se estiver definido, senão `~/.claude`), e o `<slug>` é o
 // caminho absoluto do projecto com tudo o que não é [A-Za-z0-9] trocado por `-`. Os ficheiros chegam
 // a centenas de MB, por isso lêem-se em streaming, linha a linha, e só se faz `JSON.parse` das
 // linhas que contêm `"usage"`. O contexto de uma chamada é o que lhe entrou: input + leitura de
@@ -20,6 +21,11 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { contexto as medirContextoFixo } from '../keel-init/contexto.mjs';
+
+// A pasta de config do Claude Code: `CLAUDE_CONFIG_DIR` se estiver definido, senão `<home>/.claude`.
+// Um `home` passado à mão (testes) ganha ao ambiente, para não depender da máquina onde corre.
+export const pastaConfigDoClaude = (home, env = process.env) =>
+  home !== undefined ? path.join(home, '.claude') : env.CLAUDE_CONFIG_DIR ? path.resolve(env.CLAUDE_CONFIG_DIR) : path.join(os.homedir(), '.claude');
 
 // Limiares das conclusões. Cada um dispara só acima do valor (estritamente).
 export const LIMITES = {
@@ -253,9 +259,9 @@ const lerJson = (abs, avisos) => {
 };
 
 // O do projecto manda sobre o do utilizador, e `false` desliga.
-export function medirPlugins(projecto, home = os.homedir()) {
+export function medirPlugins(projecto, home, env = process.env) {
   const avisos = [];
-  const doUtilizador = lerJson(path.join(home, '.claude', 'settings.json'), avisos).enabledPlugins ?? {};
+  const doUtilizador = lerJson(path.join(pastaConfigDoClaude(home, env), 'settings.json'), avisos).enabledPlugins ?? {};
   const doProjecto = lerJson(path.join(projecto, '.claude', 'settings.json'), avisos).enabledPlugins ?? {};
   const efectivos = new Map();
   for (const [id, v] of Object.entries(doUtilizador)) efectivos.set(id, { id, activo: v !== false, origem: 'utilizador' });
@@ -299,9 +305,10 @@ export async function medirTudo({
   projecto,
   sessoes = SESSOES_POR_OMISSAO,
   pastaSessoes,
-  home = os.homedir(),
+  home,
+  env = process.env,
 }) {
-  const pasta = pastaSessoes ?? encontrarPastaSessoes(projecto, path.join(home, '.claude', 'projects'));
+  const pasta = pastaSessoes ?? encontrarPastaSessoes(projecto, path.join(pastaConfigDoClaude(home, env), 'projects'));
   const ficheiros = pasta ? sessoesRecentes(pasta, sessoes) : [];
   const medidas = [];
   for (const f of ficheiros) medidas.push(await medirSessao(f));

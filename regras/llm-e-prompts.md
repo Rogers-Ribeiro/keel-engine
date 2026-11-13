@@ -70,7 +70,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** num prompt com documentos ou dados extensos, o papel e as regras permanentes ficam no system prompt (LLM-019) e, no turno do utilizador, os documentos vêm primeiro e a pergunta, as instruções da tarefa e os exemplos vêm depois deles, no fim.
 **Porquê:** a documentação da Anthropic mede até 30% de melhoria na qualidade da resposta com a pergunta no fim, sobretudo com vários documentos; os últimos tokens pesam mais na geração seguinte (efeito de recência), e uma pergunta afogada antes de milhares de tokens de documento perde-se.
 **Como verificar:** nos templates de prompt com contexto recuperado ou documentos anexados, o bloco dos documentos aparece antes da pergunta do utilizador; um template que põe a pergunta antes dos documentos é achado.
-**Fonte:** [Formatos da API — Messages API](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/claude-api-formatos.md)
+**Fonte:** [Formatos da API — Messages API](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/claude-api-formatos.md)
 **Cursos:** 2
 
 ## Saída estruturada e ferramentas
@@ -80,7 +80,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Quando a resposta do modelo é consumida por código, pede-a como esquema Pydantic com descrição por campo, pela saída estruturada do fornecedor (`with_structured_output` fora de agentes, `response_format` no `create_agent`), e não por texto livre tratado à mão.
 **Porquê:** O esquema obriga o modelo a devolver os campos esperados e valida-os à chegada; uma string que parece JSON não é iterável nem verificada, e um token a mais parte o fluxo.
 **Como verificar:** Cada chamada cujo resultado alimenta código tem um esquema associado; não há `json.loads` nem expressões regulares sobre a resposta do modelo.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 3
 
 ### LLM-009 — Decisões do modelo por function calling, não por texto
@@ -88,7 +88,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Faz com que as decisões do modelo sobre que ferramenta chamar cheguem ao código como chamadas de ferramenta estruturadas, e não como texto num formato combinado que o código tem de interpretar.
 **Porquê:** O formato de texto do prompt ReAct não é fiável: o modelo produz saídas difíceis de interpretar e o programa falha; a chamada de ferramenta devolve nome e argumentos organizados, prontos a converter num objecto.
 **Como verificar:** Não há código que extraia a acção e os argumentos do texto da resposta; o fluxo lê as chamadas de ferramenta devolvidas pelo modelo.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ### LLM-010 — Ferramenta com docstring e tipos
@@ -96,7 +96,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Dá a cada ferramenta um nome descritivo, anotações de tipo nos argumentos e uma docstring que diga o que faz e em que situação se usa.
 **Porquê:** É a partir desse esquema e dessa docstring que o modelo percebe a funcionalidade da ferramenta e decide chamá-la; sem eles, escolhe mal ou ignora-a.
 **Como verificar:** Nenhuma ferramenta registada no agente está sem docstring ou sem tipos nos argumentos.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 2
 
 ### LLM-021 — Depois do schema, as regras de negócio em código
@@ -120,7 +120,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Nos modelos que aceitam o parâmetro, usa temperatura 0 (ou até 0,3) nas tarefas factuais, de extracção, de classificação e de avaliação, e reserva os valores altos para as tarefas em que a variedade é o objectivo. Confirma primeiro se o modelo aceita o parâmetro: há modelos que não aceitam, e nesses não o declares — a repetibilidade obtém-se pelo prompt e pela saída estruturada.
 **Porquê:** A temperatura controla a aleatoriedade da geração: perto de 0 o resultado é determinista e repetível; acima disso a mesma entrada dá respostas diferentes, o que numa tarefa factual é ruído. Mas o parâmetro deixou de ser universal: nos modelos da Anthropic lançados depois do Claude Opus 4.6, só 1,0 é aceite e qualquer outro valor devolve erro 400, pelo que a instrução "declara sempre a temperatura" passaria a partir o código em vez de o melhorar.
 **Como verificar:** Cada instanciação de um modelo que aceite o parâmetro declara a temperatura, e nenhuma tarefa factual ou de avaliação corre com valor alto; nos modelos que não o aceitam, o parâmetro está ausente do código.
-**Fonte:** [decisão D-AV04](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/decisoes/g6-avaliacao-e-prompts.md)
+**Fonte:** [decisão D-AV04](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/decisoes/g6-avaliacao-e-prompts.md)
 **Cursos:** 2
 
 ### LLM-012 — Limite de tokens, timeout e tentativas em cada modelo (API a confirmar)
@@ -142,7 +142,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Instancia os modelos num só módulo, com uma função de inicialização independente do fornecedor (`init_chat_model`), e não importes SDKs de fornecedores no código de negócio.
 **Porquê:** Com a instanciação isolada troca-se de modelo ou de fornecedor, e comparam-se modelos entre si, sem reescrever o resto do código; um SDK de fornecedor no código de negócio prende a aplicação a esse fornecedor.
 **Como verificar:** Só o módulo de modelos importa classes de chat ou SDKs de fornecedores; trocar o modelo por omissão implica alterar um ficheiro.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 2
 
 ### LLM-023 — Raciocínio alargado só onde muda a resposta
@@ -150,7 +150,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Nos modelos Claude com thinking adaptativo, começa com um nível de esforço (`effort`) moderado e sobe para os níveis altos só nas tarefas de raciocínio em vários passos em que o chain-of-thought no prompt não dá qualidade suficiente; não deixes esforço alto por omissão em tarefas simples.
 **Porquê:** Os tokens de pensamento são facturados mesmo sem aparecerem na resposta, aumentam a latência e contam para o limite de `max_tokens`; numa tarefa com resposta directa não mudam a qualidade, só o custo.
 **Como verificar:** A configuração do modelo indica o nível de esforço por tipo de tarefa; qualquer uso de `xhigh` ou `max` está ligado a uma tarefa complexa e à avaliação (LLM-018) que o justifica.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/claude-api-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/claude-api-formatos.md)
 **Cursos:** 2
 
 ### LLM-024 — Prefixo estável na cache de prompts, com o acerto confirmado no `usage`
@@ -158,7 +158,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Quando o mesmo system prompt, conjunto de ferramentas ou documento se reenvia entre chamadas à API Claude, marca o fim da parte estável com `cache_control` e mantém essa parte idêntica byte a byte — sem data ou hora, identificadores de sessão, ferramentas em ordem variável nem JSON com chaves por ordenar — e confirma o acerto pelos campos de leitura de cache do `usage`.
 **Porquê:** A cache só reutiliza um prefixo exactamente igual; um valor volátil no prefixo faz falhar a cache sem erro nenhum, a resposta continua igual e só a factura e o `usage` mostram que se paga a escrita em vez da leitura.
 **Como verificar:** O system prompt e as ferramentas não interpolam valores que mudam por pedido; a ordem das ferramentas é fixa; existe um teste ou um registo que mostra leituras de cache acima de zero em chamadas repetidas.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/claude-api-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/claude-api-formatos.md)
 **Cursos:** 2
 
 ## Histórico e memória
@@ -168,7 +168,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Guarda o histórico de cada conversa num checkpointer, identificado por `thread_id`, e usa em produção um checkpointer persistente (`PostgresSaver`); não mantenhas o histórico numa estrutura global do processo.
 **Porquê:** O modelo não guarda estado entre chamadas: o que der contexto à pergunta seguinte tem de ser reenviado e, por isso, tem de estar guardado e separado por conversa.
 **Como verificar:** Cada invocação passa o identificador da conversa; o código de produção não usa um checkpointer em memória nem uma lista global de mensagens.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ### LLM-016 — Histórico antigo cortado ou sumarizado
@@ -176,7 +176,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Define para cada conversa longa uma estratégia explícita de redução do histórico — cortar as mensagens antigas por número de tokens ou de mensagens, ou substituí-las por um resumo e manter as últimas — em vez de reenviar tudo.
 **Porquê:** Reenviar a conversa inteira gasta tokens, aumenta a latência e o custo, e leva contexto irrelevante ao modelo, que piora a resposta.
 **Como verificar:** O fluxo de conversa tem um ponto onde o histórico é cortado ou resumido, com um limite declarado; não há caminho em que todas as mensagens sejam enviadas sem limite.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ## Observabilidade e avaliação
@@ -186,7 +186,7 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Liga o tracing do LangSmith no desenvolvimento, pelas variáveis `LANGSMITH_*`, e inspecciona o prompt, as chamadas de ferramenta e a resposta registados antes de concluir que um comportamento está errado. Em produção, o traço é estrutural por omissão (OBS-018).
 **Porquê:** Sem tracing só se vê a resposta final; o registo mostra o prompt que foi realmente enviado, as decisões pelo caminho, o tempo e os tokens de cada execução.
 **Como verificar:** O `.env.example` traz as variáveis `LANGSMITH_*` e um nome de projecto; os relatos de comportamento errado referem a execução registada.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 2
 
 ### LLM-018 — Alterações de prompt ou de modelo avaliadas contra um dataset
@@ -194,5 +194,5 @@ Prefixo `LLM`. ## Escrita de prompts
 **Regra:** Mantém um dataset de exemplos de referência e avaliadores automáticos, e corre-os antes de dar por boa uma troca de modelo, de prompt ou de parâmetros.
 **Porquê:** Sem dataset e avaliadores, a comparação é feita sobre uma ou duas respostas escolhidas à mão; com eles, a mesma entrada é medida com o mesmo critério em todos os candidatos.
 **Como verificar:** Existe um dataset versionado e um script de avaliação; cada alteração ao prompt, ao modelo ou aos parâmetros traz o resultado dessa avaliação.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 1

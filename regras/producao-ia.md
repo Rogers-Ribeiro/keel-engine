@@ -23,7 +23,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Compõe as cadeias com o operador `|` (LCEL) e com prompt templates. Não uses `LLMChain`, `SequentialChain` nem `TransformChain`.
 **Porquê:** As chains monolíticas estão descontinuadas e o professor desaconselha-as explicitamente; o LCEL é a forma actual e dá a mesma interface (`invoke`, `batch`, `stream`) a prompts, modelos e parsers.
 **Como verificar:** No diff, qualquer import de `langchain_classic.chains` ou de uma classe `*Chain` legada é motivo de rejeição; os prompts vêm de `ChatPromptTemplate`, não de f-strings.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ### IAP-004 — Limites explícitos em cada modelo
@@ -38,7 +38,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Nos modelos que aceitam o parâmetro, usa temperatura entre 0 e 0,3 em routing, classificação, análise, extracção e código, e só passa a valores altos na escrita criativa. Nos modelos que não o aceitam, não o declares (ver LLM-011).
 **Porquê:** Valores baixos dão respostas factuais e repetíveis, que é o que uma decisão ou uma extracção precisa; valores altos servem para variedade, não para correcção. Nos modelos da Anthropic lançados depois do Claude Opus 4.6 o parâmetro deixou de ser aceite: só 1,0 passa, e qualquer outro valor devolve erro 400.
 **Como verificar:** Cada modelo com temperatura acima de 0,3 tem de estar num nó de escrita; nos nós de decisão, a temperatura é 0 nos modelos que a aceitam e está ausente nos que não a aceitam.
-**Fonte:** [decisão D-AV04](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/decisoes/g6-avaliacao-e-prompts.md)
+**Fonte:** [decisão D-AV04](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/decisoes/g6-avaliacao-e-prompts.md)
 **Cursos:** 2
 
 ### IAP-006 — Saída estruturada validada, nunca parsing de texto
@@ -46,7 +46,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Obtém do LLM qualquer dado que o código vá usar através de um schema Pydantic — `with_structured_output(Schema)` fora de agentes, `response_format=Schema` no `create_agent` (a aula diz: `PydanticOutputParser` com instruções de formato no prompt; desactualizado). Não extraias campos de texto livre com regex.
 **Porquê:** O parsing de texto parte-se com um único token mal formado, enquanto a chamada de função devolve JSON organizado e validado; mesmo uma resposta correcta no formato errado rebenta o que vem a jusante.
 **Como verificar:** Nenhuma resposta de LLM é lida com `re`, `split` ou `json.loads` sobre texto livre. Cada ponto de consumo tem uma classe Pydantic associada.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 2
 
 ### IAP-024 — Campo opcional na fonte é nullable no schema
@@ -70,7 +70,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Dá um reducer a cada campo do estado em que mais do que um nó escreve; nas mensagens usa sempre `add_messages` e nunca `operator.add`.
 **Porquê:** Sem reducer o comportamento por omissão é substituir, e o trabalho dos nós anteriores desaparece; o `add_messages` junta por ID, que é o que as respostas de ferramentas exigem, enquanto o `operator.add` só concatena listas simples.
 **Como verificar:** No `TypedDict` do estado, todo o campo escrito por dois ou mais nós está `Annotated` com um reducer. Um campo `messages` com `operator.add` é um erro a assinalar.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ### IAP-009 — Contador e máximo em todos os ciclos
@@ -85,7 +85,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Compila os grafos com um checkpointer persistente (`SqliteSaver` em desenvolvimento, `PostgresSaver` em produção) e identifica cada conversa ou execução com o seu `thread_id`. O `InMemorySaver` fica para testes.
 **Porquê:** Sem persistência cada invocação é sem estado: não há memória de conversa, uma falha perde todo o progresso e não é possível pausar para revisão humana; o saver em memória perde tudo ao reiniciar o processo.
 **Como verificar:** Nenhum `compile()` de um grafo com conversa ou aprovação fica sem `checkpointer`, e todas as invocações passam `config={"configurable": {"thread_id": ...}}`. Um `InMemorySaver` fora dos testes é um erro a assinalar.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ### IAP-011 — Aprovação humana antes de acções irreversíveis
@@ -93,7 +93,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Interrompe a execução e pede confirmação humana antes de qualquer acção com efeito exterior difícil de reverter (enviar mensagens, escrever em sistemas de terceiros, gastar dinheiro). No agente usa `HumanInTheLoopMiddleware`; num grafo próprio usa `interrupt()` e retoma com `Command(resume=...)` (a aula diz: `interrupt_before` na compilação do grafo, `update_state` e `invoke(None, config)`; desactualizado).
 **Porquê:** Por muito capaz que o agente seja, num fluxo de produção quer-se um humano a dar o aval final antes do efeito acontecer.
 **Como verificar:** Lista as acções com efeito exterior; cada uma está atrás de um ponto de interrupção. Uma tool que escreve fora do projecto sem paragem de aprovação é um erro a assinalar.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ## Ferramentas
@@ -163,7 +163,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Antes de repetir uma chamada, classifica o erro: repete só os transitórios — 429 esperando o `retry-after`, 529 e sobrecargas com backoff exponencial — e, num pedido inválido (400), num erro de permissão ou de raciocínio, corrige o pedido ou aborta e escala sem repetir.
 **Porquê:** Um erro permanente falha igual em cada tentativa, por isso repeti-lo só paga outra vez o mesmo resultado e adia a correcção; abortar não é falhar em silêncio, é tornar o erro visível ao componente seguinte ou a uma pessoa.
 **Como verificar:** A política de retry decide pelo código ou pela categoria do erro, e não apanha todas as excepções da mesma forma. Um retry à volta de um 400, de uma falha de validação ou de um erro de permissão é um erro a assinalar.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/claude-api-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/claude-api-formatos.md)
 **Cursos:** 2
 
 ### IAP-027 — Chave de idempotência nas escritas que podem ser repetidas
@@ -180,7 +180,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Liga o tracing (`LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY` e `LANGSMITH_PROJECT`) no início do projecto e instrumenta todas as chamadas e nós, não só depois de algo falhar; em produção, sem o conteúdo dos prompts e das respostas por omissão (OBS-018).
 **Porquê:** Uma resposta errada de um LLM não deixa stack trace; sem traces depura-se a adivinhar pela saída final, e não se vê onde foram os tokens nem o tempo.
 **Como verificar:** As variáveis de tracing estão no `.env.example` e a documentação diz onde ver os traces. Cada função que chama o modelo ou corre um nó aparece no trace.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 2
 
 ### IAP-020 — Testes unitários com o modelo falso e asserções por conteúdo
@@ -188,7 +188,7 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Escreve os testes unitários com um modelo falso injectado no lugar do real, sem chamadas de rede, e deixa o LLM real só para os testes de integração. Nas respostas geradas, verifica se contêm o que é esperado, em vez de comparar por igualdade.
 **Porquê:** As respostas do modelo são probabilísticas: duas respostas correctas podem ter redacções diferentes, e testes com o LLM real a cada commit são lentos e caros.
 **Como verificar:** O código que chama o modelo recebe-o por injecção de dependência. Nenhum teste da suite rápida precisa de chave de API, e não há asserções de igualdade sobre texto gerado.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/langchain-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/langchain-formatos.md)
 **Cursos:** 1
 
 ## Segurança
@@ -221,5 +221,5 @@ Prefixo `IAP`. ## Escolher a abordagem
 **Regra:** Verifica o `stop_reason` antes de ler o corpo da resposta, e encaminha `refusal` e `max_tokens` para tratamento próprio, nunca para o caminho normal da resposta. O ciclo em si — continuar com `tool_use`, terminar com `end_turn` — é a AGT-030.
 **Porquê:** Uma recusa chega com sucesso HTTP e, tratada como resposta normal, entrega ao utilizador texto confuso; uma resposta cortada por `max_tokens` parece completa e não está.
 **Como verificar:** Existe um ramo para `refusal` que mostra uma mensagem controlada e regista a categoria, e um ramo para `max_tokens` que não entrega a resposta como final.
-**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.3/docs/claude-api-formatos.md)
+**Fonte:** [referência](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.23.4/docs/claude-api-formatos.md)
 **Cursos:** 2
