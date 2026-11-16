@@ -29,12 +29,13 @@ will not see the new commands.
 
 ## Four agents come with it
 
-Besides the commands, the plugin ships four role agents. Claude Code dispatches them when the work
+Besides the commands, the plugin ships these role agents (plus the `orchestrator`, which runs as the main session). Claude Code dispatches them when the work
 matches, or you can name one.
 
 | Agent | What it does |
 |---|---|
 | `architect` | Designs structure before there is code — module boundaries, layers, where each business rule lives, contracts between parts. It writes the design and nothing else. |
+| `implementer` | Carries out one decided step: Sonnet at low effort, only inside its scope and worktree, finishing with the tests of what it touched green. When the spec leaves a choice open, it stops and returns the question instead of deciding. |
 | `reviewer` | Reads only the diff and the spec — never the plan or the conversation — and gives each dimension PASS, FAIL or NO EVIDENCE. Every dimension starts at FAIL and only passes with evidence: a test run, linter or type-checker output, a cited line. Each finding is recorded in `.keel/revisao.json`. |
 | `refuter` | Runs only at critical gates (security, tenant isolation, migrations). It takes each PASS and tries to break it by writing the test that would fail. |
 | `troubleshoot` | Diagnoses something broken in a real environment — production or UAT. |

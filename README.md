@@ -6,7 +6,7 @@ Keel is a Claude Code plugin that gives a software project a contract: a small s
 always in context, a larger set that loads only when it applies, and agents and commands that work
 against both.
 
-Version 0.23.7. This repository is generated from a private source; changes made here are
+Version 0.23.8. This repository is generated from a private source; changes made here are
 overwritten by the next release.
 
 ## The problem
@@ -54,6 +54,7 @@ the rule ID and `file:line`, and you decide what to adopt before running `/keel-
 | Agent | Role |
 |---|---|
 | `architect` | Designs modules, boundaries, layers and agent graphs before anything is implemented. |
+| `implementer` | Carries out one decided implementation step inside its scope and worktree, with the tests of what it touched passing. |
 | `orchestrator` | Runs as the main session in projects that work with several subagents: dispatches steps, sends them to review, integrates. |
 | `refuter` | Runs after the reviewer on critical changes and tries to break each verdict it passed, preferably with a failing test. |
 | `reviewer` | Reviews the diff against the spec, the rules and security. It has no write tools. |
