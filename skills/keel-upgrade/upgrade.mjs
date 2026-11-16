@@ -276,6 +276,9 @@ export const SCRIPTS = [
   { destino: '.keel/licoes.mjs', origem: 'skills/keel-lesson/licoes.mjs' },
   { destino: '.keel/revisao.mjs', origem: 'skills/keel-init/revisao.mjs' },
   { destino: '.keel/estado.mjs', origem: 'skills/keel-init/estado.mjs' },
+  // O orquestrador é uma cópia do engine no projecto (é o agente da sessão principal, e o plugin não
+  // o pode ser). Actualiza-se como os scripts, mas só onde já existe: ligá-lo é uma pergunta.
+  { destino: '.claude/agents/orchestrator.md', origem: 'agents/orchestrator.md', soSeExiste: true },
 ];
 
 // O mesmo bloco que o `keel-init` escreve. Um teste confirma que os dois não se afastam.
@@ -307,11 +310,11 @@ export function estadoDoScript(textoBase, textoProjecto, textoNovo) {
 export function actualizarScripts(projecto, base, novo, aplicar) {
   const linhas = [];
   const tocados = [];
-  for (const { destino, origem } of SCRIPTS) {
+  for (const { destino, origem, soSeExiste } of SCRIPTS) {
     const fProjecto = path.join(projecto, destino);
     const textoNovo = lerSeExiste(path.join(novo, origem));
     const estado = estadoDoScript(lerSeExiste(path.join(base, origem)), lerSeExiste(fProjecto), textoNovo);
-    if (estado === 'igual' || estado === 'sem-origem') continue;
+    if (estado === 'igual' || estado === 'sem-origem' || (estado === 'instalar' && soSeExiste)) continue;
     if (estado === 'editado') {
       linhas.push(`\`${destino}\`: editado neste projecto; **ficou como está**. Compara-o com \`${origem}\` do engine.`);
       continue;

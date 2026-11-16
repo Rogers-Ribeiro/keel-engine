@@ -62,6 +62,8 @@ o que as impõe (PROC-023, PROC-035):
 - os scripts de `.keel/` (`guarda.mjs`, `licoes.mjs`, `revisao.mjs`, `estado.mjs`) seguem a mesma lógica a três que as regras:
   em falta, instalam-se; intactos desde a base, passam à versão nova; editados no projecto, ficam e
   o relatório diz-te para comparares à mão;
+- a cópia do orquestrador em `.claude/agents/orchestrator.md` segue a mesma lógica, mas só onde já
+  existe: em falta não se instala, porque ligá-lo é a pergunta abaixo;
 - ao `.claude/settings.json` **só se acrescenta** o que falta do `deny` mínimo e o hook `PreToolUse`
   do guarda, o `env` das sessões curtas (`CLAUDE_CODE_AUTO_COMPACT_WINDOW`, `CLAUDE_CODE_SUBAGENT_MODEL`) e o hook `SessionStart` do estado — as mesmas entradas que o `keel-init` escreve. Uma chave de `env` que o projecto já tenha com outro valor fica como está, e o relatório diz-o. O `"agent": "orchestrator"` **não** entra sozinho: se o projecto não tem `agent` e tem subagentes próprios em `.claude/agents/` (o orquestrador ou outros), o relatório traz a pergunta de ligá-lo, e ela vai ao utilizador no passo 3. Nada do projecto sai nem muda de sítio.
   Um `settings.json` que não seja JSON válido não é tocado, e o relatório diz o que juntar à mão.
