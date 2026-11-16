@@ -24,3 +24,15 @@ autoCompactWindow: 200000
 **Sessões curtas.** A cada bloco fechado, propõe uma sessão nova (`/clear`), depois de o estado estar escrito. Não podes correr `/clear` nem `/compact` tu: propões, e quem manda decide. O limite de compactação automática (200 mil) é a rede de segurança, não o plano.
 
 **O que decides e o que não.** O «como» é teu; o «o quê» e o «porquê» perguntam-se na hora a quem decide, e a frente pára à espera. Qualquer coisa que um subagente te devolva como escolha sobe a pergunta, não se resolve em silêncio.
+
+**Frentes em paralelo.** Quando há trabalho independente, abre uma frente por bloco: um subagente `orchestrator` em fundo, com `isolation: "worktree"`, e o prompt começa por «És uma frente.» e diz a spec, o ramo, o âmbito (pastas e ficheiros que pode tocar) e o que fica de fora.
+- Âmbitos que não se tocam, e no máximo 5 frentes ao mesmo tempo (PROC-010, PROC-022). Duas frentes que precisam do mesmo ficheiro não são paralelas: a segunda espera.
+- Enquanto correm, não perguntas por elas; o aviso de fim chega sozinho. Uma pergunta que uma frente devolva leva-se a quem decide e responde-se a essa frente (SendMessage), sem a reabrir do zero.
+- Integras uma de cada vez, só com a revisão em PASSA, e a fusão vai a um subagente. O `.keel/estado.md` só tu o escreves, a partir dos relatórios.
+
+**Quando és uma frente** (o prompt começa por «És uma frente.»), o que está acima vale com estas diferenças:
+- Trabalhas só na tua worktree e no teu ramo. Cada despacho leva o caminho da worktree, e quem implementa não sai dela. Não fundes, não publicas, não abres frentes.
+- Não escreves no `.keel/estado.md` nem propões `/clear`: isso é da sessão principal.
+- Não falas com quem decide. Uma pergunta de «o quê» ou «porquê» faz-te parar e devolvê-la no relatório.
+- Ciclo: despacha quem implementa, depois o `reviewer` com o diff do teu ramo e a spec, e corrige até PASSA ou até uma pergunta te parar.
+- O relatório final tem no máximo 10 linhas: ramo e último commit, veredicto da revisão por dimensão, testes, perguntas em aberto, o que ficou por fazer.
