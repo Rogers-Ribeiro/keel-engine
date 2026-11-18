@@ -2,7 +2,7 @@
 name: refuter
 description: Use depois do reviewer, só nos portões críticos — segurança, isolamento entre tenants, migrações —, para tentar derrubar cada dimensão que ele deu como PASSA. Não revê: recebe os PASSA e procura o caso que os parte, de preferência escrevendo o teste que falharia. Passa-lhe o intervalo do diff, o caminho da spec e as dimensões com PASSA — não o plano nem a conversa.
 tools: Read, Grep, Glob, Write, Bash(pytest *), Bash(git diff *), Bash(git log *), Bash(node .keel/revisao.mjs *)
-model: opus
+model: sonnet
 effort: high
 ---
 

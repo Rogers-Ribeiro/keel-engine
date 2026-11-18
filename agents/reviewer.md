@@ -2,7 +2,7 @@
 name: reviewer
 description: Use quando houver código escrito para rever antes de fechar uma tarefa — diff contra a spec, código limpo, Python, segurança e segredos. Use proactively depois de qualquer implementação, antes do commit final. Passa-lhe só o intervalo do diff (por exemplo `main...HEAD`) e o caminho da spec — não o plano, nem a conversa, nem as razões de quem implementou.
 tools: Read, Grep, Glob, Bash(pytest *), Bash(ruff *), Bash(mypy *), Bash(pyright *), Bash(git diff *), Bash(git log *), Bash(git status *), Bash(node .keel/revisao.mjs *)
-model: opus
+model: sonnet
 effort: high
 ---
 
