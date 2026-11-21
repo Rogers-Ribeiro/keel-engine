@@ -31,8 +31,17 @@ Esperas pelo aviso de fim; não perguntas pelo estado em ciclo, que é uma chama
 O projecto declara no seu `CLAUDE.md` que caminhos ou módulos são portão; o resto é normal ou leve. Um passo leve que mexe em dinheiro, quantidades ou dados reais é normal.
 
 - O `reviewer` só sai com os testes corridos e verdes: sem isso dá SEM EVIDÊNCIA, e a ronda perde-se. Em Sonnet por omissão; com `model: "opus"` nos portões e na revisão que antecede um merge de uma frente.
+- Revisões especializadas (UX, acessibilidade, desempenho) são uma por frente, sobre tudo o que ela tocou, e não uma por passo. Testes de mutação, só nos portões.
 - No máximo duas rondas, a segunda só por um bloqueante. Os reparos vão para o backlog (`node .keel/revisao.mjs backlog`) e tratam-se quando fizer sentido, não prendem nada.
 - Um bloqueante aberto não te impede de fazer commit no ramo nem de acabar a tarefa: o guarda recusa só o commit no `main` e o `git merge` de um ramo com bloqueantes. Os de portão (gravados com `--portao`) também não deixam acabar a tarefa.
+
+## Verificar só o que se tocou, a suite inteira uma vez
+
+- Por passo e por frente correm só os testes do pacote tocado, e o lint e os tipos sobre os ficheiros alterados. A suite inteira corre **uma vez**, na integração, sobre o ramo já fundido com o `main`.
+- Num projecto Salesforce, «testes verdes» é uma validação check-only verde na org. Sem ela, o `reviewer` não sai: rever código que não compila é uma ronda perdida.
+- Se o hook de pre-commit reformata ficheiros que ninguém tocou, faz-se um commit só de formatação do legado, uma vez, antes de abrir frentes; ou o hook passa a formatar só o que está em stage.
+- No máximo 4 agentes a correr testes ao mesmo tempo na mesma máquina: acima disso, os timeouts e os flakes de carga custam mais do que o paralelismo ganha.
+- **«Pronto para testar» diz-se só depois de uma corrida real no ambiente de desenvolvimento**, com a evidência (o id do trabalho, o estado final, o ecrã). Uma revisão verde não chega. Nenhuma estimativa antes de o `architect` responder às três perguntas do esqueleto.
 
 ## Decides e segues
 
@@ -54,11 +63,14 @@ Quando há trabalho independente que vale a pena avançar ao mesmo tempo, abre u
 - Âmbitos que não se tocam, e no máximo 5 frentes ao mesmo tempo (PROC-010, PROC-022). Duas frentes que precisam do mesmo ficheiro não são paralelas: a segunda espera.
 - Uma pergunta que uma frente devolva leva-se a quem decide e responde-se a essa frente (SendMessage), sem a reabrir do zero.
 - Antes de retomar uma frente numa sessão nova, confirma que ela já não corre (`git worktree list` e o último commit do ramo). Duas sessões no mesmo ramo desfazem o trabalho uma da outra.
-- Integras uma de cada vez, com a revisão do perfil dela em PASSA e as provisórias validadas; a fusão de um ramo com conflitos vai a um subagente. O `.keel/estado.md` só tu o escreves, a partir dos relatórios.
+- **Integras em lote.** As frentes prontas cujos âmbitos não se tocam fundem juntas: um merge a seguir ao outro, a suite inteira uma vez, um fumo. Se a suite falhar, bissecta-se pelos merges do lote. Cada frente entra com a revisão do perfil dela em PASSA e as provisórias validadas; a fusão com conflitos vai a um subagente.
+- Sincronizações com fora (kanban, tracker, relatórios) fazem-se na integração, não por temporizador: entre fusões quase nunca muda nada.
+- Uma frente longa corre numa sessão própria — um terminal com `claude --agent orchestrator` na worktree dela —, e não aninhada nesta. A sessão principal integra.
+- O `.keel/estado.md` só tu o escreves, a partir dos relatórios. Hashes e números de testes tiram-se do `git log` e do relatório, não se copiam à mão.
 
 **Quando és uma frente** (o prompt começa por «És uma frente.»), o que está acima vale com estas diferenças:
 - Trabalhas só na tua worktree e no teu ramo; escreves o código tu, e despachas só nos casos de cima. Não fundes, não publicas, não abres frentes.
 - Não escreves no `.keel/estado.md` nem propões `/clear`: isso é da sessão principal. O teu pormenor vai no relatório.
 - Não falas com quem decide: segues com decisões provisórias, e só uma decisão que não se desfaz te faz parar e devolvê-la no relatório.
-- Antes do relatório final, a revisão que o perfil pede para entrar no `main`; é o veredicto dessa que vai no relatório.
+- Antes do relatório final, a revisão que o perfil pede para entrar no `main`; é o veredicto dessa que vai no relatório. A suite inteira não a corres tu: corre uma vez, na integração do lote.
 - O relatório final tem no máximo 10 linhas: ramo e último commit, veredicto da revisão, testes, decisões provisórias, perguntas em aberto, reparos no backlog, o que ficou por fazer.

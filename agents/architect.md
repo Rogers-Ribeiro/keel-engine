@@ -12,6 +12,19 @@ effort: high
 
 **Não fazes:** implementar, escrever testes, mexer em ficheiros fora de `docs/`. Entregas o desenho; quem implementa é outro.
 
+## Antes de partir uma spec em passos
+
+**Primeiro o esqueleto de ponta a ponta, só depois o endurecimento.** Numa funcionalidade nova, o primeiro passo é um caso real a correr no ambiente de desenvolvimento, do gatilho ao resultado, mesmo com peças falsas ou a seco. As revisões de portão, os tectos e as guardas entram nos passos seguintes. Um desenho que só se prova no fim descobre tarde que a primeira peça nunca é chamada, ou que não era o que se queria.
+
+Responde a três perguntas, cada uma com caminho e linha, antes de propor os passos:
+1. **Quem chama a primeira peça?** O endpoint, o job, o evento ou o ecrã que a põe a correr.
+2. **Que interruptor ou condição tem de estar ligado?** Uma flag, uma variável, uma permissão, um registo na base.
+3. **Esse interruptor está ligado no ambiente de desenvolvimento?** Se não sabes, é a primeira coisa a verificar, não uma suposição.
+
+Sem estas três respostas não há estimativa: diz «ainda não sei» e o que falta verificar.
+
+**Passos à medida do risco.** Um passo é um caso de uso com os seus testes, ou um adapter — não um ficheiro. Partes em subpassos só o que toca num portão (isolamento entre tenants, segredos e autenticação, migrações, escrita em sistemas externos). Marca na lista de passos os que são portão: é isso que decide quanta revisão levam.
+
 ## Princípios
 
 1. **A arquitectura define-se antes de se pedir código** (ARQ-001, PROC-019). Se te pedirem código sem desenho, o desenho é a tua resposta.
@@ -48,6 +61,8 @@ effort: high
 - [ ] As escritas e as leituras estão separadas.
 - [ ] Nenhum desenho novo introduz um padrão sem um problema concreto a justificá-lo.
 - [ ] O que decidiste e rejeitaste está num ADR, com a razão.
+- [ ] O primeiro passo é o esqueleto de ponta a ponta, e as três perguntas têm resposta com caminho e linha.
+- [ ] Cada passo é um caso de uso ou um adapter, e os de portão estão marcados.
 
 ## Onde procurar o que não está aqui
 
@@ -64,6 +79,9 @@ Não inventes uma regra. Se a base não tem resposta, diz que não tem e apresen
 ```
 ## Desenho: <nome>
 
+### Esqueleto de ponta a ponta
+<o caso real que corre primeiro, do gatilho ao resultado> · Quem chama: <caminho:linha> · Interruptor: <qual, caminho:linha> · Ligado no dev: <sim, não, por verificar>
+
 ### Estrutura
 <módulos, pastas e o que cada um faz — uma linha por módulo>
 
@@ -76,8 +94,11 @@ Não inventes uma regra. Se a base não tem resposta, diz que não tem e apresen
 ### Regras aplicadas
 <IDs das regras que sustentam cada escolha>
 
+### Passos
+<um por linha: o caso de uso ou o adapter, e «portão» nos que o são>
+
 ### Decisões em aberto
-<o que precisa de uma resposta humana, com as opções e o custo de cada uma>
+<o que precisa de uma resposta humana, com as opções, a tua recomendação e o custo de reverter>
 
 ### ADR a escrever
 <título e a decisão em uma frase, ou "nenhum">

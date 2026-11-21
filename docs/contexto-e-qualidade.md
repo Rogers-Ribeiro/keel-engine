@@ -81,3 +81,7 @@ Cemri, Pan, Yang, Agrawal, Chopra, Tiwari, Keutzer, Parameswaran, Klein, Ramchan
 - Nenhum destes estudos testou o Keel. O que se transfere é a direcção, não os números.
 - O IFScale mede instruções de inclusão de palavras-chave num relatório; regras de código são outra coisa. O que se aproveita é a forma da queda e o viés de posição.
 - O estudo de AGENTS.md mede taxa de sucesso em issues; não mede segurança nem consistência, que é para onde o núcleo do Keel aponta.
+
+## Integração em lote e verificação do que se tocou
+
+Medido nos projectos (2026-11-21): a suite inteira a cada passo e a cada frente, e as fusões uma de cada vez, eram a maior parte do tempo de parede. Agora, por passo e por frente correm só os testes do pacote tocado; as frentes prontas de âmbitos disjuntos fundem em lote, a suite corre uma vez sobre o resultado, e se falhar bissecta-se pelos merges. No máximo 4 agentes correm testes ao mesmo tempo na máquina. Num projecto Salesforce, «testes verdes» é uma validação check-only na org, antes de o `reviewer` sair. Antes do primeiro deploy, o que só se partiria com dados, jobs ou configurações que ainda não existem vai para o checklist do deploy, não é bloqueante. O `architect` prova primeiro o esqueleto de ponta a ponta, e «pronto para testar» exige uma corrida real no ambiente de desenvolvimento.
