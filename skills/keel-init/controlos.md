@@ -52,7 +52,7 @@ Cuidados:
 O `reviewer` regista cada achado em `.keel/revisao.json`, pelo `.keel/revisao.mjs`, com o ramo em que foi gravado. Um **bloqueante** fica **aberto** até ser fechado de uma de duas maneiras: **corrigido**, só por uma nova ronda do revisor nessa dimensão, ou **não corrigido**, com o motivo, por quem implementou. Um **reparo** vai para o **backlog** e não prende nada. Escrever "fecha cada achado" num texto seria mais uma regra sem controlo (PROC-036, PROC-035). O controlo são duas peças:
 
 - o guarda não deixa um bloqueante entrar no ramo principal (`main` ou `master`): recusa ali o `git commit` com bloqueantes desse ramo e o `git merge` de um ramo que os tenha, e recusa a edição à mão do `revisao.json`. Num ramo de trabalho, o commit é livre;
-- o hook `Stop` avisa dos bloqueantes do ramo do `cwd` e deixa acabar; só não deixa quando algum foi gravado com `--portao` (tenants, segredos e autenticação, migrações, escrita em sistemas externos).
+- o hook `Stop` avisa dos bloqueantes do ramo do `cwd` e deixa acabar; só não deixa quando algum foi gravado com `--portao` (tenants, segredos e autenticação, migrações, escrita em sistemas externos). Mesmo esses prendem uma vez por lista: com a mesma lista já mostrada, ou com `stop_hook_active`, avisa e deixa acabar.
 
 É a regra «rigor no merge, liberdade no ramo»: um commit num ramo desfaz-se, e travá-lo só atrasava. Os projectos sentiam o processo como rígido sobretudo por isto.
 

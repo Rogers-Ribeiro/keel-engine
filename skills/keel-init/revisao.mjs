@@ -17,7 +17,11 @@
 // principal e a fusão para ele (`git merge <ramo>`) enquanto esse ramo tiver bloqueantes abertos. O
 // hook `Stop` avisa dos bloqueantes e deixa acabar; só não deixa quando algum é de um portão
 // (`--portao`: tenants, segredos e autenticação, migrações, escrita em sistemas externos), que são os
-// erros que não se desfazem depois de entrarem.
+// erros que não se desfazem depois de entrarem. E mesmo esses prendem uma vez por lista: se a sessão
+// já foi presa pela mesma lista de bloqueantes (guardada na pasta temporária do sistema, para não
+// sujar o `git status`), ou se o Stop já está a
+// continuar por causa de um hook (`stop_hook_active`), avisa e deixa acabar. Prender a cada fim de
+// turno por um bloqueante que a pessoa decidiu tratar depois levou dois projectos a remendar isto à mão.
 //
 // Os estados e quem os muda:
 // - **aberto** — um bloqueante, quando o revisor o abre (`abrir`). É o único estado que prende.
@@ -38,7 +42,9 @@
 // Isto protege contra o esquecimento, não contra a má-fé: quem corre `rever` à mão consegue fechar
 // achados. O guarda recusa a edição directa do JSON, e o resto fica no histórico de cada achado.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -223,7 +229,17 @@ async function main(argv) {
       const entrada = await lerStdin();
       const lista = abertos(projecto, { ramo: ramoActual(entrada.cwd || process.cwd()) });
       if (lista.length === 0) return 0;
-      if (lista.some((a) => a.portao)) {
+      const chave = createHash('sha1').update(path.resolve(projecto).toLowerCase()).digest('hex').slice(0, 16);
+      const ultimo = path.join(os.tmpdir(), `keel-stop-${chave}.json`);
+      const impressao = lista.map((a) => a.id).sort().join(',');
+      let jaMostrada = false;
+      try {
+        jaMostrada = JSON.parse(fs.readFileSync(ultimo, 'utf8')).ids === impressao;
+      } catch {}
+      if (lista.some((a) => a.portao) && !entrada.stop_hook_active && !jaMostrada) {
+        try {
+          fs.writeFileSync(ultimo, `${JSON.stringify({ ids: impressao })}\n`);
+        } catch {}
         process.stderr.write(mensagemAbertos(lista));
         return 2;
       }
