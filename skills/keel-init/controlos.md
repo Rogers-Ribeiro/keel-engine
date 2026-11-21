@@ -49,10 +49,12 @@ Cuidados:
 
 ## O hook que fecha a revisão
 
-O `reviewer` regista cada achado em `.keel/revisao.json`, pelo `.keel/revisao.mjs`, e cada um fica **aberto** até ser fechado de uma de duas maneiras: **corrigido**, só por uma nova ronda do revisor nessa dimensão, ou **não corrigido**, com o motivo, por quem implementou. Escrever "fecha cada achado" num texto seria mais uma regra sem controlo (PROC-036, PROC-035). O controlo são duas peças:
+O `reviewer` regista cada achado em `.keel/revisao.json`, pelo `.keel/revisao.mjs`, com o ramo em que foi gravado. Um **bloqueante** fica **aberto** até ser fechado de uma de duas maneiras: **corrigido**, só por uma nova ronda do revisor nessa dimensão, ou **não corrigido**, com o motivo, por quem implementou. Um **reparo** vai para o **backlog** e não prende nada. Escrever "fecha cada achado" num texto seria mais uma regra sem controlo (PROC-036, PROC-035). O controlo são duas peças:
 
-- o guarda recusa `git commit` enquanto houver achados abertos, e recusa a edição à mão do `revisao.json`;
-- o hook `Stop` não deixa a tarefa acabar enquanto houver achados abertos.
+- o guarda recusa `git commit` enquanto houver bloqueantes abertos no ramo da pasta onde o commit corre, e recusa a edição à mão do `revisao.json`;
+- o hook `Stop` não deixa a tarefa acabar enquanto houver bloqueantes abertos no ramo do `cwd`.
+
+Contar por ramo é o que deixa as frentes em paralelo: cada uma corre na sua worktree e no seu ramo, partilham o `revisao.json` da raiz, e um bloqueante de uma não prende os commits das outras. Os achados antigos, sem ramo, contam em todos. O `revisao.mjs` grava com uma trava (`.keel/revisao.lock`), para duas frentes não repetirem IDs, e conta as rondas por ramo e dimensão: acima de duas, o `rever` avisa que só se continua por um bloqueante de dinheiro, dados de outro tenant, segredos ou escrita indevida.
 
 Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/revisao.mjs` para `.keel/revisao.mjs`, junta `.keel/revisao.json` ao `.gitignore` (é estado de trabalho, não código), e junta ao `.claude/settings.json`:
 
@@ -75,7 +77,7 @@ Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/revisao.mjs` para `.keel/revisao.m
 }
 ```
 
-Sem `revisao.json`, ou sem achados abertos, os dois deixam passar: uma tarefa que não passou pelo revisor não fica presa. O hook nunca prende a sessão sem saída, porque quem implementou pode sempre fechar um achado como não corrigido — desde que diga porquê, e o motivo fica gravado.
+Sem `revisao.json`, ou sem bloqueantes abertos no ramo, os dois deixam passar: uma tarefa que não passou pelo revisor não fica presa. O hook nunca prende a sessão sem saída, porque quem implementou pode sempre fechar um achado como não corrigido — desde que diga porquê, e o motivo fica gravado.
 
 ## O hook que traz as lições de outros projectos
 
@@ -158,7 +160,7 @@ Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/estado.mjs` para `.keel/estado.mjs
 }
 ```
 
-O `.keel/estado.md` é onde se guardam as frentes abertas, o ramo de cada uma e as decisões pendentes. O hook põe-no em contexto ao arrancar e depois de cada compactação, antes de qualquer pergunta; sem ficheiro, ou vazio, não escreve nada, nunca falha e corta acima de 200 linhas com aviso.
+O `.keel/estado.md` é onde se guardam as frentes abertas, o ramo de cada uma e as decisões pendentes. O hook põe-no em contexto ao arrancar e depois de cada compactação, antes de qualquer pergunta; sem ficheiro, ou vazio, não escreve nada, nunca falha e corta numa linha inteira acima de 9 000 caracteres (ou 200 linhas), com aviso. O limite é em caracteres porque o Claude Code guarda num ficheiro a saída de um hook acima de 10 000 e põe em contexto só os primeiros 2 000: o estado chegava ao modelo cortado sem ninguém saber. O pormenor de cada frente vai para `.keel/frentes/`, e o histórico para `.keel/estado-arquivo.md`.
 
 **Só com vários subagentes**, e só se o utilizador o disser (pergunta 5 do `SKILL.md`): copia `${CLAUDE_PLUGIN_ROOT}/agents/orchestrator.md` para `.claude/agents/` e junta ao `settings.json` `"agent": "orchestrator"`, que corre a sessão principal como esse agente (`claude --agent orchestrator` faz o mesmo à mão). Num projecto de uma pessoa a trabalhar directo, um orquestrador atrapalha. A restrição do agente a escrever só estado, specs e decisões é texto, sem controlo: o `tools` não restringe por caminho.
 

@@ -63,7 +63,7 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 ├── .claude/rules/<tema>.md  as regras dos temas escolhidos, com `paths:` no frontmatter
 ├── .keel/licoes.mjs         põe em contexto o que já se aprendeu noutros projectos desta máquina
 ├── .keel/guarda.mjs         o hook que recusa o que nunca pode acontecer
-├── .keel/revisao.mjs        os achados de revisão como estado, e o hook Stop que não deixa acabar com achados abertos
+├── .keel/revisao.mjs        os achados de revisão como estado, por ramo, e o hook Stop que não deixa acabar com bloqueantes abertos
 ├── .keel/estado.mjs         devolve o `.keel/estado.md` (frentes, ramos, decisões pendentes) ao contexto depois de um /compact ou numa sessão nova
 ├── .claude/agents/orchestrator.md  só se a resposta à pergunta 5 for sim
 └── .claude/settings.json  o `deny` mínimo e o hook de guarda (sempre), o hook SessionStart, o `env` e o hook de estado das sessões curtas (sempre), `"agent": "orchestrator"` só com o orquestrador, e os hooks do nível escolhido

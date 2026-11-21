@@ -8,8 +8,8 @@
 // edição. O `deny` fica na mesma — é a primeira barreira e não custa nada —, e isto cobre as variantes.
 //
 // O que recusa é pouco de propósito: publicar (`git push`), apagar recursivamente e tocar em `.env`.
-// E, quando o projecto tem o `.keel/revisao.mjs`, fazer commit com achados de revisão abertos ou
-// editar à mão o ficheiro onde eles estão (PROC-036).
+// E, quando o projecto tem o `.keel/revisao.mjs`, fazer commit com bloqueantes de revisão abertos no
+// ramo em que se está, ou editar à mão o ficheiro onde eles estão (PROC-036).
 // Um guarda que recusa demais é desligado na primeira semana, e um guarda desligado não guarda nada.
 // O que cada projecto quiser acrescentar vai para o `deny` dele, não para aqui.
 import path from 'node:path';
@@ -33,6 +33,11 @@ const gitComSubcomando = (subcomando) =>
   );
 const GIT_PUSH = gitComSubcomando('push');
 const GIT_COMMIT = gitComSubcomando('commit');
+
+// Gravar um achado no registo não lê nem escreve o `.env`: o texto do achado pode nomeá-lo («a chave
+// está no `.env`»), e recusá-lo obrigava a pessoa a gravar o achado à mão.
+// Uma substituição de comando (`$(…)`, crases) dentro dele já não é só texto, e não fica isenta.
+const eRegistoDeRevisao = (parte) => !/\$\(|`/.test(parte) && /^node(?:\.exe)?\s+["']?(?:\S*[\\/])?\.keel[\\/]revisao\.mjs["']?\s/i.test(parte);
 
 const eRevisaoJson = (ficheiro) => /(?:^|\/)\.keel\/revisao\.json$/i.test(ficheiro.replace(/\\/g, '/'));
 
@@ -58,13 +63,14 @@ const REGRAS_SHELL = [
   },
   {
     // Um `.env` nomeado em qualquer ponto do comando: ler, copiar, apagar, redireccionar.
-    testa: (p) => p.split(/[\s'"`=<>()]+/).some((tok) => eFicheiroEnv(path.basename(tok.replace(/\\/g, '/')))),
+    testa: (p) =>
+      !eRegistoDeRevisao(p) && p.split(/[\s'"`=<>()]+/).some((tok) => eFicheiroEnv(path.basename(tok.replace(/\\/g, '/')))),
     motivo: 'o `.env` tem segredos; o agente não o lê nem o altera',
   },
 ];
 
-// Devolve o motivo da recusa, ou `null` se a chamada pode seguir. `abertos` são os achados de revisão
-// por fechar, que o `main` lê do `.keel/revisao.json`.
+// Devolve o motivo da recusa, ou `null` se a chamada pode seguir. `abertos` são os bloqueantes de
+// revisão por fechar no ramo da chamada, que o `main` lê do `.keel/revisao.json`.
 export function avaliar(entrada, { abertos = [] } = {}) {
   const ferramenta = entrada?.tool_name ?? '';
   const dados = entrada?.tool_input ?? {};
@@ -108,7 +114,9 @@ async function main() {
   let abertos = [];
   try {
     const revisao = await import('./revisao.mjs');
-    abertos = revisao.abertos(revisao.pastaProjecto());
+    // O ramo é o da pasta onde a chamada corre (a worktree de uma frente), não o do projecto: um
+    // bloqueante de uma frente não prende os commits das outras.
+    abertos = revisao.abertos(revisao.pastaProjecto(), { ramo: revisao.ramoActual(entrada?.cwd || process.cwd()) });
   } catch {}
 
   const motivo = avaliar(entrada, { abertos });
@@ -116,7 +124,7 @@ async function main() {
   process.stderr.write(
     `Bloqueado pelo guarda do Keel — ${motivo}.\n` +
       (motivo.startsWith(MOTIVO_REVISAO)
-        ? 'Corre `node .keel/revisao.mjs estado`: corrige e pede ao reviewer uma nova ronda, ou fecha cada achado com `recusar --porque`.\n'
+        ? 'Corre `node .keel/revisao.mjs estado`: corrige e pede ao reviewer uma nova ronda, ou fecha cada bloqueante com `recusar --porque`.\n'
         : 'Não procures outra forma de fazer o mesmo. Diz à pessoa o que querias fazer e porquê, e ela corre o comando.\n'),
   );
   return 2;
