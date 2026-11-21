@@ -1,17 +1,23 @@
 #!/usr/bin/env node
 // Os achados de uma revisão, guardados como estado e não como texto, para que nenhum fique esquecido.
 //
-//   node .keel/revisao.mjs abrir   --dimensao <d> --severidade <s> --onde <ficheiro:linha> --o-que "<…>" [--ramo <r>]
+//   node .keel/revisao.mjs abrir   --dimensao <d> --severidade <s> --onde <ficheiro:linha> --o-que "<…>" [--portao] [--ramo <r>]
 //   node .keel/revisao.mjs rever   --dimensao <d> [--mantem R-001,R-004] [--ramo <r>]
 //   node .keel/revisao.mjs recusar --id R-001 --porque "<…>"
 //   node .keel/revisao.mjs estado  [--ramo <r>]          sai com 1 se houver bloqueantes abertos
 //   node .keel/revisao.mjs backlog [--ramo <r>]          os reparos por tratar, para o despacho do fim da frente
-//   node .keel/revisao.mjs parar                         hook Stop: lê do stdin, sai com 2 se houver bloqueantes
+//   node .keel/revisao.mjs parar                         hook Stop: lê do stdin; sai com 2 só por bloqueantes de portão
 //
 // Existe porque a falha mais repetida de agentes em tarefas longas é encontrar o problema na revisão
 // e entregar sem o corrigir (arXiv:2608.14905). Escrever "fecha cada achado" num "Quando acabas" é uma
-// regra só em texto (PROC-023, PROC-035); isto é o controlo: o hook `Stop` não deixa a tarefa acabar
-// e o guarda não deixa fazer commit enquanto houver um bloqueante aberto.
+// regra só em texto (PROC-023, PROC-035); isto é o controlo.
+//
+// **Rigor no merge, liberdade no ramo.** Um commit num ramo desfaz-se; um commit no `main` não. Por
+// isso o guarda deixa fazer commit à vontade num ramo de trabalho, e recusa só o commit no ramo
+// principal e a fusão para ele (`git merge <ramo>`) enquanto esse ramo tiver bloqueantes abertos. O
+// hook `Stop` avisa dos bloqueantes e deixa acabar; só não deixa quando algum é de um portão
+// (`--portao`: tenants, segredos e autenticação, migrações, escrita em sistemas externos), que são os
+// erros que não se desfazem depois de entrarem.
 //
 // Os estados e quem os muda:
 // - **aberto** — um bloqueante, quando o revisor o abre (`abrir`). É o único estado que prende.
@@ -124,7 +130,7 @@ const agora = () => new Date().toISOString();
 const proximoId = (achados) =>
   `R-${String(achados.reduce((max, a) => Math.max(max, Number(a.id.slice(2)) || 0), 0) + 1).padStart(3, '0')}`;
 
-export function abrir(projecto, { dimensao, severidade, onde, oQue, ramo }) {
+export function abrir(projecto, { dimensao, severidade, onde, oQue, ramo, portao }) {
   if (!dimensao || !onde || !oQue) throw new Error('abrir precisa de --dimensao, --onde e --o-que');
   if (!SEVERIDADES.includes(severidade)) throw new Error(`--severidade é ${SEVERIDADES.join(' ou ')}`);
   return comTrava(projecto, (dados) => {
@@ -135,6 +141,7 @@ export function abrir(projecto, { dimensao, severidade, onde, oQue, ramo }) {
       onde,
       oQue,
       ...(ramo ? { ramo } : {}),
+      ...(portao && portao !== 'nao' ? { portao: true } : {}),
       estado: severidade === 'bloqueante' ? 'aberto' : 'backlog',
       aberto: agora(),
     };
@@ -172,7 +179,8 @@ export function recusar(projecto, { id, porque }) {
   });
 }
 
-const linha = (a) => `- ${a.id} [${a.severidade}, ${a.dimensao}${a.ramo ? `, ${a.ramo}` : ''}] ${a.onde} — ${a.oQue}`;
+const linha = (a) =>
+  `- ${a.id} [${a.severidade}${a.portao ? ' de portão' : ''}, ${a.dimensao}${a.ramo ? `, ${a.ramo}` : ''}] ${a.onde} — ${a.oQue}`;
 
 export function mensagemAbertos(lista) {
   return (
@@ -215,8 +223,16 @@ async function main(argv) {
       const entrada = await lerStdin();
       const lista = abertos(projecto, { ramo: ramoActual(entrada.cwd || process.cwd()) });
       if (lista.length === 0) return 0;
-      process.stderr.write(mensagemAbertos(lista));
-      return 2;
+      if (lista.some((a) => a.portao)) {
+        process.stderr.write(mensagemAbertos(lista));
+        return 2;
+      }
+      // Fora dos portões, avisa e deixa acabar: o guarda trava-os à entrada do `main`.
+      const aviso =
+        `${lista.length} bloqueante(s) de revisão abertos neste ramo (${lista.map((a) => a.id).join(', ')}): ` +
+        'não entram no main enquanto não forem fechados.';
+      process.stdout.write(`${JSON.stringify({ systemMessage: aviso })}\n`);
+      return 0;
     } catch {
       return 0;
     }
@@ -228,7 +244,7 @@ async function main(argv) {
       const a = abrir(projecto, { ...flags, ramo });
       process.stdout.write(
         a.estado === 'aberto'
-          ? `${a.id} aberto (bloqueante, ${a.dimensao}).\n`
+          ? `${a.id} aberto (bloqueante${a.portao ? ' de portão' : ''}, ${a.dimensao}).\n`
           : `${a.id} no backlog (reparo, ${a.dimensao}): não abre ronda; vai no despacho do fim da frente.\n`,
       );
     } else if (comando === 'rever') {

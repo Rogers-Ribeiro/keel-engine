@@ -47,6 +47,7 @@ As dimensões são cinco: **spec**, **segurança e segredos**, **código limpo**
 3. **Uma dimensão de cada vez.** Percorre o diff inteiro com a lista dessa dimensão, dá-lhe o veredicto, e só depois passa à seguinte. Não há parecer geral no fim.
 4. **Grava cada achado** bloqueante ou reparo, um a um. **Bloqueante** é só o que parte um critério de aceite, um item da lista de segurança, um teste, ou que dá dinheiro ou quantidades errados, dados de outro tenant, segredos expostos, pedidos perdidos ou escrita indevida num sistema externo. O resto é **reparo**: vai para o backlog, não prende o commit nem abre outra ronda. Um reparo que pede um mecanismo novo (uma tabela, uma fila, uma abstracção) é reparo por definição. Normas de forma que um script verifica — formatação, ordem de imports, nomes de ficheiros — são do lint, não tuas.
    `node .keel/revisao.mjs abrir --dimensao <spec|seguranca|codigo|testes|llm> --severidade <bloqueante|reparo> --onde <ficheiro:linha> --o-que "<o que está errado → o que fazer>"`
+   Num portão (isolamento entre tenants e RLS, segredos e autenticação, migrações, escrita em sistemas externos), junta `--portao` ao bloqueante: é o único que não deixa a tarefa acabar. Os outros bloqueantes deixam trabalhar no ramo e só não entram no `main`.
    As observações não se gravam. Sem `.keel/revisao.mjs` no projecto, diz-o na revisão e segue só com o texto.
 5. **No máximo duas rondas por passo, e a segunda só por um bloqueante.** Numa segunda ronda, começa por `node .keel/revisao.mjs estado`. Em cada dimensão que voltas a rever, confirma no código cada achado aberto dela e corre `node .keel/revisao.mjs rever --dimensao <d> --mantem <IDs que continuam por corrigir>`: o que não mantiveres fica corrigido. Só tu fechas um achado como corrigido, e só depois de o ver no código — não na palavra de quem corrigiu. Não abras achados novos que a primeira ronda podia ter visto: na segunda ronda revês as correcções, não o diff de novo. Se o `rever` avisar que passaste o tecto, só continua por um bloqueante de dinheiro, dados de outro tenant, segredos ou escrita indevida.
 
@@ -106,6 +107,16 @@ Cada achado cita o ID da regra. Se não houver regra que sustente o achado, ou a
 
 ## Formato de saída
 
+**Quando tudo passa,** a revisão é curta — uma linha por dimensão com a evidência, e nada mais:
+
+```
+## Revisão: <o que foi revisto> — PASSA
+- Spec: <critérios conferidos> · Segurança: <lista percorrida> · Código: <lint> · Testes: <comando e resultado> · LLM: <ou não se aplica>
+**Backlog:** <reparos gravados, ou "nenhum">
+```
+
+**Quando há FALHA ou SEM EVIDÊNCIA,** o formato inteiro:
+
 ```
 ## Revisão: <o que foi revisto>
 
@@ -136,7 +147,8 @@ Cada achado cita o ID da regra. Se não houver regra que sustente o achado, ou a
 
 **Para fechar:** cada bloqueante fica aberto, no ramo onde foi gravado, até uma nova ronda o dar como
 corrigido, ou até quem implementou o fechar com `node .keel/revisao.mjs recusar --id <ID> --porque "<motivo>"`.
-Enquanto houver um aberto no ramo, o guarda recusa o commit e o hook `Stop` não deixa a tarefa acabar (PROC-036).
+Enquanto houver um aberto, o guarda não o deixa entrar no `main` — nem por commit, nem por `git merge` —, e um de portão
+também não deixa a tarefa acabar (PROC-036). No ramo, o trabalho continua.
 Os reparos ficam no backlog (`node .keel/revisao.mjs backlog`) e não prendem nada.
 ```
 

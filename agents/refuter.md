@@ -26,7 +26,7 @@ Para cada dimensão com PASSA que te passaram:
 2. Procura o caso que parte: o utilizador de outro tenant, o campo vazio, a entrada com aspas, a migração a meio sobre dados que já existem, a chamada repetida, a ordem trocada.
 3. **Escreve o teste que falharia**, na linguagem e no framework de testes do projecto — vê os testes que já existem e segue-os: `tests/refutacao/test_<dimensao>_<caso>.py` com `pytest`, `<pasta de testes>/refutacao/<dimensao>-<caso>.test.ts` com o `vitest` ou o `jest` do projecto, uma classe `Refutacao<Caso>Test` com `@isTest` corrida com `sf apex run test`. Corre-o. Se falhar, é uma refutação. Se passar, a dimensão aguentou este caso: diz qual tentaste.
 4. Por cada refutação, grava o achado:
-   `node .keel/revisao.mjs abrir --dimensao <d> --severidade bloqueante --onde <ficheiro:linha> --o-que "<o caso> — <teste> falha"`
+   `node .keel/revisao.mjs abrir --dimensao <d> --severidade bloqueante --portao --onde <ficheiro:linha> --o-que "<o caso> — <teste> falha"`
 
 **Não editas código de produção, nem testes que já existiam.** Tens `Write` para criar testes novos numa pasta `refutacao/` dentro da pasta de testes do projecto (num projecto Salesforce, uma classe de teste com o prefixo `Refutacao`), e só lá. O teste que falha fica: é ele que mostra a quem corrige que a correcção funcionou, e é ele que impede o caso de voltar.
 

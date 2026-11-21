@@ -8,8 +8,9 @@
 // edição. O `deny` fica na mesma — é a primeira barreira e não custa nada —, e isto cobre as variantes.
 //
 // O que recusa é pouco de propósito: publicar (`git push`), apagar recursivamente e tocar em `.env`.
-// E, quando o projecto tem o `.keel/revisao.mjs`, fazer commit com bloqueantes de revisão abertos no
-// ramo em que se está, ou editar à mão o ficheiro onde eles estão (PROC-036).
+// E, quando o projecto tem o `.keel/revisao.mjs`, levar bloqueantes de revisão para o ramo principal —
+// fazer commit nele, ou fundir nele um ramo que os tem — e editar à mão o ficheiro onde eles estão
+// (PROC-036). Num ramo de trabalho, o commit é livre: desfaz-se, e é lá que se corrige.
 // Um guarda que recusa demais é desligado na primeira semana, e um guarda desligado não guarda nada.
 // O que cada projecto quiser acrescentar vai para o `deny` dele, não para aqui.
 import path from 'node:path';
@@ -33,6 +34,9 @@ const gitComSubcomando = (subcomando) =>
   );
 const GIT_PUSH = gitComSubcomando('push');
 const GIT_COMMIT = gitComSubcomando('commit');
+const GIT_MERGE = gitComSubcomando('merge');
+
+const ePrincipal = (ramo) => /^(?:main|master)$/.test(ramo ?? '');
 
 // Gravar um achado no registo não lê nem escreve o `.env`: o texto do achado pode nomeá-lo («a chave
 // está no `.env`»), e recusá-lo obrigava a pessoa a gravar o achado à mão.
@@ -69,9 +73,22 @@ const REGRAS_SHELL = [
   },
 ];
 
-// Devolve o motivo da recusa, ou `null` se a chamada pode seguir. `abertos` são os bloqueantes de
-// revisão por fechar no ramo da chamada, que o `main` lê do `.keel/revisao.json`.
-export function avaliar(entrada, { abertos = [] } = {}) {
+// Os bloqueantes que esta parte do comando levaria para o ramo principal. `abertos` são todos os
+// bloqueantes por fechar, de todos os ramos; `ramo` é o da pasta onde a chamada corre. Sem ramo
+// conhecido, trata-se como principal: na dúvida, guarda.
+function bloqueantesAEntrar(parte, { abertos, ramo }) {
+  if (abertos.length === 0 || (ramo && !ePrincipal(ramo))) return [];
+  const desteRamo = (a) => !a.ramo || !ramo || a.ramo === ramo;
+  if (GIT_COMMIT.test(parte)) return abertos.filter(desteRamo);
+  if (GIT_MERGE.test(parte)) {
+    const palavras = new Set(parte.split(/[\s'"]+/));
+    return abertos.filter((a) => desteRamo(a) || palavras.has(a.ramo));
+  }
+  return [];
+}
+
+// Devolve o motivo da recusa, ou `null` se a chamada pode seguir.
+export function avaliar(entrada, { abertos = [], ramo = null } = {}) {
   const ferramenta = entrada?.tool_name ?? '';
   const dados = entrada?.tool_input ?? {};
 
@@ -79,8 +96,9 @@ export function avaliar(entrada, { abertos = [] } = {}) {
     for (const parte of partes(String(dados.command ?? ''))) {
       const regra = REGRAS_SHELL.find((r) => r.testa(parte));
       if (regra) return `${regra.motivo}: \`${parte}\``;
-      if (abertos.length > 0 && GIT_COMMIT.test(parte)) {
-        return `${MOTIVO_REVISAO}: ${abertos.map((a) => a.id).join(', ')} ainda abertos`;
+      const aEntrar = bloqueantesAEntrar(parte, { abertos, ramo });
+      if (aEntrar.length > 0) {
+        return `${MOTIVO_REVISAO}: ${aEntrar.map((a) => a.id).join(', ')} ainda abertos, e não entram no ${ramo ?? 'ramo principal'}`;
       }
     }
     return null;
@@ -112,14 +130,15 @@ async function main() {
   // O `revisao.mjs` pode não existir num projecto que ainda não o recebeu. Sem ele, o guarda continua
   // a guardar o resto: um import que falhasse fora deste `try` desligava-o por inteiro.
   let abertos = [];
+  let ramo = null;
   try {
     const revisao = await import('./revisao.mjs');
-    // O ramo é o da pasta onde a chamada corre (a worktree de uma frente), não o do projecto: um
-    // bloqueante de uma frente não prende os commits das outras.
-    abertos = revisao.abertos(revisao.pastaProjecto(), { ramo: revisao.ramoActual(entrada?.cwd || process.cwd()) });
+    // O ramo é o da pasta onde a chamada corre (a worktree de uma frente), não o do projecto.
+    ramo = revisao.ramoActual(entrada?.cwd || process.cwd());
+    abertos = revisao.abertos(revisao.pastaProjecto());
   } catch {}
 
-  const motivo = avaliar(entrada, { abertos });
+  const motivo = avaliar(entrada, { abertos, ramo });
   if (!motivo) return 0;
   process.stderr.write(
     `Bloqueado pelo guarda do Keel — ${motivo}.\n` +

@@ -63,7 +63,7 @@ Um gerador que interroga vinte vezes é usado uma vez. Pergunta só isto, e prop
 ├── .claude/rules/<tema>.md  as regras dos temas escolhidos, com `paths:` no frontmatter
 ├── .keel/licoes.mjs         põe em contexto o que já se aprendeu noutros projectos desta máquina
 ├── .keel/guarda.mjs         o hook que recusa o que nunca pode acontecer
-├── .keel/revisao.mjs        os achados de revisão como estado, por ramo, e o hook Stop que não deixa acabar com bloqueantes abertos
+├── .keel/revisao.mjs        os achados de revisão como estado, por ramo, e o hook Stop que avisa deles (e só prende por um de portão)
 ├── .keel/estado.mjs         devolve o `.keel/estado.md` (frentes, ramos, decisões pendentes) ao contexto depois de um /compact ou numa sessão nova
 ├── .claude/agents/orchestrator.md  só se a resposta à pergunta 5 for sim
 └── .claude/settings.json  o `deny` mínimo e o hook de guarda (sempre), o hook SessionStart, o `env` e o hook de estado das sessões curtas (sempre), `"agent": "orchestrator"` só com o orquestrador, e os hooks do nível escolhido
@@ -106,7 +106,7 @@ Diz ao utilizador, numa linha, quais é que ajustaste e porquê.
 Quatro coisas entram em qualquer projecto, seja qual for o nível de exigência, e os blocos exactos estão em **`controlos.md`**, ao lado deste ficheiro — **lê-o antes de escreveres o `settings.json`**:
 
 - **O bloqueio que vai sempre** (PROC-023, PROC-035): o `deny` mínimo e o hook `PreToolUse` que corre `.keel/guarda.mjs`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/guarda.mjs`. Regras de segurança em texto sem controlo por trás dependem de o modelo obedecer, e ninguém fica a saber quando não obedece ([regras-vs-controlos](${CLAUDE_PLUGIN_ROOT}/docs/regras-vs-controlos.md)).
-- **O hook que fecha a revisão** (PROC-036): `Stop` a correr `.keel/revisao.mjs parar`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/revisao.mjs`, e `.keel/revisao.json` no `.gitignore`. O `reviewer` grava os achados; o hook não deixa a tarefa acabar, e o guarda não deixa fazer commit, enquanto houver um aberto.
+- **O hook que fecha a revisão** (PROC-036): `Stop` a correr `.keel/revisao.mjs parar`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/revisao.mjs`, e `.keel/revisao.json` no `.gitignore`. O `reviewer` grava os achados; o guarda não deixa um bloqueante entrar no `main` (commit nele ou `git merge`), e o hook só não deixa a tarefa acabar com um de portão.
 - **O hook que traz as lições** de outros projectos desta máquina: `SessionStart` a correr `.keel/licoes.mjs sugerir`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-lesson/licoes.mjs`.
 - **As sessões curtas:** `env` com `CLAUDE_CODE_AUTO_COMPACT_WINDOW` e `CLAUDE_CODE_SUBAGENT_MODEL`, e o hook `SessionStart` que corre `.keel/estado.mjs`, copiado de `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/estado.mjs`, com `.keel/estado.md` no `.gitignore`. Só se a resposta à pergunta 5 for sim: copia `${CLAUDE_PLUGIN_ROOT}/agents/orchestrator.md` para `.claude/agents/` e junta `"agent": "orchestrator"` ao `settings.json` (se o projecto já tiver outro `agent`, não o substituas: pergunta). Os blocos e os cuidados estão na secção «As sessões curtas» do `controlos.md`.
 

@@ -51,10 +51,12 @@ Cuidados:
 
 O `reviewer` regista cada achado em `.keel/revisao.json`, pelo `.keel/revisao.mjs`, com o ramo em que foi gravado. Um **bloqueante** fica **aberto** até ser fechado de uma de duas maneiras: **corrigido**, só por uma nova ronda do revisor nessa dimensão, ou **não corrigido**, com o motivo, por quem implementou. Um **reparo** vai para o **backlog** e não prende nada. Escrever "fecha cada achado" num texto seria mais uma regra sem controlo (PROC-036, PROC-035). O controlo são duas peças:
 
-- o guarda recusa `git commit` enquanto houver bloqueantes abertos no ramo da pasta onde o commit corre, e recusa a edição à mão do `revisao.json`;
-- o hook `Stop` não deixa a tarefa acabar enquanto houver bloqueantes abertos no ramo do `cwd`.
+- o guarda não deixa um bloqueante entrar no ramo principal (`main` ou `master`): recusa ali o `git commit` com bloqueantes desse ramo e o `git merge` de um ramo que os tenha, e recusa a edição à mão do `revisao.json`. Num ramo de trabalho, o commit é livre;
+- o hook `Stop` avisa dos bloqueantes do ramo do `cwd` e deixa acabar; só não deixa quando algum foi gravado com `--portao` (tenants, segredos e autenticação, migrações, escrita em sistemas externos).
 
-Contar por ramo é o que deixa as frentes em paralelo: cada uma corre na sua worktree e no seu ramo, partilham o `revisao.json` da raiz, e um bloqueante de uma não prende os commits das outras. Os achados antigos, sem ramo, contam em todos. O `revisao.mjs` grava com uma trava (`.keel/revisao.lock`), para duas frentes não repetirem IDs, e conta as rondas por ramo e dimensão: acima de duas, o `rever` avisa que só se continua por um bloqueante de dinheiro, dados de outro tenant, segredos ou escrita indevida.
+É a regra «rigor no merge, liberdade no ramo»: um commit num ramo desfaz-se, e travá-lo só atrasava. Os projectos sentiam o processo como rígido sobretudo por isto.
+
+Contar por ramo é o que deixa as frentes em paralelo: cada uma corre na sua worktree e no seu ramo, partilham o `revisao.json` da raiz, e um bloqueante de uma não prende a fusão das outras. Os achados antigos, sem ramo, contam em todos. O `revisao.mjs` grava com uma trava (`.keel/revisao.lock`), para duas frentes não repetirem IDs, e conta as rondas por ramo e dimensão: acima de duas, o `rever` avisa que só se continua por um bloqueante de dinheiro, dados de outro tenant, segredos ou escrita indevida.
 
 Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/revisao.mjs` para `.keel/revisao.mjs`, junta `.keel/revisao.json` ao `.gitignore` (é estado de trabalho, não código), e junta ao `.claude/settings.json`:
 
@@ -77,7 +79,7 @@ Copia `${CLAUDE_PLUGIN_ROOT}/skills/keel-init/revisao.mjs` para `.keel/revisao.m
 }
 ```
 
-Sem `revisao.json`, ou sem bloqueantes abertos no ramo, os dois deixam passar: uma tarefa que não passou pelo revisor não fica presa. O hook nunca prende a sessão sem saída, porque quem implementou pode sempre fechar um achado como não corrigido — desde que diga porquê, e o motivo fica gravado.
+Sem `revisao.json`, ou sem bloqueantes abertos, os dois deixam passar: uma tarefa que não passou pelo revisor não fica presa. O hook nunca prende a sessão sem saída, porque quem implementou pode sempre fechar um achado como não corrigido — desde que diga porquê, e o motivo fica gravado.
 
 ## O hook que traz as lições de outros projectos
 
