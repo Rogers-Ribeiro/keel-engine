@@ -2,7 +2,7 @@
 // Os achados de uma revisão, guardados como estado e não como texto, para que nenhum fique esquecido.
 //
 //   node .keel/revisao.mjs abrir   --dimensao <d> --severidade <s> --onde <ficheiro:linha> --o-que "<…>" [--portao] [--ramo <r>]
-//   node .keel/revisao.mjs rever   --dimensao <d> [--mantem R-001,R-004] [--ramo <r>]
+//   node .keel/revisao.mjs rever   --dimensao <d> --corrigidos R-001,R-004 [--ramo <r>]
 //   node .keel/revisao.mjs recusar --id R-001 --porque "<…>"
 //   node .keel/revisao.mjs estado  [--ramo <r>]          sai com 1 se houver bloqueantes abertos
 //   node .keel/revisao.mjs backlog [--ramo <r>]          os reparos por tratar, para o despacho do fim da frente
@@ -29,8 +29,9 @@
 //   abre ronda nova, e junta-se aos outros num só despacho no fim da frente (`backlog`). Prender por
 //   reparos custou, num projecto, cerca de 100 mil tokens por seis linhas de comentário, e noutro
 //   centenas de `recusar` à mão só para a sessão poder parar.
-// - **corrigido** — só por uma nova ronda do revisor na mesma dimensão (`rever`): o que ele não
-//   voltar a apontar fica corrigido. Quem implementou não marca o seu próprio trabalho como feito.
+// - **corrigido** — só por uma nova ronda do revisor na mesma dimensão (`rever --corrigidos`): fecha
+//   só os IDs que o revisor confirmou no código; o que a ronda simplesmente não repetiu fica aberto
+//   (não repetir não é prova de correcção). Quem implementou não marca o seu próprio trabalho como feito.
 // - **não corrigido** — quem implementou recusa-o com o motivo (`recusar`). É uma saída legítima, e
 //   é o que impede o hook de prender a sessão quando a correcção é decisão da pessoa.
 //
@@ -156,14 +157,15 @@ export function abrir(projecto, { dimensao, severidade, onde, oQue, ramo, portao
   });
 }
 
-// Uma nova ronda do revisor numa dimensão: o que ele voltou a apontar fica como estava, o resto
-// corrigido — os bloqueantes abertos e os reparos do backlog. Devolve também o número da ronda.
-export function rever(projecto, { dimensao, mantem = [], ramo }) {
+// Uma nova ronda do revisor numa dimensão: fecha como corrigidos só os IDs que ele confirmou
+// (`corrigidos`) — bloqueantes abertos e reparos do backlog; o resto fica como estava.
+// Devolve também o número da ronda.
+export function rever(projecto, { dimensao, corrigidos: confirmados = [], ramo }) {
   if (!dimensao) throw new Error('rever precisa de --dimensao');
   return comTrava(projecto, (dados) => {
     const corrigidos = [];
     for (const a of dados.achados) {
-      if (!['aberto', 'backlog'].includes(a.estado) || a.dimensao !== dimensao || mantem.includes(a.id)) continue;
+      if (!['aberto', 'backlog'].includes(a.estado) || a.dimensao !== dimensao || !confirmados.includes(a.id)) continue;
       if (!doRamo(a, ramo)) continue;
       Object.assign(a, { estado: 'corrigido', fechado: agora() });
       corrigidos.push(a.id);
@@ -264,9 +266,12 @@ async function main(argv) {
           : `${a.id} no backlog (reparo, ${a.dimensao}): não abre ronda; vai no despacho do fim da frente.\n`,
       );
     } else if (comando === 'rever') {
-      const mantem = flags.mantem && flags.mantem !== 'sim' ? flags.mantem.split(',').map((s) => s.trim()) : [];
-      const { corrigidos, ronda: n } = rever(projecto, { dimensao: flags.dimensao, mantem, ramo });
-      process.stdout.write(corrigidos.length ? `Corrigidos: ${corrigidos.join(', ')}.\n` : 'Nenhum achado fechado nesta ronda.\n');
+      if (flags.mantem) throw new Error('--mantem já não existe: usa --corrigidos <IDs que confirmaste no código>');
+      const confirmados = flags.corrigidos && flags.corrigidos !== 'sim' ? flags.corrigidos.split(',').map((s) => s.trim()) : [];
+      const { corrigidos, ronda: n } = rever(projecto, { dimensao: flags.dimensao, corrigidos: confirmados, ramo });
+      process.stdout.write(
+        corrigidos.length ? `Corrigidos: ${corrigidos.join(', ')}.\n` : 'Nenhum achado fechado nesta ronda (só fecha o que vem em --corrigidos).\n',
+      );
       if (n > TECTO_RONDAS) {
         process.stdout.write(
           `Atenção: ronda ${n} de ${flags.dimensao} neste ramo, acima do tecto de ${TECTO_RONDAS}. ` +

@@ -40,8 +40,35 @@ const ePrincipal = (ramo) => /^(?:main|master)$/.test(ramo ?? '');
 
 // Gravar um achado no registo não lê nem escreve o `.env`: o texto do achado pode nomeá-lo («a chave
 // está no `.env`»), e recusá-lo obrigava a pessoa a gravar o achado à mão.
-// Uma substituição de comando (`$(…)`, crases) dentro dele já não é só texto, e não fica isenta.
-const eRegistoDeRevisao = (parte) => !/\$\(|`/.test(parte) && /^node(?:\.exe)?\s+["']?(?:\S*[\\/])?\.keel[\\/]revisao\.mjs["']?\s/i.test(parte);
+// A isenção é uma LISTA BRANCA avaliada sobre o comando inteiro (não sobre as partes):
+// (a) começa por `node .keel/revisao.mjs ` (ou `./.keel/`);
+// (b) aspas todas emparelhadas; (c) fora de aspas só [A-Za-z0-9 _\-./=:,@%+];
+// (d) dentro de aspas duplas nem `$`, crase nem `\`; dentro de aspas simples tudo é literal (com newlines);
+// (e) nenhum argumento fora de aspas nomeia um ficheiro de segredos.
+// Qualquer falha: guarda normal.
+const INICIO_REVISAO = /^node (?:\.\/)?\.keel\/revisao\.mjs /;
+const FORA_DE_ASPAS = /^[A-Za-z0-9 _\-./=:,@%+]*$/;
+function eRegistoDeRevisao(comando) {
+  const c = comando.trim();
+  if (!INICIO_REVISAO.test(c)) return false;
+  let fora = '';
+  let i = 0;
+  while (i < c.length) {
+    const ch = c[i];
+    if (ch === "'" || ch === '"') {
+      const fim = c.indexOf(ch, i + 1);
+      if (fim < 0) return false;
+      if (ch === '"' && /[$`\\]/.test(c.slice(i + 1, fim))) return false;
+      fora += 'Q';
+      i = fim + 1;
+    } else {
+      fora += ch;
+      i++;
+    }
+  }
+  if (!FORA_DE_ASPAS.test(fora)) return false;
+  return !fora.split(/[\s=:,@%+]+/).some((tok) => eFicheiroEnv(path.basename(tok)));
+}
 
 const eRevisaoJson = (ficheiro) => /(?:^|\/)\.keel\/revisao\.json$/i.test(ficheiro.replace(/\\/g, '/'));
 
@@ -67,11 +94,22 @@ const REGRAS_SHELL = [
   },
   {
     // Um `.env` nomeado em qualquer ponto do comando: ler, copiar, apagar, redireccionar.
-    testa: (p) =>
-      !eRegistoDeRevisao(p) && p.split(/[\s'"`=<>()]+/).some((tok) => eFicheiroEnv(path.basename(tok.replace(/\\/g, '/')))),
+    testa: (p, c) =>
+      !eRegistoDeRevisao(c) && p.split(/[\s'"`=<>()]+/).some((tok) => eFicheiroEnv(path.basename(tok.replace(/\\/g, '/')))),
     motivo: 'o `.env` tem segredos; o agente não o lê nem o altera',
   },
 ];
+
+// Uma palavra do `git merge` que aponta para o ramo `ramo`, na forma exacta ou numa variante:
+// `origin/feat/a`, `refs/heads/feat/a`, `refs/remotes/origin/feat/a`, `feat/a~1`, `feat/a^`, `HEAD:feat/a`.
+// Melhor esforço: erra para o lado de guardar (`outro/feat/a` também conta).
+function nomeiaRamo(palavra, ramo) {
+  if (!ramo) return false;
+  return palavra.split(':').some((p) => {
+    const nome = p.replace(/[~^@].*$/, '');
+    return nome === ramo || nome.endsWith(`/${ramo}`);
+  });
+}
 
 // Os bloqueantes que esta parte do comando levaria para o ramo principal. `abertos` são todos os
 // bloqueantes por fechar, de todos os ramos; `ramo` é o da pasta onde a chamada corre. Sem ramo
@@ -81,8 +119,8 @@ function bloqueantesAEntrar(parte, { abertos, ramo }) {
   const desteRamo = (a) => !a.ramo || !ramo || a.ramo === ramo;
   if (GIT_COMMIT.test(parte)) return abertos.filter(desteRamo);
   if (GIT_MERGE.test(parte)) {
-    const palavras = new Set(parte.split(/[\s'"]+/));
-    return abertos.filter((a) => desteRamo(a) || palavras.has(a.ramo));
+    const palavras = parte.split(/[\s'"]+/);
+    return abertos.filter((a) => desteRamo(a) || palavras.some((p) => nomeiaRamo(p, a.ramo)));
   }
   return [];
 }
@@ -93,8 +131,9 @@ export function avaliar(entrada, { abertos = [], ramo = null } = {}) {
   const dados = entrada?.tool_input ?? {};
 
   if (ferramenta === 'Bash' || ferramenta === 'PowerShell') {
-    for (const parte of partes(String(dados.command ?? ''))) {
-      const regra = REGRAS_SHELL.find((r) => r.testa(parte));
+    const comando = String(dados.command ?? '');
+    for (const parte of partes(comando)) {
+      const regra = REGRAS_SHELL.find((r) => r.testa(parte, comando));
       if (regra) return `${regra.motivo}: \`${parte}\``;
       const aEntrar = bloqueantesAEntrar(parte, { abertos, ramo });
       if (aEntrar.length > 0) {
