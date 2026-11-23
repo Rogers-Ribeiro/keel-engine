@@ -17,6 +17,11 @@ Este é o núcleo de um projecto React no browser, e não substitui os outros n�
 - O que é estado de ecrã — página, filtro, ordenação, pesquisa — vive no URL, não em estado local: **RCT-045**.
 - Um valor que se pode derivar não vira estado, e o que é partilhado sobe ao ancestral comum mais próximo: **RCT-021**, **RCT-022**.
 
+## Escolher um registo
+
+- Lookup para listas que crescem, Combobox para listas médias, `<select>` nativo até cerca de 10 opções fixas: **RCT-055**.
+- O combobox vem de uma biblioteca que cumpre o padrão da W3C, a pesquisa ignora acentos e maiúsculas, e cada estado da lista tem texto: **RCT-056**, **RCT-057**, **RCT-058**.
+
 ## Estado e efeitos
 
 - Estado que depende do anterior actualiza-se com a forma funcional: **RCT-019**.

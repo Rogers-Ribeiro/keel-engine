@@ -448,3 +448,48 @@ Nenhum curso da base ensina React Flow. Estas regras saem da referência
 **Como verificar:** cada `ReactFlow` tem as três props.
 **Fonte:** [react-flow](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.27.0/docs/react-flow.md)
 **Cursos:** 0
+
+## Escolher um registo
+
+Nenhum curso da base ensina este padrão. Estas regras saem da referência
+[lookup-e-combobox](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.27.0/docs/lookup-e-combobox.md).
+
+### RCT-055 — O componente de escolha segue o tamanho e a origem da lista
+
+**Regra:** lista que cresce e vive no servidor usa um Lookup com pesquisa no servidor; lista média e conhecida usa um Combobox que filtra no browser; até cerca de 10 opções fixas fica no `<select>` nativo.
+**Porquê:** um `<select>` com centenas de registos obriga a percorrer a lista à procura, e com milhares deixa de carregar; um Combobox numa lista de três opções obriga a escrever o que se via de uma vez.
+**Como verificar:** cada `<select>` com opções vindas de uma API tem tecto conhecido e pequeno; cada lista de registos que cresce passa por um Lookup.
+**Fonte:** [lookup-e-combobox](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.27.0/docs/lookup-e-combobox.md)
+**Cursos:** 0
+
+### RCT-056 — O combobox segue o padrão da W3C, e vem de uma biblioteca que o cumpre
+
+**Regra:** `role="combobox"`, `aria-expanded`, `aria-controls`, `aria-activedescendant` e o teclado do padrão (↓, Enter, Esc) — dados por uma biblioteca como o React Aria, não escritos à mão.
+**Porquê:** o combobox feito com `div`s funciona com o rato e falha em silêncio no teclado e no leitor de ecrã; nenhum teste visual o apanha.
+**Como verificar:** um teste por teclado escolhe uma opção só com ↓ e Enter, e encontra-a por `getByRole('combobox')` e `getByRole('option')`.
+**Fonte:** [lookup-e-combobox](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.27.0/docs/lookup-e-combobox.md)
+**Cursos:** 0
+
+### RCT-057 — A pesquisa ignora acentos e maiúsculas, procura em vários campos, e a resposta antiga não se sobrepõe à nova
+
+**Regra:** a comparação normaliza acentos e maiúsculas; procura em todos os campos por que o utilizador conhece o registo (código, nome, documento); no servidor, com espera de 200 a 300 ms entre teclas, e a resposta de um termo anterior descarta-se.
+**Porquê:** «sao paulo» não encontra «São Paulo» com uma comparação simples; e sem descartar a resposta antiga, a lista mostra o resultado de «pel» depois de se ter escrito «pele».
+**Como verificar:** um teste procura sem acento e encontra o registo acentuado; a chave da query inclui o termo (ou o pedido anterior é abortado).
+**Fonte:** [lookup-e-combobox](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.27.0/docs/lookup-e-combobox.md)
+**Cursos:** 0
+
+### RCT-058 — Cada estado da lista tem texto
+
+**Regra:** a carregar, sem resultados (com o termo), erro (com tentar de novo) e vazio com o motivo — por exemplo «Não há tabela de preços em USD para exportação».
+**Porquê:** uma lista vazia sem texto parece avaria; quem a vê não sabe se tem de esperar, escrever outra coisa ou pedir a alguém que crie o registo.
+**Como verificar:** há um teste para cada um dos quatro estados.
+**Fonte:** [lookup-e-combobox](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.27.0/docs/lookup-e-combobox.md)
+**Cursos:** 0
+
+### RCT-059 — O Lookup mostra o escolhido como etiqueta, abre a pesquisa completa num diálogo, e cria só com permissão
+
+**Regra:** o valor escolhido aparece como etiqueta com «×» para limpar; a última linha das sugestões abre um diálogo com tabela, ordenação, filtro e paginação no servidor; «+ Novo» só aparece a quem pode criar, e o registo criado fica escolhido.
+**Porquê:** as sugestões mostram poucos resultados e pouca informação; quando não chegam, a alternativa sem diálogo é sair do formulário e perder o que se escreveu. E uma acção que dá 403 depois de se preencher o formulário ensina a não confiar no ecrã.
+**Como verificar:** o diálogo pede ao servidor por página; a linha «+ Novo» depende da permissão; depois de criar, o campo tem o registo novo.
+**Fonte:** [lookup-e-combobox](https://github.com/Rogers-Ribeiro/keel-engine/blob/v0.27.0/docs/lookup-e-combobox.md)
+**Cursos:** 0
